@@ -2,6 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#cc0018">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a1628">
 <meta name="mobile-web-app-capable" content="yes">
@@ -281,7 +283,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="partes-mes-label" id="partes-mes-label">Abril 2026</div>
       <button class="ynav-btn" onclick="partesChangeMes(1)">&#9654;</button>
     </div>
-    <button class="btn-primary" style="font-size:0.75rem;padding:6px 12px;" onclick="openNuevoParte()">+ PARTE HOY</button>
+    <button class="btn-primary" style="font-size:0.75rem;padding:6px 12px;" onclick="openNuevoParte(null)">+ NUEVO PARTE</button>
   </div>
   <div class="partes-cal" id="partes-cal"></div>
   <div class="partes-lista" id="partes-lista"><div class="loading">Cargando...</div></div>
@@ -575,6 +577,10 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
           <input type="file" id="np-input-b" accept="image/*" capture="environment" style="display:none" onchange="npPreview(event,'b')">
         </div>
       </div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>FECHA DEL PARTE</label>
+      <input type="date" id="np-fecha" style="width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem;background:#fafafa;box-sizing:border-box;">
     </div>
     <div class="form-group" style="margin-bottom:14px;">
       <label>TURNO</label>
@@ -1607,24 +1613,45 @@ window.partesChangeMes = function(d) {
 
 window.partesVerDia = function(fechaStr) {
   const items = Object.values(partes).filter(p => p.fecha === fechaStr);
+  const fecha = new Date(fechaStr + 'T12:00:00');
+  const hoy = new Date(); hoy.setHours(23,59,59,999);
   if (!items.length) {
-    const fecha = new Date(fechaStr + 'T12:00:00');
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
     if (fecha <= hoy) {
-      showToast('No hay parte para este día');
+      // Día pasado sin parte: ofrecer añadir
+      if (confirm('No hay parte para este día. ¿Quieres añadir uno?')) {
+        openNuevoParte(fechaStr);
+      }
     }
     return;
   }
-  // Scroll al primer parte de ese día
+  // Tiene parte: scroll a la lista
   renderPartesLista();
 };
 
 // ── NUEVO PARTE ──
-window.openNuevoParte = function() {
+window.openNuevoParte = function(fechaIso) {
   npFotoA = null; npFotoB = null;
+
+  // Determinar fecha: la pasada o hoy
   const hoy = new Date();
-  const fechaStr = hoy.toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  document.getElementById('np-titulo').textContent = 'PARTE — ' + fechaStr.toUpperCase();
+  let fechaDate;
+  if (fechaIso) {
+    fechaDate = new Date(fechaIso + 'T12:00:00');
+  } else {
+    // Turno de noche: si son las 00-06h, el parte puede ser del día anterior
+    const h = hoy.getHours();
+    fechaDate = (h >= 0 && h < 6) ? new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1) : new Date(hoy);
+  }
+
+  // Formatear para input date (YYYY-MM-DD)
+  const yyyy = fechaDate.getFullYear();
+  const mm = String(fechaDate.getMonth()+1).padStart(2,'0');
+  const dd = String(fechaDate.getDate()).padStart(2,'0');
+  document.getElementById('np-fecha').value = yyyy+'-'+mm+'-'+dd;
+  document.getElementById('np-fecha').max = hoy.toISOString().split('T')[0]; // no fechas futuras
+
+  const fechaStr = fechaDate.toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  document.getElementById('np-titulo').textContent = 'NUEVO PARTE';
 
   // Reset slots
   ['a','b'].forEach(side => {
@@ -1722,8 +1749,11 @@ async function subirFotoDrive(token, folderId, file, nombre) {
 window.guardarParte = async function() {
   if (!npFotoA && !npFotoB) { showToast('Añade al menos una foto'); return; }
 
-  const hoy = new Date();
-  const fechaStr = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0') + '-' + String(hoy.getDate()).padStart(2,'0');
+  // Usar la fecha seleccionada en el input, no necesariamente hoy
+  const fechaStr = document.getElementById('np-fecha').value || (() => {
+    const hoy = new Date();
+    return hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0') + '-' + String(hoy.getDate()).padStart(2,'0');
+  })();
   const turno = document.getElementById('np-turno').value;
   const marinero = currentUser || 'desconocido';
   const nombreBase = `Parte_${fechaStr}_${turno}_${NOMBRES[marinero]||marinero}`;
@@ -1849,6 +1879,14 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.remove();
   deferredPrompt = null;
 });
+</script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('Service Worker registrado'))
+      .catch(err => console.error('Error SW:', err));
+  }
+</script>
 </script>
 </body>
 </html>
