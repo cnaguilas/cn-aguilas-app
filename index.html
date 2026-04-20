@@ -1844,9 +1844,25 @@ function comprimirBase64(dataUrl, calidad = 0.5) {
 // ── PWA SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(r => console.log('SW registrado:', r.scope))
-      .catch(e => console.log('SW error:', e));
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW registrado:', reg.scope);
+      // Detectar nueva versión y recargar automáticamente
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            // Hay versión nueva — recargar para aplicarla
+            showToast('Actualizando app... ⟳');
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        });
+      });
+    }).catch(e => console.log('SW error:', e));
+
+    // Si el SW cambia de controlador, recargar
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   });
 }
 
@@ -1855,7 +1871,6 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // Mostrar botón de instalación en la topbar si no está ya instalada
   const pill = document.getElementById('user-pill');
   if (pill && !window.matchMedia('(display-mode: standalone)').matches) {
     const btn = document.createElement('button');
@@ -1879,14 +1894,6 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.remove();
   deferredPrompt = null;
 });
-</script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(() => console.log('Service Worker registrado'))
-      .catch(err => console.error('Error SW:', err));
-  }
-</script>
 </script>
 </body>
 </html>
