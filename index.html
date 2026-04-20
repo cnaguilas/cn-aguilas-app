@@ -183,6 +183,8 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .btn-row .btn-primary{flex:1;}
 .btn-secondary{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid #cc0018;cursor:pointer;background:transparent;color:#cc0018;}
 .btn-danger{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid rgba(220,50,50,0.4);cursor:pointer;background:rgba(220,50,50,0.15);color:#f08080;}
+.btn-aviso{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:10px 16px;border-radius:5px;border:2px solid #f0a500;cursor:pointer;background:rgba(240,165,0,0.12);color:#c87800;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-aviso:active{background:rgba(240,165,0,0.25);}
 .semana-badge{display:inline-block;font-size:0.58rem;color:#cc0018;background:rgba(204,0,24,0.08);border:1px solid rgba(204,0,24,0.3);border-radius:3px;padding:2px 8px;margin-bottom:12px;letter-spacing:0.08em;}
 .marinero-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 .mar-card{border-radius:6px;padding:11px;text-align:center;}
@@ -461,6 +463,9 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <label>NOTAS</label>
       <textarea id="d-notas" placeholder="Notas o actualizaciones..."></textarea>
     </div>
+    <button class="btn-aviso" onclick="avisarDireccion()" style="width:100%;margin-bottom:10px;">
+      &#9888;&#65039; AVISAR A DIRECCIÓN
+    </button>
     <div class="btn-row">
       <button class="btn-danger" onclick="eliminarInc()">ELIMINAR</button>
       <button class="btn-primary" onclick="actualizarInc()">GUARDAR</button>
@@ -1186,6 +1191,41 @@ window.eliminarInc=async function(){
   closeOv('ov-detalle-inc');showToast('Eliminada');
 };
 
+// ── AVISAR A DIRECCIÓN POR WHATSAPP ──
+// Número de dirección (formato internacional sin + ni espacios)
+const DIRECCION_WHATSAPP = '34XXXXXXXXX'; // <-- Reemplazar con el número real
+
+window.avisarDireccion = function() {
+  if(!editingIncId) return;
+  const inc = incidencias[editingIncId] || {};
+
+  const titulo = inc.titulo || 'Sin título';
+  const tipo = inc.tipo ? (inc.tipo.charAt(0).toUpperCase() + inc.tipo.slice(1)) : '--';
+  const icon = TIPO_ICONS[inc.tipo] || '🔧';
+  const estado = inc.estado === 'prog' ? 'En curso' : inc.estado === 'pend' ? 'Pendiente' : 'Resuelta';
+  const prio = inc.prioridad ? inc.prioridad.toUpperCase() : 'NORMAL';
+  const marinero = NOMBRES[currentUser] || currentUser || 'Marinero';
+  const asig = inc.asignadoA ? (NOMBRES[inc.asignadoA] || inc.asignadoA) : 'Sin asignar';
+  const notas = document.getElementById('d-notas')?.value?.trim() || inc.notas || '';
+  const desc = inc.descripcion || '';
+  const fecha = inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('es-ES') : '--';
+
+  // Construir mensaje
+  let msg = `⚠️ *AVISO INCIDENCIA — CN ÁGUILAS*\n\n`;
+  msg += `${icon} *${titulo}*\n`;
+  msg += `📋 Tipo: ${tipo}\n`;
+  msg += `🔴 Estado: ${estado} · ${prio}\n`;
+  msg += `📅 Abierta: ${fecha}\n`;
+  if (asig !== 'Sin asignar') msg += `👤 Asignada a: ${asig}\n`;
+  if (desc) msg += `\n📝 *Descripción:*\n${desc}\n`;
+  if (notas) msg += `\n💬 *Notas / Motivo del aviso:*\n${notas}\n`;
+  msg += `\n— Enviado por ${marinero} desde la app CN Águilas`;
+
+  const encoded = encodeURIComponent(msg);
+  const url = `https://wa.me/${DIRECCION_WHATSAPP}?text=${encoded}`;
+  window.open(url, '_blank');
+};
+
 // ═══════════════════════════════
 // MAPA
 // ═══════════════════════════════
@@ -1844,25 +1884,9 @@ function comprimirBase64(dataUrl, calidad = 0.5) {
 // ── PWA SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
-      console.log('SW registrado:', reg.scope);
-      // Detectar nueva versión y recargar automáticamente
-      reg.addEventListener('updatefound', () => {
-        const newSW = reg.installing;
-        newSW.addEventListener('statechange', () => {
-          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-            // Hay versión nueva — recargar para aplicarla
-            showToast('Actualizando app... ⟳');
-            setTimeout(() => window.location.reload(), 1500);
-          }
-        });
-      });
-    }).catch(e => console.log('SW error:', e));
-
-    // Si el SW cambia de controlador, recargar
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      window.location.reload();
-    });
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('SW registrado:', r.scope))
+      .catch(e => console.log('SW error:', e));
   });
 }
 
@@ -1871,6 +1895,7 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
+  // Mostrar botón de instalación en la topbar si no está ya instalada
   const pill = document.getElementById('user-pill');
   if (pill && !window.matchMedia('(display-mode: standalone)').matches) {
     const btn = document.createElement('button');
@@ -1894,6 +1919,14 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.remove();
   deferredPrompt = null;
 });
+</script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('Service Worker registrado'))
+      .catch(err => console.error('Error SW:', err));
+  }
+</script>
 </script>
 </body>
 </html>
