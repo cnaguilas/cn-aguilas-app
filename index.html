@@ -14,7 +14,6 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Club Nautico Aguilas</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --navy:#ffffff;--sea:#f5f5f5;--ocean:#cc0018;
@@ -183,8 +182,6 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .btn-row .btn-primary{flex:1;}
 .btn-secondary{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid #cc0018;cursor:pointer;background:transparent;color:#cc0018;}
 .btn-danger{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid rgba(220,50,50,0.4);cursor:pointer;background:rgba(220,50,50,0.15);color:#f08080;}
-.btn-aviso{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:10px 16px;border-radius:5px;border:2px solid #f0a500;cursor:pointer;background:rgba(240,165,0,0.12);color:#c87800;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:6px;}
-.btn-aviso:active{background:rgba(240,165,0,0.25);}
 .semana-badge{display:inline-block;font-size:0.58rem;color:#cc0018;background:rgba(204,0,24,0.08);border:1px solid rgba(204,0,24,0.3);border-radius:3px;padding:2px 8px;margin-bottom:12px;letter-spacing:0.08em;}
 .marinero-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 .mar-card{border-radius:6px;padding:11px;text-align:center;}
@@ -463,9 +460,6 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <label>NOTAS</label>
       <textarea id="d-notas" placeholder="Notas o actualizaciones..."></textarea>
     </div>
-    <button class="btn-aviso" onclick="avisarDireccion()" style="width:100%;margin-bottom:10px;">
-      &#9888;&#65039; AVISAR A DIRECCIÓN
-    </button>
     <div class="btn-row">
       <button class="btn-danger" onclick="eliminarInc()">ELIMINAR</button>
       <button class="btn-primary" onclick="actualizarInc()">GUARDAR</button>
@@ -564,7 +558,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3 id="np-titulo">PARTE DEL DÍA</h3>
       <button class="close-btn" onclick="closeOv('ov-nuevo-parte')">x</button>
     </div>
-    <div style="font-size:0.65rem;color:#888;margin-bottom:14px;letter-spacing:0.05em;">Sube las dos caras del parte de trabajo. Las fotos se guardarán en Google Drive de forma automática.</div>
+    <div style="font-size:0.65rem;color:#888;margin-bottom:14px;letter-spacing:0.05em;">Fotografía las dos caras del parte de trabajo. Las fotos se comprimen y guardan automáticamente.</div>
     <div class="parte-fotos" style="margin-bottom:16px;">
       <div>
         <div style="font-size:0.6rem;color:#888;letter-spacing:0.06em;margin-bottom:5px;text-align:center;">CARA DELANTERA</div>
@@ -595,12 +589,9 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <option value="noche">III Turno — Noche (22-06h)</option>
       </select>
     </div>
-    <div style="font-size:0.6rem;color:#888;letter-spacing:0.05em;margin-bottom:12px;background:#f5f5f5;padding:8px;border-radius:5px;">
-      ⚠️ Necesitas estar conectado con la cuenta <b>puertodeportivocnaguilas@gmail.com</b> en Google para subir a Drive. Si no, se guardará solo en Firebase.
-    </div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nuevo-parte')">CANCELAR</button>
-      <button class="btn-primary" onclick="guardarParte()">&#9729; SUBIR PARTE</button>
+      <button class="btn-primary" onclick="guardarParte()">&#128190; GUARDAR PARTE</button>
     </div>
   </div>
 </div>
@@ -1191,41 +1182,6 @@ window.eliminarInc=async function(){
   closeOv('ov-detalle-inc');showToast('Eliminada');
 };
 
-// ── AVISAR A DIRECCIÓN POR WHATSAPP ──
-// Número de dirección (formato internacional sin + ni espacios)
-const DIRECCION_WHATSAPP = '34655441929'; // <-- Reemplazar con el número real
-
-window.avisarDireccion = function() {
-  if(!editingIncId) return;
-  const inc = incidencias[editingIncId] || {};
-
-  const titulo = inc.titulo || 'Sin título';
-  const tipo = inc.tipo ? (inc.tipo.charAt(0).toUpperCase() + inc.tipo.slice(1)) : '--';
-  const icon = TIPO_ICONS[inc.tipo] || '🔧';
-  const estado = inc.estado === 'prog' ? 'En curso' : inc.estado === 'pend' ? 'Pendiente' : 'Resuelta';
-  const prio = inc.prioridad ? inc.prioridad.toUpperCase() : 'NORMAL';
-  const marinero = NOMBRES[currentUser] || currentUser || 'Marinero';
-  const asig = inc.asignadoA ? (NOMBRES[inc.asignadoA] || inc.asignadoA) : 'Sin asignar';
-  const notas = document.getElementById('d-notas')?.value?.trim() || inc.notas || '';
-  const desc = inc.descripcion || '';
-  const fecha = inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('es-ES') : '--';
-
-  // Construir mensaje
-  let msg = `⚠️ *AVISO INCIDENCIA — CN ÁGUILAS*\n\n`;
-  msg += `${icon} *${titulo}*\n`;
-  msg += `📋 Tipo: ${tipo}\n`;
-  msg += `🔴 Estado: ${estado} · ${prio}\n`;
-  msg += `📅 Abierta: ${fecha}\n`;
-  if (asig !== 'Sin asignar') msg += `👤 Asignada a: ${asig}\n`;
-  if (desc) msg += `\n📝 *Descripción:*\n${desc}\n`;
-  if (notas) msg += `\n💬 *Notas / Motivo del aviso:*\n${notas}\n`;
-  msg += `\n— Enviado por ${marinero} desde la app CN Águilas`;
-
-  const encoded = encodeURIComponent(msg);
-  const url = `https://wa.me/${DIRECCION_WHATSAPP}?text=${encoded}`;
-  window.open(url, '_blank');
-};
-
 // ═══════════════════════════════
 // MAPA
 // ═══════════════════════════════
@@ -1525,19 +1481,11 @@ window.showToast=showToast;
 // PARTES DE TRABAJO
 // ═══════════════════════════════
 
-// Google Drive API — cuenta compartida
-// Client ID del proyecto Google Cloud (hay que crearlo una vez, ver instrucciones)
-const GDRIVE_CLIENT_ID = '592442160902-d6p387p36ebtvl6al090857as8ju6tv7.apps.googleusercontent.com';
-const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-const GDRIVE_FOLDER_NAME = 'Partes CN Aguilas';
-
 let partesRef = ref(db, 'partes');
 let partes = {};
 let partesMesActual = new Date();
 let npFotoA = null; // {file, dataUrl}
 let npFotoB = null;
-let gdriveToken = null;
-let gdriveFolderId = null;
 
 // Cargar partes desde Firebase
 onValue(partesRef, snap => {
@@ -1607,30 +1555,13 @@ function renderPartesLista() {
     const marineroNombre = NOMBRES[p.marinero] || p.marinero || '--';
     const turnoLabel = p.turno === 'mañana' ? 'I Turno — Mañana' : p.turno === 'tarde' ? 'II Turno — Tarde' : 'III Turno — Noche';
 
-    const fotoAHtml = p.driveUrlA
-      ? `<a href="${p.driveUrlA}" target="_blank" style="display:block;text-decoration:none;">
-           <div class="parte-foto-slot tiene-foto" style="cursor:pointer;">
-             <img src="${p.driveUrlA.replace('view','thumbnail')}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" />
-             <div style="display:none;flex-direction:column;align-items:center;gap:4px;color:#1e9e5a;font-size:0.7rem;">&#128279;<span>Ver en Drive</span></div>
-             <div class="slot-label">CARA DELANTERA</div>
-           </div></a>`
-      : (p.fotoA
-          ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoA}')"><img src="${p.fotoA}"/><div class="slot-label">CARA DELANTERA</div></div>`
-          : `<div class="parte-foto-slot"><span>Sin foto</span></div>`);
+    const fotoAHtml = p.fotoA
+      ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoA}')"><img src="${p.fotoA}"/><div class="slot-label">CARA DELANTERA</div></div>`
+      : `<div class="parte-foto-slot"><span style="font-size:1.2rem">📄</span><span>Sin foto</span></div>`;
 
-    const fotoBHtml = p.driveUrlB
-      ? `<a href="${p.driveUrlB}" target="_blank" style="display:block;text-decoration:none;">
-           <div class="parte-foto-slot tiene-foto" style="cursor:pointer;">
-             <img src="${p.driveUrlB.replace('view','thumbnail')}" onerror="this.style.display='none';this.nextSibling.style.display='flex'" />
-             <div style="display:none;flex-direction:column;align-items:center;gap:4px;color:#1e9e5a;font-size:0.7rem;">&#128279;<span>Ver en Drive</span></div>
-             <div class="slot-label">CARA TRASERA</div>
-           </div></a>`
-      : (p.fotoB
-          ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoB}')"><img src="${p.fotoB}"/><div class="slot-label">CARA TRASERA</div></div>`
-          : `<div class="parte-foto-slot"><span>Sin foto</span></div>`);
-
-    const driveLink = p.driveFolderUrl
-      ? `<a href="${p.driveFolderUrl}" target="_blank" class="parte-drive-link">&#128279; Ver en Google Drive</a>` : '';
+    const fotoBHtml = p.fotoB
+      ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoB}')"><img src="${p.fotoB}"/><div class="slot-label">CARA TRASERA</div></div>`
+      : `<div class="parte-foto-slot"><span style="font-size:1.2rem">📄</span><span>Sin foto</span></div>`;
 
     return `<div class="parte-card">
       <div class="parte-card-fecha">📋 ${fechaLegible}</div>
@@ -1639,7 +1570,6 @@ function renderPartesLista() {
         <span>👤 ${marineroNombre}</span>
         <span style="color:#bbb;">·</span>
         <span>🕐 ${turnoLabel}</span>
-        ${driveLink ? '<span style="color:#bbb;">·</span>' + driveLink : ''}
       </div>
     </div>`;
   }).join('');
@@ -1730,156 +1660,67 @@ window.npPreview = function(e, side) {
   reader.readAsDataURL(file);
 };
 
-// ── SUBIR A GOOGLE DRIVE ──
-async function getGDriveToken() {
-  if (GDRIVE_CLIENT_ID === 'PENDIENTE_CONFIGURAR') return null;
-  return new Promise(resolve => {
-    if (!window.google?.accounts?.oauth2) { resolve(null); return; }
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: GDRIVE_CLIENT_ID,
-      scope: GDRIVE_SCOPE,
-      callback: resp => resolve(resp.access_token || null),
-    });
-    client.requestAccessToken({ prompt: gdriveToken ? '' : 'consent' });
-  });
-}
 
-async function getOrCreateFolder(token) {
-  // Buscar carpeta existente
-  const q = encodeURIComponent(`name='${GDRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-  const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,webViewLink)`, {
-    headers: { Authorization: 'Bearer ' + token }
-  });
-  const data = await r.json();
-  if (data.files && data.files.length > 0) return data.files[0];
-
-  // Crear carpeta
-  const cr = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: GDRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
-  });
-  return await cr.json();
-}
-
-async function subirFotoDrive(token, folderId, file, nombre) {
-  const meta = { name: nombre, parents: [folderId] };
-  const form = new FormData();
-  form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
-  form.append('file', file);
-
-  const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + token },
-    body: form
-  });
-  const data = await r.json();
-
-  // Hacer público para ver desde dirección
-  if (data.id) {
-    await fetch(`https://www.googleapis.com/drive/v3/files/${data.id}/permissions`, {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'reader', type: 'anyone' })
-    });
-  }
-  return data;
-}
-
+// ── GUARDAR PARTE EN FIREBASE ──
 window.guardarParte = async function() {
   if (!npFotoA && !npFotoB) { showToast('Añade al menos una foto'); return; }
 
-  // Usar la fecha seleccionada en el input, no necesariamente hoy
-  const fechaStr = document.getElementById('np-fecha').value || (() => {
+  const fechaStr = document.getElementById('np-fecha')?.value || (() => {
     const hoy = new Date();
     return hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0') + '-' + String(hoy.getDate()).padStart(2,'0');
   })();
   const turno = document.getElementById('np-turno').value;
   const marinero = currentUser || 'desconocido';
-  const nombreBase = `Parte_${fechaStr}_${turno}_${NOMBRES[marinero]||marinero}`;
 
   const progress = document.getElementById('upload-progress');
   const msgEl = document.getElementById('upload-msg');
   progress.classList.add('visible');
+  msgEl.textContent = 'Comprimiendo fotos...';
 
-  let driveUrlA = null, driveUrlB = null, driveFolderUrl = null;
-
-  try {
-    msgEl.textContent = 'Conectando con Google Drive...';
-    const token = await getGDriveToken();
-
-    if (token) {
-      gdriveToken = token;
-      msgEl.textContent = 'Buscando carpeta en Drive...';
-      const folder = await getOrCreateFolder(token);
-      gdriveFolderId = folder.id;
-      driveFolderUrl = folder.webViewLink;
-
-      if (npFotoA) {
-        msgEl.textContent = 'Subiendo cara delantera...';
-        const res = await subirFotoDrive(token, folder.id, npFotoA.file, nombreBase + '_frente.jpg');
-        driveUrlA = res.webViewLink;
-      }
-      if (npFotoB) {
-        msgEl.textContent = 'Subiendo cara trasera...';
-        const res = await subirFotoDrive(token, folder.id, npFotoB.file, nombreBase + '_trasera.jpg');
-        driveUrlB = res.webViewLink;
-      }
-    } else {
-      msgEl.textContent = 'Google Drive no disponible, guardando local...';
-      await new Promise(r => setTimeout(r, 800));
-    }
-  } catch(e) {
-    console.warn('Drive error:', e);
-    msgEl.textContent = 'Error en Drive, guardando local...';
-    await new Promise(r => setTimeout(r, 800));
-  }
-
-  msgEl.textContent = 'Guardando registro...';
-
-  // Guardar en Firebase (con o sin Drive)
   const parteData = {
     fecha: fechaStr,
     turno,
     marinero,
     creadoEn: Date.now(),
-    driveUrlA: driveUrlA || null,
-    driveUrlB: driveUrlB || null,
-    driveFolderUrl: driveFolderUrl || null,
   };
 
-  // Si no hay Drive, guardar fotos en Firebase (comprimidas)
-  if (!driveUrlA && npFotoA) parteData.fotoA = await comprimirBase64(npFotoA.dataUrl, 0.5);
-  if (!driveUrlB && npFotoB) parteData.fotoB = await comprimirBase64(npFotoB.dataUrl, 0.5);
+  // Comprimir y guardar fotos directamente en Firebase
+  if (npFotoA) parteData.fotoA = await comprimirParaFirebase(npFotoA.dataUrl);
+  if (npFotoB) parteData.fotoB = await comprimirParaFirebase(npFotoB.dataUrl);
 
+  msgEl.textContent = 'Guardando parte...';
   await push(partesRef, parteData);
 
   progress.classList.remove('visible');
   closeOv('ov-nuevo-parte');
-  showToast(driveUrlA || driveUrlB ? 'Parte subido a Drive ✓' : 'Parte guardado ✓');
+  showToast('Parte guardado ✓');
 
   // Volver al mes del parte
-  partesMesActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  const [y, m] = fechaStr.split('-').map(Number);
+  partesMesActual = new Date(y, m - 1, 1);
   renderPartesCalendario();
+  renderPartesLista();
 };
 
-// Comprimir imagen base64 para fallback sin Drive
-function comprimirBase64(dataUrl, calidad = 0.5) {
+// Comprimir foto para Firebase: máx 900px ancho, calidad 0.45 → ~80-120KB
+function comprimirParaFirebase(dataUrl) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
+      const MAX = 900;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
       const canvas = document.createElement('canvas');
-      const maxW = 800;
-      const scale = Math.min(1, maxW / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', calidad));
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.45));
     };
     img.src = dataUrl;
   });
 }
-</script>
+</script></script>
 <script>
 // ── PWA SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
@@ -1919,14 +1760,6 @@ window.addEventListener('appinstalled', () => {
   if (btn) btn.remove();
   deferredPrompt = null;
 });
-</script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(() => console.log('Service Worker registrado'))
-      .catch(err => console.error('Error SW:', err));
-  }
-</script>
 </script>
 </body>
 </html>
