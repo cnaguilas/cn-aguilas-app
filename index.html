@@ -285,7 +285,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <button class="btn-primary" style="font-size:0.75rem;padding:6px 12px;" onclick="openNuevoParte(null)">+ NUEVO PARTE</button>
   </div>
   <div class="partes-cal" id="partes-cal"></div>
-  <div class="partes-lista" id="partes-lista"><div class="loading">Cargando...</div></div>
+  <div style="text-align:center;padding:18px 0 8px;font-size:0.62rem;color:#bbb;letter-spacing:0.06em;">Toca un día del calendario para ver el parte</div>
 </div>
 
 <!-- MODAL TURNOS -->
@@ -599,7 +599,23 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 <!-- UPLOAD PROGRESS -->
 <div class="upload-progress" id="upload-progress">
   <div class="spinner"></div>
-  <div id="upload-msg">Subiendo a Google Drive...</div>
+  <div id="upload-msg">Guardando parte...</div>
+</div>
+
+<!-- MODAL VER PARTE -->
+<div class="overlay" id="ov-ver-parte" onclick="handleOv(event,'ov-ver-parte')">
+  <div class="modal" style="max-height:90vh;">
+    <div class="modal-header">
+      <h3 id="vp-titulo">PARTE DEL DÍA</h3>
+      <button class="close-btn" onclick="closeOv('ov-ver-parte')">x</button>
+    </div>
+    <div id="vp-marinero" style="font-size:0.65rem;color:#888;margin-bottom:14px;letter-spacing:0.04em;"></div>
+    <div class="parte-fotos" id="vp-fotos"></div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn-danger" id="vp-btn-eliminar" onclick="eliminarParte()" style="display:none;">ELIMINAR</button>
+      <button class="btn-secondary" onclick="closeOv('ov-ver-parte')">CERRAR</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1491,7 +1507,6 @@ let npFotoB = null;
 onValue(partesRef, snap => {
   partes = snap.val() || {};
   renderPartesCalendario();
-  renderPartesLista();
 });
 
 // ── CALENDARIO PARTES ──
@@ -1533,69 +1548,69 @@ function renderPartesCalendario() {
   cal.innerHTML = html;
 }
 
-function renderPartesLista() {
-  const lista = document.getElementById('partes-lista');
-  if (!lista) return;
-  const año = partesMesActual.getFullYear();
-  const mes = partesMesActual.getMonth();
-  const prefijo = año + '-' + String(mes + 1).padStart(2, '0');
-
-  const items = Object.entries(partes)
-    .filter(([, p]) => p.fecha && p.fecha.startsWith(prefijo))
-    .sort((a, b) => b[1].fecha.localeCompare(a[1].fecha));
-
-  if (!items.length) {
-    lista.innerHTML = '<div class="no-partes"><div>📋</div>No hay partes este mes</div>';
-    return;
-  }
-
-  lista.innerHTML = items.map(([id, p]) => {
-    const fecha = new Date(p.fecha + 'T12:00:00');
-    const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-    const marineroNombre = NOMBRES[p.marinero] || p.marinero || '--';
-    const turnoLabel = p.turno === 'mañana' ? 'I Turno — Mañana' : p.turno === 'tarde' ? 'II Turno — Tarde' : 'III Turno — Noche';
-
-    const fotoAHtml = p.fotoA
-      ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoA}')"><img src="${p.fotoA}"/><div class="slot-label">CARA DELANTERA</div></div>`
-      : `<div class="parte-foto-slot"><span style="font-size:1.2rem">📄</span><span>Sin foto</span></div>`;
-
-    const fotoBHtml = p.fotoB
-      ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoB}')"><img src="${p.fotoB}"/><div class="slot-label">CARA TRASERA</div></div>`
-      : `<div class="parte-foto-slot"><span style="font-size:1.2rem">📄</span><span>Sin foto</span></div>`;
-
-    return `<div class="parte-card">
-      <div class="parte-card-fecha">📋 ${fechaLegible}</div>
-      <div class="parte-fotos">${fotoAHtml}${fotoBHtml}</div>
-      <div class="parte-marinero-row">
-        <span>👤 ${marineroNombre}</span>
-        <span style="color:#bbb;">·</span>
-        <span>🕐 ${turnoLabel}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
 
 window.partesChangeMes = function(d) {
   partesMesActual = new Date(partesMesActual.getFullYear(), partesMesActual.getMonth() + d, 1);
   renderPartesCalendario();
-  renderPartesLista();
 };
 
 window.partesVerDia = function(fechaStr) {
   const items = Object.values(partes).filter(p => p.fecha === fechaStr);
   const fecha = new Date(fechaStr + 'T12:00:00');
   const hoy = new Date(); hoy.setHours(23,59,59,999);
+
   if (!items.length) {
     if (fecha <= hoy) {
-      // Día pasado sin parte: ofrecer añadir
       if (confirm('No hay parte para este día. ¿Quieres añadir uno?')) {
         openNuevoParte(fechaStr);
       }
     }
     return;
   }
-  // Tiene parte: scroll a la lista
-  renderPartesLista();
+
+  // Abrir modal con las fotos del día
+  const p = items[0]; // tomar el primer parte del día
+  const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const turnoLabel = p.turno === 'mañana' ? 'I Turno — Mañana (06-14h)' : p.turno === 'tarde' ? 'II Turno — Tarde (14-22h)' : 'III Turno — Noche (22-06h)';
+  const marineroNombre = NOMBRES[p.marinero] || p.marinero || '--';
+
+  document.getElementById('vp-titulo').textContent = fechaLegible.toUpperCase();
+  document.getElementById('vp-marinero').innerHTML = `👤 ${marineroNombre} &nbsp;·&nbsp; 🕐 ${turnoLabel}`;
+
+  const fotoAHtml = p.fotoA
+    ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoA}')"><img src="${p.fotoA}"/><div class="slot-label">CARA DELANTERA</div></div>`
+    : `<div class="parte-foto-slot"><span style="font-size:1.4rem">📄</span><span>Sin foto</span></div>`;
+  const fotoBHtml = p.fotoB
+    ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoB}')"><img src="${p.fotoB}"/><div class="slot-label">CARA TRASERA</div></div>`
+    : `<div class="parte-foto-slot"><span style="font-size:1.4rem">📄</span><span>Sin foto</span></div>`;
+
+  document.getElementById('vp-fotos').innerHTML = fotoAHtml + fotoBHtml;
+
+  // Botón eliminar solo visible para quien subió el parte o si no hay marinero
+  const btnEliminar = document.getElementById('vp-btn-eliminar');
+  // Guardar el ID para eliminar
+  btnEliminar._parteId = Object.keys(partes).find(k => partes[k] === p);
+  btnEliminar.style.display = (p.marinero === currentUser) ? 'block' : 'none';
+
+  // Si hay varios partes ese día mostrar indicador
+  if (items.length > 1) {
+    document.getElementById('vp-marinero').innerHTML +=
+      `<span style="margin-left:8px;color:#cc0018;font-size:0.6rem;">(${items.length} partes este día)</span>`;
+  }
+
+  openOv('ov-ver-parte');
+};
+
+let _eliminandoParteId = null;
+window.eliminarParte = async function() {
+  const btn = document.getElementById('vp-btn-eliminar');
+  const id = btn._parteId;
+  if (!id) return;
+  if (!confirm('¿Eliminar este parte?')) return;
+  await remove(ref(db, 'partes/' + id));
+  closeOv('ov-ver-parte');
+  showToast('Parte eliminado');
+  renderPartesCalendario();
 };
 
 // ── NUEVO PARTE ──
@@ -1699,7 +1714,6 @@ window.guardarParte = async function() {
   const [y, m] = fechaStr.split('-').map(Number);
   partesMesActual = new Date(y, m - 1, 1);
   renderPartesCalendario();
-  renderPartesLista();
 };
 
 // Comprimir foto para Firebase: máx 900px ancho, calidad 0.45 → ~80-120KB
