@@ -129,6 +129,14 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .pcal-day.tiene-parte{background:#e8f5e9;border-color:#1e9e5a;}
 .pcal-day.tiene-parte-dot::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#1e9e5a;}
 .pcal-day.future{opacity:0.4;pointer-events:none;}
+.turno-selector-list{display:flex;flex-direction:column;gap:10px;padding:8px 0;}
+.turno-selector-btn{background:#f5f5f5;border:1px solid #e0e0e0;border-radius:8px;padding:12px 16px;cursor:pointer;text-align:left;font-family:"IBM Plex Mono",monospace;transition:all 0.15s;border-left:4px solid transparent;}
+.turno-selector-btn:active{transform:scale(0.97);}
+.turno-selector-btn.ts-mañana{border-left-color:var(--morn);}
+.turno-selector-btn.ts-tarde{border-left-color:var(--eve);}
+.turno-selector-btn.ts-noche{border-left-color:var(--night);}
+.turno-selector-title{font-family:"Bebas Neue",sans-serif;font-size:0.95rem;letter-spacing:0.06em;color:#1a1a1a;}
+.turno-selector-sub{font-size:0.6rem;color:#888;margin-top:2px;}
 .parte-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
 .parte-card-fecha{font-family:"Bebas Neue",sans-serif;font-size:1rem;letter-spacing:0.08em;color:#cc0018;margin-bottom:8px;}
 .parte-fotos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
@@ -673,6 +681,18 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 <div class="upload-progress" id="upload-progress">
   <div class="spinner"></div>
   <div id="upload-msg">Guardando parte...</div>
+</div>
+
+<!-- MODAL SELECCIONAR TURNO DEL DÍA -->
+<div class="overlay" id="ov-sel-turno" onclick="handleOv(event,'ov-sel-turno')">
+  <div class="modal" style="max-height:80vh;padding:16px;">
+    <div class="modal-header">
+      <h3 id="sel-turno-titulo">PARTES DEL DÍA</h3>
+      <button class="close-btn" onclick="closeOv('ov-sel-turno')">x</button>
+    </div>
+    <p style="font-size:0.62rem;color:#888;margin-bottom:10px;letter-spacing:0.04em;">Selecciona el turno que quieres ver:</p>
+    <div id="sel-turno-list" class="turno-selector-list"></div>
+  </div>
 </div>
 
 <!-- MODAL VER PARTE DIGITAL -->
@@ -1593,9 +1613,9 @@ function renderPartesCalendario() {
   label.textContent = MONTH_NAMES[mes] + ' ' + año;
 
   const hoy = new Date();
-  const diasConParte = new Set();
+  const diasConParte = {};
   Object.values(partes).forEach(p => {
-    if (p.fecha) diasConParte.add(p.fecha);
+    if (p.fecha) diasConParte[p.fecha] = (diasConParte[p.fecha] || 0) + 1;
   });
 
   let html = '';
@@ -1611,12 +1631,13 @@ function renderPartesCalendario() {
     const fechaStr = año + '-' + String(mes + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
     const esFuturo = new Date(año, mes, d) > hoy;
     const esHoy = d === hoy.getDate() && mes === hoy.getMonth() && año === hoy.getFullYear();
-    const tieneParte = diasConParte.has(fechaStr);
+    const tieneParte = diasConParte[fechaStr] || 0;
     let cls = 'pcal-day';
     if (esHoy) cls += ' today';
     if (tieneParte) cls += ' tiene-parte tiene-parte-dot';
     if (esFuturo) cls += ' future';
-    html += `<div class="${cls}" onclick="partesVerDia('${fechaStr}')">${d}</div>`;
+    const countBadge = tieneParte > 1 ? `<span style="font-size:0.45rem;background:#1e9e5a;color:#fff;border-radius:8px;padding:0 3px;position:absolute;top:2px;right:2px;line-height:1.4;">${tieneParte}</span>` : '';
+    html += `<div class="${cls}" onclick="partesVerDia('${fechaStr}')">${d}${countBadge}</div>`;
   }
   cal.innerHTML = html;
 }
@@ -1628,11 +1649,11 @@ window.partesChangeMes = function(d) {
 };
 
 window.partesVerDia = function(fechaStr) {
-  const items = Object.values(partes).filter(p => p.fecha === fechaStr);
+  const itemsEntries = Object.entries(partes).filter(([,p]) => p.fecha === fechaStr);
   const fecha = new Date(fechaStr + 'T12:00:00');
   const hoy = new Date(); hoy.setHours(23,59,59,999);
 
-  if (!items.length) {
+  if (!itemsEntries.length) {
     if (fecha <= hoy) {
       if (confirm('No hay parte para este día. ¿Quieres añadir uno?')) {
         openNuevoParte(fechaStr);
@@ -1641,7 +1662,41 @@ window.partesVerDia = function(fechaStr) {
     return;
   }
 
-  const p = items[0];
+  if (itemsEntries.length === 1) {
+    // Un solo parte: abrir directamente
+    verParteConcreto(itemsEntries[0][1], itemsEntries[0][0]);
+    return;
+  }
+
+  // Varios partes: mostrar selector de turno
+  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2 };
+  const TURNO_LABELS = { mañana: 'I Turno — Mañana (06-14h)', tarde: 'II Turno — Tarde (14-22h)', noche: 'III Turno — Noche (22-06h)' };
+  itemsEntries.sort((a, b) => (TURNO_ORDER[a[1].turno] ?? 9) - (TURNO_ORDER[b[1].turno] ?? 9));
+
+  const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  document.getElementById('sel-turno-titulo').textContent = fechaLegible.toUpperCase();
+
+  const list = document.getElementById('sel-turno-list');
+  list.innerHTML = itemsEntries.map(([id, p]) => {
+    const marineroNombre = NOMBRES[p.marinero] || p.marinero || '--';
+    const turnoLabel = TURNO_LABELS[p.turno] || p.turno;
+    return `<button class="turno-selector-btn ts-${p.turno}" onclick="closeOv('ov-sel-turno');verParteConcreto_global('${id}')">
+      <div class="turno-selector-title">🕐 ${turnoLabel}</div>
+      <div class="turno-selector-sub">👤 ${marineroNombre.toUpperCase()}</div>
+    </button>`;
+  }).join('');
+
+  openOv('ov-sel-turno');
+};
+
+window.verParteConcreto_global = function(id) {
+  const p = partes[id];
+  if (p) verParteConcreto(p, id);
+};
+
+function verParteConcreto(p, id) {
+  const fechaStr = p.fecha;
+  const fecha = new Date(fechaStr + 'T12:00:00');
   const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const turnoLabel = p.turno === 'mañana' ? 'I Turno — Mañana (06-14h)' : p.turno === 'tarde' ? 'II Turno — Tarde (14-22h)' : 'III Turno — Noche (22-06h)';
   const marineroNombre = NOMBRES[p.marinero] || p.marinero || '--';
@@ -1716,7 +1771,7 @@ window.partesVerDia = function(fechaStr) {
 
   // Botón eliminar solo para quien creó el parte
   const btnEl = document.getElementById('vp-btn-eliminar');
-  btnEl._parteId = Object.keys(partes).find(k => partes[k] === p);
+  btnEl._parteId = id;
   btnEl.style.display = (p.marinero === currentUser) ? 'block' : 'none';
 
   openOv('ov-ver-parte');
