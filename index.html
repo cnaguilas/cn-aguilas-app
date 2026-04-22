@@ -629,6 +629,10 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <label>S.P. 95 (€/L)</label>
         <input type="number" id="precio-sp95-input" step="0.001" min="0" placeholder="1.509">
       </div>
+      <div class="parte-campo" style="grid-column:1/-1;">
+        <label>ACEITE 2T (€/L)</label>
+        <input type="number" id="precio-aceite-input" step="0.01" min="0" placeholder="12.00">
+      </div>
     </div>
     <div class="btn-row" style="margin-top:14px;">
       <button class="btn-secondary" onclick="closeOv('ov-precios')">CANCELAR</button>
@@ -675,6 +679,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <span>PRECIOS ACTUALES:</span>
       <span>GASÓIL <strong id="np-precio-gasoil-lbl">—</strong> €/L</span>
       <span>S.P.95 <strong id="np-precio-sp95-lbl">—</strong> €/L</span>
+      <span>ACEITE 2T <strong id="np-precio-aceite-lbl">—</strong> €/L</span>
       <button class="precio-edit-btn" onclick="abrirPrecios()">✏️ EDITAR</button>
     </div>
     <!-- Referencia turno anterior -->
@@ -690,7 +695,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         </div>
         <div class="comb-recaudacion-valor" id="np-recaudacion-valor">—</div>
       </div>
-      <div class="parte-campo"><label>ACEITE 2T (L)</label><input type="number" id="np-aceite" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>ACEITE 2T — contador actual (L)</label><input type="number" id="np-aceite" placeholder="0.00" min="0" step="0.01" oninput="calcularRecaudacion()"></div>
       <div class="parte-campo"><label>CAJAS GAS</label><input type="number" id="np-cajas" placeholder="0" min="0"></div>
       <div class="parte-campo"><label>AGUA ENTRADA (m³)</label><input type="number" id="np-agua-entrada" placeholder="0" min="0"></div>
       <div class="parte-campo"><label>AGUA SALIDA (m³)</label><input type="number" id="np-agua-salida" placeholder="0" min="0"></div>
@@ -1659,32 +1664,37 @@ let npFotoB = null;
 let preciosRef = ref(db, 'config/precios');
 let precioGasoil = 1.790;
 let precioSp95 = 1.509;
+let precioAceite = 12.00;
 
 onValue(preciosRef, snap => {
   const v = snap.val();
   if (v) {
     precioGasoil = v.gasoil ?? 1.790;
     precioSp95 = v.sp95 ?? 1.509;
+    precioAceite = v.aceite ?? 12.00;
   }
-  // Actualizar labels donde estén visibles
   const lg = document.getElementById('np-precio-gasoil-lbl');
   const ls = document.getElementById('np-precio-sp95-lbl');
+  const la = document.getElementById('np-precio-aceite-lbl');
   if (lg) lg.textContent = precioGasoil.toFixed(3);
   if (ls) ls.textContent = precioSp95.toFixed(3);
+  if (la) la.textContent = precioAceite.toFixed(2);
   calcularRecaudacion();
 });
 
 window.abrirPrecios = function() {
   document.getElementById('precio-gasoil-input').value = precioGasoil;
   document.getElementById('precio-sp95-input').value = precioSp95;
+  document.getElementById('precio-aceite-input').value = precioAceite;
   openOv('ov-precios');
 };
 
 window.guardarPrecios = async function() {
   const g = parseFloat(document.getElementById('precio-gasoil-input').value);
   const s = parseFloat(document.getElementById('precio-sp95-input').value);
-  if (isNaN(g) || isNaN(s) || g <= 0 || s <= 0) { showToast('Precio no válido'); return; }
-  await set(preciosRef, { gasoil: g, sp95: s });
+  const a = parseFloat(document.getElementById('precio-aceite-input').value);
+  if (isNaN(g) || isNaN(s) || isNaN(a) || g <= 0 || s <= 0 || a <= 0) { showToast('Precio no válido'); return; }
+  await set(preciosRef, { gasoil: g, sp95: s, aceite: a });
   closeOv('ov-precios');
   showToast('Precios actualizados ✓');
 };
@@ -1722,6 +1732,7 @@ window.calcularRecaudacion = function() {
   const turno = document.getElementById('np-turno')?.value;
   const finGasoil = parseFloat(document.getElementById('np-gasoil')?.value);
   const finSp95 = parseFloat(document.getElementById('np-sp95')?.value);
+  const finAceite = parseFloat(document.getElementById('np-aceite')?.value);
 
   const refBox = document.getElementById('np-comb-ref');
   const recBox = document.getElementById('np-recaudacion-box');
@@ -1729,38 +1740,52 @@ window.calcularRecaudacion = function() {
   const recDetalle = document.getElementById('np-recaudacion-detalle');
   const lblG = document.getElementById('np-precio-gasoil-lbl');
   const lblS = document.getElementById('np-precio-sp95-lbl');
+  const lblA = document.getElementById('np-precio-aceite-lbl');
   if (lblG) lblG.textContent = precioGasoil.toFixed(3);
   if (lblS) lblS.textContent = precioSp95.toFixed(3);
+  if (lblA) lblA.textContent = precioAceite.toFixed(2);
 
-  if (!fechaStr || !turno) { refBox.style.display='none'; recBox.style.display='none'; return; }
+  if (!fechaStr || !turno || !refBox) { if(recBox) recBox.style.display='none'; return; }
 
   const anterior = getParteAnterior(fechaStr, turno);
   if (anterior) {
     const iniG = parseFloat(anterior.gasoil) || 0;
     const iniS = parseFloat(anterior.sp95) || 0;
+    const iniA = parseFloat(anterior.aceite) || 0;
     const tLabel = anterior.turno === 'mañana' ? 'Mañana' : anterior.turno === 'tarde' ? 'Tarde' : 'Noche';
-    refBox.style.display = 'block';
-    refBox.textContent = `📋 Referencia (${tLabel} ${anterior.fecha}): Gasóil ${iniG.toFixed(2)} · S.P.95 ${iniS.toFixed(2)}`;
+    refBox.style.cssText = 'display:block;';
+    refBox.className = 'comb-ref-box';
+    refBox.textContent = `📋 Ref. (${tLabel} ${anterior.fecha}): Gasóil ${iniG.toFixed(2)} · S.P.95 ${iniS.toFixed(2)} · Aceite ${iniA.toFixed(2)} L`;
 
-    const lG = litrosVendidos(isNaN(finGasoil) ? null : finGasoil, iniG);
-    const lS = litrosVendidos(isNaN(finSp95) ? null : finSp95, iniS);
-
-    if (lG !== null && lS !== null && !isNaN(finGasoil) && !isNaN(finSp95)) {
+    const hasFin = !isNaN(finGasoil) && !isNaN(finSp95);
+    if (hasFin) {
+      // Combustibles: contador sube → fin - inicio
+      const lG = iniG > finGasoil ? finGasoil + 10000 - iniG : finGasoil - iniG;
+      const lS = iniS > finSp95 ? finSp95 + 10000 - iniS : finSp95 - iniS;
       const recG = lG * precioGasoil;
       const recS = lS * precioSp95;
-      const total = recG + recS;
+
+      // Aceite: contador baja → inicio - fin (si se introdujo)
+      let recA = 0, lA = 0;
+      if (!isNaN(finAceite)) {
+        lA = iniA - finAceite; // vendido = lo que bajó
+        if (lA < 0) lA = 0;   // sin datos negativos
+        recA = lA * precioAceite;
+      }
+
+      const total = recG + recS + recA;
       recBox.style.display = 'flex';
       recValor.textContent = total.toFixed(2) + ' €';
-      recDetalle.textContent = `Gasóil ${lG.toFixed(2)}L × ${precioGasoil.toFixed(3)} = ${recG.toFixed(2)}€  ·  S.P.95 ${lS.toFixed(2)}L × ${precioSp95.toFixed(3)} = ${recS.toFixed(2)}€`;
+      let detalle = `Gasóil ${lG.toFixed(2)}L×${precioGasoil.toFixed(3)}=${recG.toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L×${precioSp95.toFixed(3)}=${recS.toFixed(2)}€`;
+      if (!isNaN(finAceite)) detalle += ` · Aceite ${lA.toFixed(2)}L×${precioAceite.toFixed(2)}=${recA.toFixed(2)}€`;
+      recDetalle.textContent = detalle;
     } else {
       recBox.style.display = 'none';
     }
   } else {
-    refBox.style.display = 'block';
-    refBox.style.background = '#fff8e1';
-    refBox.style.borderColor = '#f0c030';
-    refBox.style.color = '#8a6d00';
-    refBox.textContent = `⚠️ No se encontró el parte anterior. Introduce los contadores de inicio manualmente si lo conoces.`;
+    refBox.style.cssText = 'display:block;background:#fff8e1;border-color:#f0c030;color:#8a6d00;';
+    refBox.className = 'comb-ref-box';
+    refBox.textContent = `⚠️ No se encontró el parte anterior. Sin referencia para calcular recaudación.`;
     recBox.style.display = 'none';
   }
 }; // fin calcularRecaudacion
@@ -1900,32 +1925,36 @@ function verParteConcreto(p, id) {
   }
 
   // Combustible / Agua
+  function buildRecHtml(lG, lS, lA, pG, pS, pA, guardado) {
+    const recG = lG * pG, recS = lS * pS, recA = (lA||0) * pA;
+    const total = recG + recS + recA;
+    const border = guardado ? 'border:1.5px solid rgba(204,0,24,0.3);background:linear-gradient(135deg,rgba(204,0,24,0.07),rgba(204,0,24,0.03));' : 'border:1.5px dashed rgba(240,165,0,0.4);background:rgba(240,165,0,0.08);';
+    const color = guardado ? '#cc0018' : '#e07820';
+    const label = guardado ? '⛽ Recaudación combustible' : '⛽ Recaudación (calculada ahora)';
+    let detalle = `Gasóil ${lG.toFixed(2)}L×${pG.toFixed(3)}=${recG.toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L×${pS.toFixed(3)}=${recS.toFixed(2)}€`;
+    if (lA > 0) detalle += ` · Aceite ${lA.toFixed(2)}L×${pA.toFixed(2)}=${recA.toFixed(2)}€`;
+    return `<div style="margin-top:8px;${border}border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:0.55rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;">${label}</div>
+        <div style="font-size:0.55rem;color:#aaa;margin-top:2px;">${detalle}</div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${color};letter-spacing:0.06em;">${total.toFixed(2)} €</div>
+    </div>`;
+  }
+
   let recHtml = '';
   if (p.recaudacion) {
     const r = p.recaudacion;
-    recHtml = `<div style="margin-top:8px;background:linear-gradient(135deg,rgba(204,0,24,0.07),rgba(204,0,24,0.03));border:1.5px solid rgba(204,0,24,0.3);border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:0.55rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;">⛽ Recaudación combustible</div>
-        <div style="font-size:0.55rem;color:#aaa;margin-top:2px;">Gasóil ${(r.litrosGasoil||0).toFixed(2)}L × ${(r.precioGasoil||0).toFixed(3)} = ${((r.litrosGasoil||0)*(r.precioGasoil||0)).toFixed(2)}€ · S.P.95 ${(r.litrosSp95||0).toFixed(2)}L × ${(r.precioSp95||0).toFixed(3)} = ${((r.litrosSp95||0)*(r.precioSp95||0)).toFixed(2)}€</div>
-      </div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#cc0018;letter-spacing:0.06em;">${(r.totalEuros||0).toFixed(2)} €</div>
-    </div>`;
+    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, r.precioGasoil||precioGasoil, r.precioSp95||precioSp95, r.precioAceite||precioAceite, true);
   } else {
-    // Calcular en tiempo real aunque no esté guardado
     const ant = getParteAnterior(p.fecha, p.turno);
     if (ant) {
-      const iniG = parseFloat(ant.gasoil)||0, iniS = parseFloat(ant.sp95)||0;
-      const finG = parseFloat(p.gasoil)||0, finS = parseFloat(p.sp95)||0;
+      const iniG = parseFloat(ant.gasoil)||0, iniS = parseFloat(ant.sp95)||0, iniA = parseFloat(ant.aceite)||0;
+      const finG = parseFloat(p.gasoil)||0, finS = parseFloat(p.sp95)||0, finA = parseFloat(p.aceite)||0;
       const lG = iniG > finG ? finG+10000-iniG : finG-iniG;
       const lS = iniS > finS ? finS+10000-iniS : finS-iniS;
-      const total = lG*precioGasoil + lS*precioSp95;
-      recHtml = `<div style="margin-top:8px;background:rgba(240,165,0,0.08);border:1.5px dashed rgba(240,165,0,0.4);border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-size:0.55rem;color:#888;letter-spacing:0.08em;">⛽ Recaudación (calculada ahora)</div>
-          <div style="font-size:0.55rem;color:#aaa;margin-top:2px;">Gasóil ${lG.toFixed(2)}L × ${precioGasoil.toFixed(3)} = ${(lG*precioGasoil).toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L × ${precioSp95.toFixed(3)} = ${(lS*precioSp95).toFixed(2)}€</div>
-        </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:#e07820;letter-spacing:0.06em;">${total.toFixed(2)} €</div>
-      </div>`;
+      const lA = iniA > finA ? iniA-finA : 0;
+      recHtml = buildRecHtml(lG, lS, lA, precioGasoil, precioSp95, precioAceite, false);
     }
   }
 
@@ -2085,9 +2114,23 @@ window.descargarPartesDia = function() {
   const fecha = new Date(fechaStr + 'T12:00:00');
   const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
 
+  function calcRec(p) {
+    const ant = getParteAnterior(p.fecha, p.turno);
+    if (p.recaudacion) return p.recaudacion;
+    if (!ant) return null;
+    const iniG = parseFloat(ant.gasoil)||0, iniS = parseFloat(ant.sp95)||0, iniA = parseFloat(ant.aceite)||0;
+    const finG = parseFloat(p.gasoil)||0, finS = parseFloat(p.sp95)||0, finA = parseFloat(p.aceite)||0;
+    const lG = iniG > finG ? finG+10000-iniG : finG-iniG;
+    const lS = iniS > finS ? finS+10000-iniS : finS-iniS;
+    const lA = iniA > finA ? iniA-finA : 0;
+    return { litrosGasoil:lG, litrosSp95:lS, litrosAceite:lA, precioGasoil, precioSp95, precioAceite,
+      totalEuros: parseFloat((lG*precioGasoil + lS*precioSp95 + lA*precioAceite).toFixed(2)) };
+  }
+
   function renderParteHtml(p) {
     const marinero = (NOMBRES[p.marinero] || p.marinero || '--').toUpperCase();
     const turno = TURNO_LABELS[p.turno] || p.turno;
+    const rec = calcRec(p);
     let h = `<div class="parte-bloque">
       <div class="parte-bloque-hdr">
         <span class="parte-bloque-turno">${turno}</span>
@@ -2102,15 +2145,31 @@ window.descargarPartesDia = function() {
       h += `</table></div>`;
     }
 
+    // Combustible con recaudación
+    let recRow = '';
+    if (rec) {
+      const pG = rec.precioGasoil||precioGasoil, pS = rec.precioSp95||precioSp95, pA = rec.precioAceite||precioAceite;
+      const lG = rec.litrosGasoil||0, lS = rec.litrosSp95||0, lA = rec.litrosAceite||0;
+      const rG = lG*pG, rS = lS*pS, rA = lA*pA;
+      let detalle = `Gasóil ${lG.toFixed(2)}L × ${pG.toFixed(3)} = ${rG.toFixed(2)}€ &nbsp;·&nbsp; S.P.95 ${lS.toFixed(2)}L × ${pS.toFixed(3)} = ${rS.toFixed(2)}€`;
+      if (lA > 0) detalle += ` &nbsp;·&nbsp; Aceite ${lA.toFixed(2)}L × ${pA.toFixed(2)} = ${rA.toFixed(2)}€`;
+      recRow = `<div class="pdf-recaudacion">
+        <div class="pdf-rec-label">⛽ RECAUDACIÓN COMBUSTIBLE</div>
+        <div class="pdf-rec-detalle">${detalle}</div>
+        <div class="pdf-rec-total">${(rec.totalEuros||0).toFixed(2)} €</div>
+      </div>`;
+    }
+
     h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">COMBUSTIBLE · AGUA · VENTAS</div>
       <div class="pdf-datos">
-        <div class="pdf-dato"><span>GASÓIL</span><strong>${p.gasoil||'0'} L</strong></div>
-        <div class="pdf-dato"><span>S.P. 95</span><strong>${p.sp95||'0'} L</strong></div>
-        <div class="pdf-dato"><span>ACEITE 2T</span><strong>${p.aceite||'0'} L</strong></div>
+        <div class="pdf-dato"><span>GASÓIL contador</span><strong>${p.gasoil||'0'}</strong></div>
+        <div class="pdf-dato"><span>S.P. 95 contador</span><strong>${p.sp95||'0'}</strong></div>
+        <div class="pdf-dato"><span>ACEITE 2T contador</span><strong>${p.aceite||'0'} L</strong></div>
         <div class="pdf-dato"><span>CAJAS GAS</span><strong>${p.cajas||'0'}</strong></div>
         <div class="pdf-dato"><span>AGUA ENTRADA</span><strong>${p.aguaEntrada||'0'} m³</strong></div>
         <div class="pdf-dato"><span>AGUA SALIDA</span><strong>${p.aguaSalida||'0'} m³</strong></div>
       </div>
+      ${recRow}
       ${p.otros ? `<div class="pdf-otros">Otros: ${p.otros}</div>` : ''}
     </div>`;
 
@@ -2146,13 +2205,29 @@ window.descargarPartesDia = function() {
     return h;
   }
 
+  // Resumen total del día
+  const totalDia = itemsDelDia.reduce((sum, p) => {
+    const r = calcRec(p);
+    return sum + (r ? (r.totalEuros||0) : 0);
+  }, 0);
+  const resumenTurnos = itemsDelDia.map(p => {
+    const r = calcRec(p);
+    const tLabel = p.turno === 'mañana' ? 'Mañana' : p.turno === 'tarde' ? 'Tarde' : 'Noche';
+    return `<div class="resumen-fila"><span>${tLabel} — ${(NOMBRES[p.marinero]||p.marinero||'').toUpperCase()}</span><strong>${r ? r.totalEuros.toFixed(2)+' €' : '—'}</strong></div>`;
+  }).join('');
+
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <title>Partes ${fechaStr} — Club Náutico Águilas</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#111;background:#fff;padding:20px;}
     h1{font-size:18px;letter-spacing:0.08em;color:#cc0018;margin-bottom:4px;text-transform:uppercase;}
-    .subtitulo{font-size:10px;color:#888;margin-bottom:16px;letter-spacing:0.04em;}
+    .subtitulo{font-size:10px;color:#888;margin-bottom:12px;letter-spacing:0.04em;}
+    .resumen-dia{border:2px solid #cc0018;border-radius:8px;padding:12px 16px;margin-bottom:20px;background:#fff8f8;}
+    .resumen-dia-title{font-size:11px;font-weight:700;letter-spacing:0.1em;color:#cc0018;text-transform:uppercase;margin-bottom:8px;}
+    .resumen-fila{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid #f0e0e0;}
+    .resumen-fila:last-child{border-bottom:none;}
+    .resumen-total{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#cc0018;margin-top:8px;padding-top:6px;border-top:2px solid #cc0018;}
     .parte-bloque{border:1px solid #ccc;border-radius:6px;margin-bottom:20px;overflow:hidden;page-break-inside:avoid;}
     .parte-bloque-hdr{background:#cc0018;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;}
     .parte-bloque-turno{font-size:12px;font-weight:700;letter-spacing:0.06em;}
@@ -2170,12 +2245,21 @@ window.descargarPartesDia = function() {
     .pdf-dato{background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:4px 10px;min-width:90px;}
     .pdf-dato span{display:block;font-size:8px;color:#888;text-transform:uppercase;letter-spacing:0.06em;}
     .pdf-dato strong{font-size:11px;color:#111;}
+    .pdf-recaudacion{margin-top:8px;background:#fff0f0;border:1.5px solid rgba(204,0,24,0.3);border-radius:5px;padding:7px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .pdf-rec-label{font-size:9px;font-weight:700;color:#cc0018;letter-spacing:0.06em;flex:none;}
+    .pdf-rec-detalle{font-size:9px;color:#666;flex:1;}
+    .pdf-rec-total{font-size:15px;font-weight:700;color:#cc0018;flex:none;margin-left:auto;}
     .pdf-otros{font-size:10px;color:#555;margin-top:6px;padding:4px 0;}
     .pdf-obs{font-size:10px;color:#333;background:#fffde7;border-left:3px solid #f0c030;padding:6px 10px;border-radius:3px;}
     @media print{body{padding:10px;}@page{margin:1cm;}}
   </style></head><body>
   <h1>Club Náutico Águilas — Partes del día</h1>
   <div class="subtitulo">${fechaLegible} &nbsp;·&nbsp; ${itemsDelDia.length} turno${itemsDelDia.length>1?'s':''}</div>
+  <div class="resumen-dia">
+    <div class="resumen-dia-title">⛽ Resumen recaudación del día</div>
+    ${resumenTurnos}
+    <div class="resumen-total"><span>TOTAL DÍA</span><span>${totalDia.toFixed(2)} €</span></div>
+  </div>
   ${itemsDelDia.map(renderParteHtml).join('')}
   </body></html>`;
 
@@ -2334,16 +2418,19 @@ window.guardarParte = async function() {
   if (anteriorParte) {
     const iniG = parseFloat(anteriorParte.gasoil) || 0;
     const iniS = parseFloat(anteriorParte.sp95) || 0;
+    const iniA = parseFloat(anteriorParte.aceite) || 0;
     const finG = parseFloat(document.getElementById('np-gasoil').value);
     const finS = parseFloat(document.getElementById('np-sp95').value);
+    const finA = parseFloat(document.getElementById('np-aceite').value);
     if (!isNaN(finG) && !isNaN(finS)) {
       const lG = iniG > finG ? finG + 10000 - iniG : finG - iniG;
       const lS = iniS > finS ? finS + 10000 - iniS : finS - iniS;
+      const lA = (!isNaN(finA) && iniA > finA) ? iniA - finA : 0;
       recaudacionData = {
-        inicioGasoil: iniG, inicioSp95: iniS,
-        litrosGasoil: lG, litrosSp95: lS,
-        precioGasoil, precioSp95,
-        totalEuros: parseFloat((lG * precioGasoil + lS * precioSp95).toFixed(2))
+        inicioGasoil: iniG, inicioSp95: iniS, inicioAceite: iniA,
+        litrosGasoil: lG, litrosSp95: lS, litrosAceite: lA,
+        precioGasoil, precioSp95, precioAceite,
+        totalEuros: parseFloat((lG * precioGasoil + lS * precioSp95 + lA * precioAceite).toFixed(2))
       };
     }
   }
