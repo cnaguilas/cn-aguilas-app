@@ -672,8 +672,9 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nuevo-parte')">CANCELAR</button>
-      <button class="btn-primary" onclick="guardarParte()">&#128190; GUARDAR PARTE</button>
+      <button class="btn-primary" id="np-btn-guardar" onclick="guardarParte()">&#128190; GUARDAR PARTE</button>
     </div>
+    <input type="hidden" id="np-editing-id" value="">
   </div>
 </div>
 
@@ -704,8 +705,10 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     </div>
     <div id="vp-marinero" style="font-size:0.65rem;color:#888;margin-bottom:12px;letter-spacing:0.04em;"></div>
     <div id="vp-contenido"></div>
-    <div class="btn-row" style="margin-top:14px;">
+    <div class="btn-row" style="margin-top:14px;flex-wrap:wrap;gap:8px;">
       <button class="btn-danger" id="vp-btn-eliminar" onclick="eliminarParte()" style="display:none;">ELIMINAR</button>
+      <button class="btn-secondary" id="vp-btn-editar" onclick="editarParte()" style="display:none;">✏️ EDITAR</button>
+      <button class="btn-secondary" id="vp-btn-descargar-dia" onclick="descargarPartesDia()" style="background:#1b7a4a;color:#fff;border-color:#1b7a4a;">⬇ DÍA COMPLETO</button>
       <button class="btn-secondary" onclick="closeOv('ov-ver-parte')">CERRAR</button>
     </div>
   </div>
@@ -1769,10 +1772,18 @@ function verParteConcreto(p, id) {
 
   document.getElementById('vp-contenido').innerHTML = html;
 
-  // Botón eliminar solo para quien creó el parte
+  // Botones acción
   const btnEl = document.getElementById('vp-btn-eliminar');
   btnEl._parteId = id;
+  btnEl._parteFecha = fechaStr;
   btnEl.style.display = (p.marinero === currentUser) ? 'block' : 'none';
+
+  const btnEditar = document.getElementById('vp-btn-editar');
+  btnEditar._parteId = id;
+  btnEditar.style.display = (p.marinero === currentUser) ? 'block' : 'none';
+
+  const btnDesc = document.getElementById('vp-btn-descargar-dia');
+  btnDesc._parteFecha = fechaStr;
 
   openOv('ov-ver-parte');
 };
@@ -1787,6 +1798,199 @@ window.eliminarParte = async function() {
   closeOv('ov-ver-parte');
   showToast('Parte eliminado');
   renderPartesCalendario();
+};
+
+// ── EDITAR PARTE ──
+window.editarParte = function() {
+  const btn = document.getElementById('vp-btn-editar');
+  const id = btn._parteId;
+  const p = partes[id];
+  if (!p) return;
+
+  closeOv('ov-ver-parte');
+
+  // Reusar el formulario de nuevo parte pero en modo edición
+  const fechaDate = new Date(p.fecha + 'T12:00:00');
+  const fechaLegible = fechaDate.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('np-titulo').textContent = '✏️ EDITAR: ' + fechaLegible.toUpperCase();
+  document.getElementById('np-fecha').value = p.fecha;
+  document.getElementById('np-fecha').disabled = true; // no cambiar fecha en edición
+  document.getElementById('np-turno').value = p.turno;
+  document.getElementById('np-turno').disabled = true; // no cambiar turno en edición
+  document.getElementById('np-editing-id').value = id;
+  document.getElementById('np-btn-guardar').textContent = '💾 ACTUALIZAR PARTE';
+
+  // Rellenar campos numéricos
+  document.getElementById('np-gasoil').value = p.gasoil || '';
+  document.getElementById('np-sp95').value = p.sp95 || '';
+  document.getElementById('np-aceite').value = p.aceite || '';
+  document.getElementById('np-cajas').value = p.cajas || '';
+  document.getElementById('np-agua-entrada').value = p.aguaEntrada || '';
+  document.getElementById('np-agua-salida').value = p.aguaSalida || '';
+  document.getElementById('np-otros').value = p.otros || '';
+  document.getElementById('np-papel').value = p.papel || '';
+  document.getElementById('np-vidrio').value = p.vidrio || '';
+  document.getElementById('np-plastico').value = p.plastico || '';
+  document.getElementById('np-observaciones').value = p.observaciones || '';
+
+  // Construir filas y marcar valores
+  buildFilas(REVISIONES_ITEMS, 'np-revisiones', 'rev');
+  if (p.revisiones) {
+    p.revisiones.forEach((r, i) => {
+      const si = document.getElementById(`rev-si-${i}`);
+      const no = document.getElementById(`rev-no-${i}`);
+      const obs = document.getElementById(`rev-obs-${i}`);
+      if (si) si.checked = !!r.si;
+      if (no) no.checked = !!r.no;
+      if (obs) obs.value = r.obs || '';
+    });
+  }
+
+  const trabajos = p.turno === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
+  buildFilas(trabajos, 'np-trabajos', 'trab');
+  if (p.trabajos) {
+    p.trabajos.forEach((r, i) => {
+      const si = document.getElementById(`trab-si-${i}`);
+      const no = document.getElementById(`trab-no-${i}`);
+      const obs = document.getElementById(`trab-obs-${i}`);
+      if (si) si.checked = !!r.si;
+      if (no) no.checked = !!r.no;
+      if (obs) obs.value = r.obs || '';
+    });
+  }
+
+  buildRondas(p.turno);
+  if (p.rondas) {
+    p.rondas.forEach((r, i) => {
+      const si = document.getElementById(`ronda-si-${i}`);
+      const no = document.getElementById(`ronda-no-${i}`);
+      if (si) si.checked = !!r.si;
+      if (no) no.checked = !!r.no;
+    });
+  }
+
+  openOv('ov-nuevo-parte');
+};
+
+// ── DESCARGA PDF PARTES DEL DÍA ──
+window.descargarPartesDia = function() {
+  const btn = document.getElementById('vp-btn-descargar-dia');
+  const fechaStr = btn._parteFecha;
+  if (!fechaStr) return;
+
+  const itemsDelDia = Object.values(partes).filter(p => p.fecha === fechaStr);
+  if (!itemsDelDia.length) { showToast('No hay partes para descargar'); return; }
+
+  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2 };
+  const TURNO_LABELS = { mañana: 'I TURNO — MAÑANA (06-14h)', tarde: 'II TURNO — TARDE (14-22h)', noche: 'III TURNO — NOCHE (22-06h)' };
+  itemsDelDia.sort((a, b) => (TURNO_ORDER[a.turno] ?? 9) - (TURNO_ORDER[b.turno] ?? 9));
+
+  const fecha = new Date(fechaStr + 'T12:00:00');
+  const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+
+  function renderParteHtml(p) {
+    const marinero = (NOMBRES[p.marinero] || p.marinero || '--').toUpperCase();
+    const turno = TURNO_LABELS[p.turno] || p.turno;
+    let h = `<div class="parte-bloque">
+      <div class="parte-bloque-hdr">
+        <span class="parte-bloque-turno">${turno}</span>
+        <span class="parte-bloque-mar">👤 ${marinero}</span>
+      </div>`;
+
+    if (p.revisiones && p.revisiones.length) {
+      h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">REVISIONES</div><table class="pdf-tabla"><tr><th>ÍTEM</th><th>SÍ</th><th>NO</th><th>OBSERVACIONES</th></tr>`;
+      p.revisiones.forEach(r => {
+        h += `<tr><td>${r.item}</td><td class="${r.si?'si':''}">${r.si?'✓':''}</td><td class="${r.no?'no':''}">${r.no?'✗':''}</td><td>${r.obs||''}</td></tr>`;
+      });
+      h += `</table></div>`;
+    }
+
+    h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">COMBUSTIBLE · AGUA · VENTAS</div>
+      <div class="pdf-datos">
+        <div class="pdf-dato"><span>GASÓIL</span><strong>${p.gasoil||'0'} L</strong></div>
+        <div class="pdf-dato"><span>S.P. 95</span><strong>${p.sp95||'0'} L</strong></div>
+        <div class="pdf-dato"><span>ACEITE 2T</span><strong>${p.aceite||'0'} L</strong></div>
+        <div class="pdf-dato"><span>CAJAS GAS</span><strong>${p.cajas||'0'}</strong></div>
+        <div class="pdf-dato"><span>AGUA ENTRADA</span><strong>${p.aguaEntrada||'0'} m³</strong></div>
+        <div class="pdf-dato"><span>AGUA SALIDA</span><strong>${p.aguaSalida||'0'} m³</strong></div>
+      </div>
+      ${p.otros ? `<div class="pdf-otros">Otros: ${p.otros}</div>` : ''}
+    </div>`;
+
+    h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">RECICLAJE</div>
+      <div class="pdf-datos">
+        <div class="pdf-dato"><span>PAPEL</span><strong>${p.papel||'0'} kg</strong></div>
+        <div class="pdf-dato"><span>VIDRIO</span><strong>${p.vidrio||'0'} kg</strong></div>
+        <div class="pdf-dato"><span>PLÁSTICOS</span><strong>${p.plastico||'0'} kg</strong></div>
+      </div>
+    </div>`;
+
+    if (p.trabajos && p.trabajos.length) {
+      h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">TRABAJOS E INCIDENCIAS</div><table class="pdf-tabla"><tr><th>ÍTEM</th><th>SÍ</th><th>NO</th><th>OBSERVACIONES</th></tr>`;
+      p.trabajos.forEach(r => {
+        h += `<tr><td>${r.item}</td><td class="${r.si?'si':''}">${r.si?'✓':''}</td><td class="${r.no?'no':''}">${r.no?'✗':''}</td><td>${r.obs||''}</td></tr>`;
+      });
+      h += `</table></div>`;
+    }
+
+    if (p.rondas && p.rondas.length) {
+      h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">RONDAS DE VIGILANCIA</div><table class="pdf-tabla rondas"><tr><th>HORARIO</th><th>REALIZADA</th></tr>`;
+      p.rondas.forEach(r => {
+        h += `<tr><td>${r.hora}</td><td class="${r.si?'si':r.no?'no':''}">${r.si?'✓':r.no?'✗':'—'}</td></tr>`;
+      });
+      h += `</table></div>`;
+    }
+
+    if (p.observaciones) {
+      h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">OBSERVACIONES DEL TURNO</div><div class="pdf-obs">${p.observaciones}</div></div>`;
+    }
+
+    h += `</div>`;
+    return h;
+  }
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Partes ${fechaStr} — Club Náutico Águilas</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#111;background:#fff;padding:20px;}
+    h1{font-size:18px;letter-spacing:0.08em;color:#cc0018;margin-bottom:4px;text-transform:uppercase;}
+    .subtitulo{font-size:10px;color:#888;margin-bottom:16px;letter-spacing:0.04em;}
+    .parte-bloque{border:1px solid #ccc;border-radius:6px;margin-bottom:20px;overflow:hidden;page-break-inside:avoid;}
+    .parte-bloque-hdr{background:#cc0018;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;}
+    .parte-bloque-turno{font-size:12px;font-weight:700;letter-spacing:0.06em;}
+    .parte-bloque-mar{font-size:10px;}
+    .pdf-seccion{padding:8px 12px;border-bottom:1px solid #eee;}
+    .pdf-seccion:last-child{border-bottom:none;}
+    .pdf-seccion-hdr{font-size:9px;font-weight:700;letter-spacing:0.1em;color:#cc0018;margin-bottom:6px;text-transform:uppercase;}
+    .pdf-tabla{width:100%;border-collapse:collapse;font-size:10px;}
+    .pdf-tabla th{background:#f5f5f5;padding:4px 6px;text-align:left;font-size:9px;letter-spacing:0.06em;border-bottom:1px solid #ddd;}
+    .pdf-tabla td{padding:4px 6px;border-bottom:1px solid #f0f0f0;}
+    .pdf-tabla td.si{color:#1e9e5a;font-weight:700;text-align:center;}
+    .pdf-tabla td.no{color:#cc0018;font-weight:700;text-align:center;}
+    .pdf-tabla.rondas{width:50%;}
+    .pdf-datos{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0;}
+    .pdf-dato{background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:4px 10px;min-width:90px;}
+    .pdf-dato span{display:block;font-size:8px;color:#888;text-transform:uppercase;letter-spacing:0.06em;}
+    .pdf-dato strong{font-size:11px;color:#111;}
+    .pdf-otros{font-size:10px;color:#555;margin-top:6px;padding:4px 0;}
+    .pdf-obs{font-size:10px;color:#333;background:#fffde7;border-left:3px solid #f0c030;padding:6px 10px;border-radius:3px;}
+    @media print{body{padding:10px;}@page{margin:1cm;}}
+  </style></head><body>
+  <h1>Club Náutico Águilas — Partes del día</h1>
+  <div class="subtitulo">${fechaLegible} &nbsp;·&nbsp; ${itemsDelDia.length} turno${itemsDelDia.length>1?'s':''}</div>
+  ${itemsDelDia.map(renderParteHtml).join('')}
+  </body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `partes_${fechaStr}.html`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  showToast('Descargando partes del día...');
 };
 
 // ────────────────────────────────────
@@ -1865,6 +2069,10 @@ window.openNuevoParte = function(fechaIso) {
 
   document.getElementById('np-fecha').value = `${yyyy}-${mm}-${dd}`;
   document.getElementById('np-fecha').max = hoy.toISOString().split('T')[0];
+  document.getElementById('np-fecha').disabled = false;
+  document.getElementById('np-turno').disabled = false;
+  document.getElementById('np-editing-id').value = '';
+  document.getElementById('np-btn-guardar').textContent = '💾 GUARDAR PARTE';
 
   const h = hoy.getHours();
   const turnoSel = h >= 6 && h < 14 ? 'mañana' : h >= 14 && h < 22 ? 'tarde' : 'noche';
@@ -1910,17 +2118,19 @@ window.guardarParte = async function() {
   if (!fechaStr) { showToast('Indica la fecha'); return; }
   const turno = document.getElementById('np-turno').value;
   const trabajos = turno === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
+  const editingId = document.getElementById('np-editing-id').value;
 
   const progress = document.getElementById('upload-progress');
   const msgEl = document.getElementById('upload-msg');
   progress.classList.add('visible');
-  msgEl.textContent = 'Guardando parte...';
+  msgEl.textContent = editingId ? 'Actualizando parte...' : 'Guardando parte...';
 
   const parteData = {
     fecha: fechaStr,
     turno,
     marinero: currentUser || 'desconocido',
-    creadoEn: Date.now(),
+    creadoEn: editingId ? (partes[editingId]?.creadoEn || Date.now()) : Date.now(),
+    modificadoEn: editingId ? Date.now() : null,
     revisiones: recogerFilas(REVISIONES_ITEMS, 'rev'),
     trabajos: recogerRondas_trabajos(trabajos),
     rondas: recogerRondas(turno),
@@ -1937,10 +2147,21 @@ window.guardarParte = async function() {
     observaciones: document.getElementById('np-observaciones').value.trim()
   };
 
-  await push(partesRef, parteData);
+  if (editingId) {
+    await update(ref(db, 'partes/' + editingId), parteData);
+  } else {
+    await push(partesRef, parteData);
+  }
+
+  // Resetear modo edición
+  document.getElementById('np-editing-id').value = '';
+  document.getElementById('np-btn-guardar').textContent = '💾 GUARDAR PARTE';
+  document.getElementById('np-fecha').disabled = false;
+  document.getElementById('np-turno').disabled = false;
+
   progress.classList.remove('visible');
   closeOv('ov-nuevo-parte');
-  showToast('Parte guardado ✓');
+  showToast(editingId ? 'Parte actualizado ✓' : 'Parte guardado ✓');
 
   const [y, m] = fechaStr.split('-').map(Number);
   partesMesActual = new Date(y, m - 1, 1);
