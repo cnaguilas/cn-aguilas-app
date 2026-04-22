@@ -141,6 +141,45 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .partes-lista{display:flex;flex-direction:column;gap:10px;}
 .no-partes{text-align:center;padding:32px 16px;color:#aaa;font-size:0.72rem;letter-spacing:0.06em;}
 .no-partes div{font-size:2rem;margin-bottom:8px;}
+/* Parte digital — formulario */
+.parte-seccion-hdr{font-family:"Bebas Neue",sans-serif;font-size:0.82rem;letter-spacing:0.1em;color:#fff;background:#0a1628;padding:5px 10px;border-radius:4px;margin-bottom:4px;}
+.parte-tabla{border:1px solid #e0e0e0;border-radius:5px;overflow:hidden;margin-bottom:4px;}
+.parte-tabla-hdr{display:grid;grid-template-columns:2fr 0.5fr 0.5fr 2fr;background:#f0f4f8;padding:5px 8px;font-size:0.55rem;font-weight:700;letter-spacing:0.07em;color:#555;border-bottom:1px solid #e0e0e0;}
+.parte-tabla-hdr span{text-align:center;}
+.parte-tabla-hdr span:first-child{text-align:left;}
+.parte-fila{display:grid;grid-template-columns:2fr 0.5fr 0.5fr 2fr;padding:5px 8px;border-bottom:1px solid #f0f0f0;align-items:center;gap:4px;}
+.parte-fila:last-child{border-bottom:none;}
+.parte-fila-label{font-size:0.65rem;color:#333;letter-spacing:0.03em;}
+.parte-fila input[type="checkbox"]{width:18px;height:18px;accent-color:#cc0018;cursor:pointer;margin:auto;display:block;}
+.parte-fila input[type="text"]{width:100%;border:1px solid #e0e0e0;border-radius:4px;padding:3px 6px;font-size:0.62rem;font-family:"IBM Plex Mono",monospace;background:#fafafa;}
+.parte-ronda-hdr{display:grid;grid-template-columns:2fr 0.5fr 0.5fr;background:#f0f4f8;padding:5px 8px;font-size:0.55rem;font-weight:700;letter-spacing:0.07em;color:#555;border-bottom:1px solid #e0e0e0;}
+.parte-ronda-hdr span{text-align:center;}
+.parte-ronda-hdr span:first-child{text-align:left;}
+.parte-ronda-fila{display:grid;grid-template-columns:2fr 0.5fr 0.5fr;padding:4px 8px;border-bottom:1px solid #f0f0f0;align-items:center;}
+.parte-ronda-fila:last-child{border-bottom:none;}
+.parte-ronda-fila span{font-size:0.65rem;color:#333;}
+.parte-campo{display:flex;flex-direction:column;gap:3px;}
+.parte-campo label{font-size:0.55rem;letter-spacing:0.07em;color:#888;font-weight:700;}
+.parte-campo input{border:1px solid #e0e0e0;border-radius:4px;padding:5px 8px;font-size:0.75rem;font-family:"IBM Plex Mono",monospace;background:#fafafa;width:100%;}
+/* Parte digital — vista */
+.vp-seccion{margin-bottom:10px;}
+.vp-seccion-hdr{font-family:"Bebas Neue",sans-serif;font-size:0.78rem;letter-spacing:0.1em;color:#fff;background:#0a1628;padding:4px 10px;border-radius:4px;margin-bottom:4px;}
+.vp-tabla{border:1px solid #e0e0e0;border-radius:5px;overflow:hidden;}
+.vp-fila{display:grid;grid-template-columns:2fr 0.5fr 2fr;padding:5px 8px;border-bottom:1px solid #f5f5f5;align-items:center;font-size:0.65rem;}
+.vp-fila:last-child{border-bottom:none;}
+.vp-fila-label{color:#444;}
+.vp-fila-val{text-align:center;font-weight:700;font-size:0.7rem;}
+.vp-fila-val.si{color:#1e9e5a;}
+.vp-fila-val.no{color:#cc0018;}
+.vp-fila-obs{color:#666;font-size:0.6rem;font-style:italic;}
+.vp-ronda-fila{display:grid;grid-template-columns:2fr 0.5fr;padding:4px 8px;border-bottom:1px solid #f5f5f5;font-size:0.65rem;align-items:center;}
+.vp-ronda-fila:last-child{border-bottom:none;}
+.vp-ronda-fila span:last-child{text-align:center;font-weight:700;}
+.vp-datos{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px;}
+.vp-dato{background:#f8f8f8;border-radius:4px;padding:5px 8px;}
+.vp-dato label{display:block;font-size:0.52rem;color:#999;letter-spacing:0.06em;font-weight:700;}
+.vp-dato span{font-size:0.72rem;font-weight:600;color:#1a1a1a;}
+.vp-obs{background:#fffbe6;border:1px solid #f0e68c;border-radius:5px;padding:8px 10px;font-size:0.68rem;color:#555;line-height:1.5;margin-top:4px;white-space:pre-wrap;}
 .upload-progress{display:none;background:rgba(0,0,0,0.6);position:fixed;inset:0;z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#fff;font-size:0.8rem;letter-spacing:0.06em;}
 .upload-progress.visible{display:flex;}
 .upload-progress .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;}
@@ -551,44 +590,78 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <button onclick="document.getElementById('ov-lightbox').style.display='none'" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.15);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:1.1rem;cursor:pointer;">✕</button>
 </div>
 
-<!-- MODAL NUEVO PARTE -->
+<!-- MODAL NUEVO PARTE DIGITAL -->
 <div class="overlay" id="ov-nuevo-parte" onclick="handleOv(event,'ov-nuevo-parte')">
-  <div class="modal">
+  <div class="modal" style="max-height:92vh;padding:16px;">
     <div class="modal-header">
       <h3 id="np-titulo">PARTE DEL DÍA</h3>
       <button class="close-btn" onclick="closeOv('ov-nuevo-parte')">x</button>
     </div>
-    <div style="font-size:0.65rem;color:#888;margin-bottom:14px;letter-spacing:0.05em;">Fotografía las dos caras del parte de trabajo. Las fotos se comprimen y guardan automáticamente.</div>
-    <div class="parte-fotos" style="margin-bottom:16px;">
-      <div>
-        <div style="font-size:0.6rem;color:#888;letter-spacing:0.06em;margin-bottom:5px;text-align:center;">CARA DELANTERA</div>
-        <div class="parte-foto-slot" id="np-slot-a" onclick="document.getElementById('np-input-a').click()">
-          <span style="font-size:1.4rem;">📄</span>
-          <span style="margin-top:4px;">AÑADIR FOTO</span>
-          <input type="file" id="np-input-a" accept="image/*" capture="environment" style="display:none" onchange="npPreview(event,'a')">
-        </div>
+
+    <!-- Fecha y turno -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div class="form-group" style="margin:0;">
+        <label>FECHA</label>
+        <input type="date" id="np-fecha" style="width:100%;background:#fafafa;border:1px solid #ddd;border-radius:5px;padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;">
       </div>
-      <div>
-        <div style="font-size:0.6rem;color:#888;letter-spacing:0.06em;margin-bottom:5px;text-align:center;">CARA TRASERA</div>
-        <div class="parte-foto-slot" id="np-slot-b" onclick="document.getElementById('np-input-b').click()">
-          <span style="font-size:1.4rem;">📄</span>
-          <span style="margin-top:4px;">AÑADIR FOTO</span>
-          <input type="file" id="np-input-b" accept="image/*" capture="environment" style="display:none" onchange="npPreview(event,'b')">
-        </div>
+      <div class="form-group" style="margin:0;">
+        <label>TURNO</label>
+        <select id="np-turno" onchange="actualizarRondasSegunTurno()">
+          <option value="mañana">I — Mañana (06-14h)</option>
+          <option value="tarde">II — Tarde (14-22h)</option>
+          <option value="noche">III — Noche (22-06h)</option>
+        </select>
       </div>
     </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>FECHA DEL PARTE</label>
-      <input type="date" id="np-fecha" style="width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem;background:#fafafa;box-sizing:border-box;">
+
+    <!-- SECCIÓN: REVISIONES -->
+    <div class="parte-seccion-hdr">REVISIONES</div>
+    <div class="parte-tabla">
+      <div class="parte-tabla-hdr"><span>ÍTEM</span><span>SÍ</span><span>NO</span><span style="flex:2">OBSERVACIONES</span></div>
+      <div id="np-revisiones"></div>
     </div>
-    <div class="form-group" style="margin-bottom:14px;">
-      <label>TURNO</label>
-      <select id="np-turno">
-        <option value="mañana">I Turno — Mañana (06-14h)</option>
-        <option value="tarde">II Turno — Tarde (14-22h)</option>
-        <option value="noche">III Turno — Noche (22-06h)</option>
-      </select>
+
+    <!-- SECCIÓN: COMBUSTIBLE Y AGUA -->
+    <div class="parte-seccion-hdr" style="margin-top:12px;">COMBUSTIBLE · AGUA · VENTAS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+      <div class="parte-campo"><label>GASÓIL (L)</label><input type="number" id="np-gasoil" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>S.P. 95 (L)</label><input type="number" id="np-sp95" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>ACEITE 2T (L)</label><input type="number" id="np-aceite" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>CAJAS GAS</label><input type="number" id="np-cajas" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>AGUA ENTRADA (m³)</label><input type="number" id="np-agua-entrada" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>AGUA SALIDA (m³)</label><input type="number" id="np-agua-salida" placeholder="0" min="0"></div>
     </div>
+    <div class="parte-campo" style="margin-bottom:10px;">
+      <label>OTROS</label>
+      <input type="text" id="np-otros" placeholder="Anotaciones...">
+    </div>
+
+    <!-- SECCIÓN: RECICLAJE -->
+    <div class="parte-seccion-hdr" style="margin-top:4px;">RECICLAJE</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
+      <div class="parte-campo"><label>PAPEL (kg)</label><input type="number" id="np-papel" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>VIDRIO (kg)</label><input type="number" id="np-vidrio" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>PLÁSTICOS (kg)</label><input type="number" id="np-plastico" placeholder="0" min="0"></div>
+    </div>
+
+    <!-- SECCIÓN: TRABAJOS E INCIDENCIAS -->
+    <div class="parte-seccion-hdr" style="margin-top:4px;">TRABAJOS E INCIDENCIAS</div>
+    <div class="parte-tabla">
+      <div class="parte-tabla-hdr"><span>ÍTEM</span><span>SÍ</span><span>NO</span><span style="flex:2">OBSERVACIONES</span></div>
+      <div id="np-trabajos"></div>
+    </div>
+
+    <!-- SECCIÓN: RONDAS -->
+    <div class="parte-seccion-hdr" style="margin-top:12px;">RONDAS DE VIGILANCIA</div>
+    <div class="parte-tabla">
+      <div class="parte-tabla-hdr"><span>HORARIO</span><span>SÍ</span><span>NO</span></div>
+      <div id="np-rondas"></div>
+    </div>
+
+    <!-- SECCIÓN: OBSERVACIONES -->
+    <div class="parte-seccion-hdr" style="margin-top:12px;">OBSERVACIONES DEL TURNO</div>
+    <textarea id="np-observaciones" rows="3" placeholder="Observaciones generales del turno..." style="width:100%;background:#fafafa;border:1px solid #ddd;border-radius:5px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;resize:vertical;margin-bottom:14px;"></textarea>
+
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nuevo-parte')">CANCELAR</button>
       <button class="btn-primary" onclick="guardarParte()">&#128190; GUARDAR PARTE</button>
@@ -602,15 +675,15 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <div id="upload-msg">Guardando parte...</div>
 </div>
 
-<!-- MODAL VER PARTE -->
+<!-- MODAL VER PARTE DIGITAL -->
 <div class="overlay" id="ov-ver-parte" onclick="handleOv(event,'ov-ver-parte')">
-  <div class="modal" style="max-height:90vh;">
+  <div class="modal" style="max-height:92vh;padding:16px;">
     <div class="modal-header">
       <h3 id="vp-titulo">PARTE DEL DÍA</h3>
       <button class="close-btn" onclick="closeOv('ov-ver-parte')">x</button>
     </div>
-    <div id="vp-marinero" style="font-size:0.65rem;color:#888;margin-bottom:14px;letter-spacing:0.04em;"></div>
-    <div class="parte-fotos" id="vp-fotos"></div>
+    <div id="vp-marinero" style="font-size:0.65rem;color:#888;margin-bottom:12px;letter-spacing:0.04em;"></div>
+    <div id="vp-contenido"></div>
     <div class="btn-row" style="margin-top:14px;">
       <button class="btn-danger" id="vp-btn-eliminar" onclick="eliminarParte()" style="display:none;">ELIMINAR</button>
       <button class="btn-secondary" onclick="closeOv('ov-ver-parte')">CERRAR</button>
@@ -1568,8 +1641,7 @@ window.partesVerDia = function(fechaStr) {
     return;
   }
 
-  // Abrir modal con las fotos del día
-  const p = items[0]; // tomar el primer parte del día
+  const p = items[0];
   const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const turnoLabel = p.turno === 'mañana' ? 'I Turno — Mañana (06-14h)' : p.turno === 'tarde' ? 'II Turno — Tarde (14-22h)' : 'III Turno — Noche (22-06h)';
   const marineroNombre = NOMBRES[p.marinero] || p.marinero || '--';
@@ -1577,26 +1649,75 @@ window.partesVerDia = function(fechaStr) {
   document.getElementById('vp-titulo').textContent = fechaLegible.toUpperCase();
   document.getElementById('vp-marinero').innerHTML = `👤 ${marineroNombre} &nbsp;·&nbsp; 🕐 ${turnoLabel}`;
 
-  const fotoAHtml = p.fotoA
-    ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoA}')"><img src="${p.fotoA}"/><div class="slot-label">CARA DELANTERA</div></div>`
-    : `<div class="parte-foto-slot"><span style="font-size:1.4rem">📄</span><span>Sin foto</span></div>`;
-  const fotoBHtml = p.fotoB
-    ? `<div class="parte-foto-slot tiene-foto" onclick="abrirLightbox('${p.fotoB}')"><img src="${p.fotoB}"/><div class="slot-label">CARA TRASERA</div></div>`
-    : `<div class="parte-foto-slot"><span style="font-size:1.4rem">📄</span><span>Sin foto</span></div>`;
+  // Renderizar contenido del parte
+  let html = '';
 
-  document.getElementById('vp-fotos').innerHTML = fotoAHtml + fotoBHtml;
-
-  // Botón eliminar solo visible para quien subió el parte o si no hay marinero
-  const btnEliminar = document.getElementById('vp-btn-eliminar');
-  // Guardar el ID para eliminar
-  btnEliminar._parteId = Object.keys(partes).find(k => partes[k] === p);
-  btnEliminar.style.display = (p.marinero === currentUser) ? 'block' : 'none';
-
-  // Si hay varios partes ese día mostrar indicador
-  if (items.length > 1) {
-    document.getElementById('vp-marinero').innerHTML +=
-      `<span style="margin-left:8px;color:#cc0018;font-size:0.6rem;">(${items.length} partes este día)</span>`;
+  // Revisiones
+  if (p.revisiones && p.revisiones.length) {
+    html += `<div class="vp-seccion"><div class="vp-seccion-hdr">REVISIONES</div><div class="vp-tabla">`;
+    p.revisiones.forEach(r => {
+      const val = r.si ? 'SÍ' : r.no ? 'NO' : '—';
+      const cls = r.si ? 'si' : r.no ? 'no' : '';
+      html += `<div class="vp-fila"><span class="vp-fila-label">${r.item}</span><span class="vp-fila-val ${cls}">${val}</span><span class="vp-fila-obs">${r.obs||''}</span></div>`;
+    });
+    html += `</div></div>`;
   }
+
+  // Trabajos
+  if (p.trabajos && p.trabajos.length) {
+    html += `<div class="vp-seccion"><div class="vp-seccion-hdr">TRABAJOS E INCIDENCIAS</div><div class="vp-tabla">`;
+    p.trabajos.forEach(r => {
+      const val = r.si ? 'SÍ' : r.no ? 'NO' : '—';
+      const cls = r.si ? 'si' : r.no ? 'no' : '';
+      html += `<div class="vp-fila"><span class="vp-fila-label">${r.item}</span><span class="vp-fila-val ${cls}">${val}</span><span class="vp-fila-obs">${r.obs||''}</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Combustible / Agua
+  html += `<div class="vp-seccion"><div class="vp-seccion-hdr">COMBUSTIBLE · AGUA · VENTAS</div>
+    <div class="vp-datos">
+      <div class="vp-dato"><label>GASÓIL</label><span>${p.gasoil||'0'} L</span></div>
+      <div class="vp-dato"><label>S.P. 95</label><span>${p.sp95||'0'} L</span></div>
+      <div class="vp-dato"><label>ACEITE 2T</label><span>${p.aceite||'0'} L</span></div>
+      <div class="vp-dato"><label>CAJAS GAS</label><span>${p.cajas||'0'}</span></div>
+      <div class="vp-dato"><label>AGUA ENTRADA</label><span>${p.aguaEntrada||'0'} m³</span></div>
+      <div class="vp-dato"><label>AGUA SALIDA</label><span>${p.aguaSalida||'0'} m³</span></div>
+    </div>
+    ${p.otros ? `<div style="font-size:0.65rem;color:#666;padding:4px 8px;">Otros: ${p.otros}</div>` : ''}
+  </div>`;
+
+  // Reciclaje
+  html += `<div class="vp-seccion"><div class="vp-seccion-hdr">RECICLAJE</div>
+    <div class="vp-datos" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="vp-dato"><label>PAPEL</label><span>${p.papel||'0'} kg</span></div>
+      <div class="vp-dato"><label>VIDRIO</label><span>${p.vidrio||'0'} kg</span></div>
+      <div class="vp-dato"><label>PLÁSTICOS</label><span>${p.plastico||'0'} kg</span></div>
+    </div>
+  </div>`;
+
+  // Rondas
+  if (p.rondas && p.rondas.length) {
+    html += `<div class="vp-seccion"><div class="vp-seccion-hdr">RONDAS DE VIGILANCIA</div><div class="vp-tabla">`;
+    p.rondas.forEach(r => {
+      const val = r.si ? '✓' : r.no ? '✗' : '—';
+      const col = r.si ? '#1e9e5a' : r.no ? '#cc0018' : '#aaa';
+      html += `<div class="vp-ronda-fila"><span>${r.hora}</span><span style="color:${col};font-weight:700;">${val}</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Observaciones
+  if (p.observaciones) {
+    html += `<div class="vp-seccion"><div class="vp-seccion-hdr">OBSERVACIONES</div><div class="vp-obs">${p.observaciones}</div></div>`;
+  }
+
+  document.getElementById('vp-contenido').innerHTML = html;
+
+  // Botón eliminar solo para quien creó el parte
+  const btnEl = document.getElementById('vp-btn-eliminar');
+  btnEl._parteId = Object.keys(partes).find(k => partes[k] === p);
+  btnEl.style.display = (p.marinero === currentUser) ? 'block' : 'none';
 
   openOv('ov-ver-parte');
 };
@@ -1613,128 +1734,173 @@ window.eliminarParte = async function() {
   renderPartesCalendario();
 };
 
-// ── NUEVO PARTE ──
-window.openNuevoParte = function(fechaIso) {
-  npFotoA = null; npFotoB = null;
+// ────────────────────────────────────
+// PARTES DIGITALES
+// ────────────────────────────────────
 
-  // Determinar fecha: la pasada o hoy
+const REVISIONES_ITEMS = [
+  'Pantalanes','Embarcaciones','Gasolinera','Almacén',
+  'Servicios','Mangueras / Extintores','Bombas','Limpieza puerto'
+];
+const TRABAJOS_BASE = ['Limpieza aguas','Riego palmeras','Mantenimiento'];
+const TRABAJOS_TARDE = ['Limpieza aguas','Riego palmeras','Recogida de basuras','Regar','Mantenimiento'];
+const RONDAS = {
+  mañana: ['06:00-07:00','07:00-08:00','08:00-09:00','09:00-10:00','10:00-11:00','11:00-12:00','12:00-13:00','13:00-14:00'],
+  tarde:  ['14:00-15:00','15:00-16:00','16:00-17:00','17:00-18:00','18:00-19:00','19:00-20:00','20:00-21:00','21:00-22:00'],
+  noche:  ['22:00-23:00','23:00-24:00','00:00-01:00','01:00-02:00','02:00-03:00','03:00-04:00','04:00-05:00','05:00-06:00']
+};
+
+function buildFilas(items, containerId, prefix) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = items.map((item, i) => `
+    <div class="parte-fila">
+      <span class="parte-fila-label">${item}</span>
+      <input type="checkbox" id="${prefix}-si-${i}" onchange="checkboxExclusivo('${prefix}',${i},'si')">
+      <input type="checkbox" id="${prefix}-no-${i}" onchange="checkboxExclusivo('${prefix}',${i},'no')">
+      <input type="text" id="${prefix}-obs-${i}" placeholder="Observaciones...">
+    </div>`).join('');
+}
+
+function buildRondas(turno) {
+  const el = document.getElementById('np-rondas');
+  if (!el) return;
+  const horas = RONDAS[turno] || RONDAS.mañana;
+  // Replace header too
+  el.parentElement.innerHTML = `
+    <div class="parte-ronda-hdr"><span>HORARIO</span><span>SÍ</span><span>NO</span></div>
+    <div id="np-rondas">` +
+    horas.map((h, i) => `
+      <div class="parte-ronda-fila">
+        <span>${h}</span>
+        <input type="checkbox" id="ronda-si-${i}" onchange="checkboxExclusivo('ronda',${i},'si')">
+        <input type="checkbox" id="ronda-no-${i}" onchange="checkboxExclusivo('ronda',${i},'no')">
+      </div>`).join('') +
+    `</div>`;
+}
+
+window.checkboxExclusivo = function(prefix, idx, tipo) {
+  const otro = tipo === 'si' ? 'no' : 'si';
+  const elOtro = document.getElementById(`${prefix}-${otro}-${idx}`);
+  if (elOtro && document.getElementById(`${prefix}-${tipo}-${idx}`)?.checked) {
+    elOtro.checked = false;
+  }
+};
+
+window.actualizarRondasSegunTurno = function() {
+  const turno = document.getElementById('np-turno')?.value || 'mañana';
+  buildRondas(turno);
+  // Actualizar trabajos según turno
+  const trabajos = turno === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
+  buildFilas(trabajos, 'np-trabajos', 'trab');
+};
+
+window.openNuevoParte = function(fechaIso) {
   const hoy = new Date();
   let fechaDate;
   if (fechaIso) {
     fechaDate = new Date(fechaIso + 'T12:00:00');
   } else {
-    // Turno de noche: si son las 00-06h, el parte puede ser del día anterior
     const h = hoy.getHours();
-    fechaDate = (h >= 0 && h < 6) ? new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1) : new Date(hoy);
+    fechaDate = (h >= 0 && h < 6) ? new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1) : hoy;
   }
-
-  // Formatear para input date (YYYY-MM-DD)
   const yyyy = fechaDate.getFullYear();
   const mm = String(fechaDate.getMonth()+1).padStart(2,'0');
   const dd = String(fechaDate.getDate()).padStart(2,'0');
-  document.getElementById('np-fecha').value = yyyy+'-'+mm+'-'+dd;
-  document.getElementById('np-fecha').max = hoy.toISOString().split('T')[0]; // no fechas futuras
 
-  const fechaStr = fechaDate.toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  document.getElementById('np-titulo').textContent = 'NUEVO PARTE';
+  document.getElementById('np-fecha').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('np-fecha').max = hoy.toISOString().split('T')[0];
 
-  // Reset slots
-  ['a','b'].forEach(side => {
-    const slot = document.getElementById('np-slot-' + side);
-    slot.innerHTML = `<span style="font-size:1.4rem;">📄</span><span style="margin-top:4px;">AÑADIR FOTO</span>
-      <input type="file" id="np-input-${side}" accept="image/*" capture="environment" style="display:none" onchange="npPreview(event,'${side}')">`;
-    slot.classList.remove('tiene-foto');
-    slot.onclick = () => document.getElementById('np-input-' + side).click();
-  });
-
-  // Auto-seleccionar turno según hora actual
   const h = hoy.getHours();
   const turnoSel = h >= 6 && h < 14 ? 'mañana' : h >= 14 && h < 22 ? 'tarde' : 'noche';
   document.getElementById('np-turno').value = turnoSel;
 
+  const fechaLegible = fechaDate.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('np-titulo').textContent = fechaLegible.toUpperCase();
+
+  // Limpiar campos numéricos
+  ['np-gasoil','np-sp95','np-aceite','np-cajas','np-agua-entrada','np-agua-salida','np-papel','np-vidrio','np-plastico','np-otros','np-observaciones'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+
+  // Construir filas dinámicas
+  buildFilas(REVISIONES_ITEMS, 'np-revisiones', 'rev');
+  const trabajos = turnoSel === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
+  buildFilas(trabajos, 'np-trabajos', 'trab');
+  buildRondas(turnoSel);
+
   openOv('ov-nuevo-parte');
 };
 
-window.npPreview = function(e, side) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const dataUrl = ev.target.result;
-    if (side === 'a') npFotoA = { file, dataUrl };
-    else npFotoB = { file, dataUrl };
+function recogerFilas(items, prefix) {
+  return items.map((item, i) => ({
+    item,
+    si: document.getElementById(`${prefix}-si-${i}`)?.checked || false,
+    no: document.getElementById(`${prefix}-no-${i}`)?.checked || false,
+    obs: document.getElementById(`${prefix}-obs-${i}`)?.value?.trim() || ''
+  }));
+}
 
-    const slot = document.getElementById('np-slot-' + side);
-    const label = side === 'a' ? 'CARA DELANTERA' : 'CARA TRASERA';
-    slot.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;" onclick="abrirLightbox('${dataUrl}')"/>
-      <div class="slot-label">${label}</div>
-      <input type="file" id="np-input-${side}" accept="image/*" capture="environment" style="display:none" onchange="npPreview(event,'${side}')">`;
-    slot.classList.add('tiene-foto');
-    slot.onclick = () => document.getElementById('np-input-' + side).click();
-  };
-  reader.readAsDataURL(file);
-};
+function recogerRondas(turno) {
+  const horas = RONDAS[turno] || RONDAS.mañana;
+  return horas.map((h, i) => ({
+    hora: h,
+    si: document.getElementById(`ronda-si-${i}`)?.checked || false,
+    no: document.getElementById(`ronda-no-${i}`)?.checked || false
+  }));
+}
 
-
-// ── GUARDAR PARTE EN FIREBASE ──
 window.guardarParte = async function() {
-  if (!npFotoA && !npFotoB) { showToast('Añade al menos una foto'); return; }
-
-  const fechaStr = document.getElementById('np-fecha')?.value || (() => {
-    const hoy = new Date();
-    return hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0') + '-' + String(hoy.getDate()).padStart(2,'0');
-  })();
+  const fechaStr = document.getElementById('np-fecha')?.value;
+  if (!fechaStr) { showToast('Indica la fecha'); return; }
   const turno = document.getElementById('np-turno').value;
-  const marinero = currentUser || 'desconocido';
+  const trabajos = turno === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
 
   const progress = document.getElementById('upload-progress');
   const msgEl = document.getElementById('upload-msg');
   progress.classList.add('visible');
-  msgEl.textContent = 'Comprimiendo fotos...';
+  msgEl.textContent = 'Guardando parte...';
 
   const parteData = {
     fecha: fechaStr,
     turno,
-    marinero,
+    marinero: currentUser || 'desconocido',
     creadoEn: Date.now(),
+    revisiones: recogerFilas(REVISIONES_ITEMS, 'rev'),
+    trabajos: recogerRondas_trabajos(trabajos),
+    rondas: recogerRondas(turno),
+    gasoil: document.getElementById('np-gasoil').value || '0',
+    sp95: document.getElementById('np-sp95').value || '0',
+    aceite: document.getElementById('np-aceite').value || '0',
+    cajas: document.getElementById('np-cajas').value || '0',
+    aguaEntrada: document.getElementById('np-agua-entrada').value || '0',
+    aguaSalida: document.getElementById('np-agua-salida').value || '0',
+    otros: document.getElementById('np-otros').value.trim(),
+    papel: document.getElementById('np-papel').value || '0',
+    vidrio: document.getElementById('np-vidrio').value || '0',
+    plastico: document.getElementById('np-plastico').value || '0',
+    observaciones: document.getElementById('np-observaciones').value.trim()
   };
 
-  // Comprimir y guardar fotos directamente en Firebase
-  if (npFotoA) parteData.fotoA = await comprimirParaFirebase(npFotoA.dataUrl);
-  if (npFotoB) parteData.fotoB = await comprimirParaFirebase(npFotoB.dataUrl);
-
-  msgEl.textContent = 'Guardando parte...';
   await push(partesRef, parteData);
-
   progress.classList.remove('visible');
   closeOv('ov-nuevo-parte');
   showToast('Parte guardado ✓');
 
-  // Volver al mes del parte
   const [y, m] = fechaStr.split('-').map(Number);
   partesMesActual = new Date(y, m - 1, 1);
   renderPartesCalendario();
 };
 
-// Comprimir foto para Firebase: máx 900px ancho, calidad 0.45 → ~80-120KB
-function comprimirParaFirebase(dataUrl) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const MAX = 900;
-      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
-      const w = Math.round(img.width * scale);
-      const h = Math.round(img.height * scale);
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.45));
-    };
-    img.src = dataUrl;
-  });
+function recogerRondas_trabajos(items) {
+  return items.map((item, i) => ({
+    item,
+    si: document.getElementById(`trab-si-${i}`)?.checked || false,
+    no: document.getElementById(`trab-no-${i}`)?.checked || false,
+    obs: document.getElementById(`trab-obs-${i}`)?.value?.trim() || ''
+  }));
 }
-</script></script>
+</script>
 <script>
 // ── PWA SERVICE WORKER ──
 if ('serviceWorker' in navigator) {
