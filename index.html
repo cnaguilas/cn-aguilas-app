@@ -2366,6 +2366,41 @@ window.descargarPartesDia = function() {
     return `<div class="resumen-fila"><span>${tLabel} — ${(NOMBRES[p.marinero]||p.marinero||'').toUpperCase()}</span><strong>${r ? r.totalEuros.toFixed(2)+' €' : '—'}</strong></div>`;
   }).join('');
 
+  // Nivel de tanques al cierre de este día
+  // Acumulamos entradas y salidas hasta e incluyendo este día
+  const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
+  const diaDate = new Date(fechaStr + 'T23:59:59');
+  let acumEnG = 0, acumEnS = 0, acumSalG = 0, acumSalS = 0;
+  Object.values(partes).forEach(p => {
+    const fp = new Date(p.fecha + 'T12:00:00');
+    if (fp <= refDate || fp > diaDate) return;
+    if (p.cisterna) {
+      acumEnG += parseFloat(p.cisterna.gasoil)||0;
+      acumEnS += parseFloat(p.cisterna.sp95)||0;
+    }
+    const r = p.recaudacion;
+    if (r) {
+      acumSalG += parseFloat(r.litrosGasoil)||0;
+      acumSalS += parseFloat(r.litrosSp95)||0;
+    } else {
+      const ant = getParteAnterior(p.fecha, p.turno);
+      if (ant) {
+        const iniG=parseFloat(ant.gasoil)||0, finG=parseFloat(p.gasoil)||0;
+        const iniS=parseFloat(ant.sp95)||0,  finS=parseFloat(p.sp95)||0;
+        if (finG>0) acumSalG += iniG>finG ? finG+10000-iniG : finG-iniG;
+        if (finS>0) acumSalS += iniS>finS ? finS+10000-iniS : finS-iniS;
+      }
+    }
+  });
+  const nivelGDia = Math.max(0, STOCK_REF_GASOIL + acumEnG - acumSalG);
+  const nivelSDia = Math.max(0, STOCK_REF_SP95  + acumEnS - acumSalS);
+  const pctGDia = Math.min(100, (nivelGDia/CAP_GASOIL)*100);
+  const pctSDia = Math.min(100, (nivelSDia/CAP_SP95)*100);
+  const alertaG = pctGDia < ALERTA_PCT ? '<span style="color:#cc0018;font-weight:700;"> ⚠️ NIVEL BAJO</span>' : '';
+  const alertaS = pctSDia < ALERTA_PCT ? '<span style="color:#cc0018;font-weight:700;"> ⚠️ NIVEL BAJO</span>' : '';
+  const entradaGHtml = acumEnG > 0 ? `<div style="font-size:9px;color:#1b7a4a;margin-top:3px;">🚛 Cisterna acumulada hoy: +${acumEnG.toFixed(0)} L</div>` : '';
+  const entradaSHtml = acumEnS > 0 ? `<div style="font-size:9px;color:#1b7a4a;margin-top:3px;">🚛 Cisterna acumulada hoy: +${acumEnS.toFixed(0)} L</div>` : '';
+
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <title>Partes ${fechaStr} — Club Náutico Águilas</title>
   <style>
@@ -2373,11 +2408,22 @@ window.descargarPartesDia = function() {
     body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#111;background:#fff;padding:20px;}
     h1{font-size:18px;letter-spacing:0.08em;color:#cc0018;margin-bottom:4px;text-transform:uppercase;}
     .subtitulo{font-size:10px;color:#888;margin-bottom:12px;letter-spacing:0.04em;}
-    .resumen-dia{border:2px solid #cc0018;border-radius:8px;padding:12px 16px;margin-bottom:20px;background:#fff8f8;}
+    .resumen-dia{border:2px solid #cc0018;border-radius:8px;padding:12px 16px;margin-bottom:14px;background:#fff8f8;}
     .resumen-dia-title{font-size:11px;font-weight:700;letter-spacing:0.1em;color:#cc0018;text-transform:uppercase;margin-bottom:8px;}
     .resumen-fila{display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid #f0e0e0;}
     .resumen-fila:last-child{border-bottom:none;}
     .resumen-total{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#cc0018;margin-top:8px;padding-top:6px;border-top:2px solid #cc0018;}
+    .tanques-cierre{border:2px solid #1b4a7a;border-radius:8px;padding:12px 16px;margin-bottom:20px;background:#f0f6ff;page-break-inside:avoid;}
+    .tanques-cierre-title{font-size:11px;font-weight:700;letter-spacing:0.1em;color:#1b4a7a;text-transform:uppercase;margin-bottom:10px;}
+    .tanques-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .tanque-pdf{background:#fff;border:1px solid #d0dff0;border-radius:6px;padding:10px 12px;}
+    .tanque-pdf-label{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
+    .tanque-pdf-litros{font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:6px;}
+    .tanque-pdf-litros small{font-size:11px;font-weight:400;color:#888;}
+    .tanque-barra-wrap{height:8px;background:#e8eef5;border-radius:4px;overflow:hidden;margin-bottom:4px;}
+    .tanque-barra-g{height:100%;border-radius:4px;background:linear-gradient(90deg,#cc0018,#ff6644);}
+    .tanque-barra-s{height:100%;border-radius:4px;background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
+    .tanque-pdf-pct{font-size:9px;color:#888;display:flex;justify-content:space-between;}
     .parte-bloque{border:1px solid #ccc;border-radius:6px;margin-bottom:20px;overflow:hidden;page-break-inside:avoid;}
     .parte-bloque-hdr{background:#cc0018;color:#fff;padding:8px 14px;display:flex;justify-content:space-between;align-items:center;}
     .parte-bloque-turno{font-size:12px;font-weight:700;letter-spacing:0.06em;}
@@ -2406,12 +2452,37 @@ window.descargarPartesDia = function() {
   </style></head><body>
   <h1>Club Náutico Águilas — Partes del día</h1>
   <div class="subtitulo">${fechaLegible} &nbsp;·&nbsp; ${itemsDelDia.length} turno${itemsDelDia.length>1?'s':''}</div>
+
   <div class="resumen-dia">
     <div class="resumen-dia-title">⛽ Resumen recaudación del día</div>
     ${resumenTurnos}
     <div class="resumen-total"><span>TOTAL DÍA</span><span>${totalDia.toFixed(2)} €</span></div>
   </div>
+
   ${itemsDelDia.map(renderParteHtml).join('')}
+
+  <div class="tanques-cierre">
+    <div class="tanques-cierre-title">🛢 Nivel de tanques al cierre del día</div>
+    <div class="tanques-grid">
+      <div class="tanque-pdf">
+        <div class="tanque-pdf-label">⛽ Gasóil</div>
+        <div class="tanque-pdf-litros">${nivelGDia.toFixed(1)} <small>L</small>${alertaG}</div>
+        <div class="tanque-barra-wrap"><div class="tanque-barra-g" style="width:${pctGDia.toFixed(1)}%"></div></div>
+        <div class="tanque-pdf-pct"><span>${pctGDia.toFixed(1)}% del tanque</span><span>Cap. ${CAP_GASOIL.toLocaleString()} L</span></div>
+        <div style="font-size:9px;color:#888;margin-top:3px;">Vendido hoy: ${acumSalG.toFixed(1)} L</div>
+        ${entradaGHtml}
+      </div>
+      <div class="tanque-pdf">
+        <div class="tanque-pdf-label">🟢 S.P. 95</div>
+        <div class="tanque-pdf-litros">${nivelSDia.toFixed(1)} <small>L</small>${alertaS}</div>
+        <div class="tanque-barra-wrap"><div class="tanque-barra-s" style="width:${pctSDia.toFixed(1)}%"></div></div>
+        <div class="tanque-pdf-pct"><span>${pctSDia.toFixed(1)}% del tanque</span><span>Cap. ${CAP_SP95.toLocaleString()} L</span></div>
+        <div style="font-size:9px;color:#888;margin-top:3px;">Vendido hoy: ${acumSalS.toFixed(1)} L</div>
+        ${entradaSHtml}
+      </div>
+    </div>
+  </div>
+
   </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
