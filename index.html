@@ -130,7 +130,27 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .pcal-day.tiene-parte-dot::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#1e9e5a;}
 .pcal-day.future{opacity:0.4;pointer-events:none;}
 
-/* ── RECAUDACIÓN COMBUSTIBLE ── */
+/* ── TANQUES ── */
+.tanques-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.tanque-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);position:relative;overflow:hidden;}
+.tanque-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;}
+.tanque-gasoil::before{background:linear-gradient(90deg,#cc0018,#ff4444);}
+.tanque-sp95::before{background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
+.tanque-label{font-size:0.55rem;letter-spacing:0.1em;color:#999;text-transform:uppercase;margin-bottom:4px;}
+.tanque-litros{font-family:"Bebas Neue",sans-serif;font-size:1.6rem;letter-spacing:0.06em;line-height:1;color:#1a1a1a;}
+.tanque-litros span{font-size:0.7rem;color:#999;font-family:"IBM Plex Mono",monospace;margin-left:2px;}
+.tanque-barra-wrap{height:6px;background:#f0f0f0;border-radius:3px;margin:8px 0 4px;overflow:hidden;}
+.tanque-barra{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.tanque-gasoil .tanque-barra{background:linear-gradient(90deg,#cc0018,#ff6644);}
+.tanque-sp95 .tanque-barra{background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
+.tanque-pct{font-size:0.55rem;color:#aaa;display:flex;justify-content:space-between;}
+.tanque-alerta{font-size:0.58rem;color:#cc0018;font-weight:600;margin-top:3px;}
+.tanque-cisterna{font-size:0.55rem;color:#1b7a4a;margin-top:2px;}
+/* cisterna en el formulario */
+.cisterna-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:6px;margin-bottom:8px;cursor:pointer;}
+.cisterna-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#1b7a4a;cursor:pointer;}
+.cisterna-toggle label{font-size:0.65rem;color:#1b7a4a;letter-spacing:0.06em;cursor:pointer;font-weight:600;}
+.cisterna-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:6px;margin-bottom:8px;}
 .comb-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
 .comb-recaudacion-box{grid-column:1/-1;background:linear-gradient(135deg,rgba(204,0,24,0.08),rgba(204,0,24,0.04));border:1.5px solid rgba(204,0,24,0.35);border-radius:7px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
 .comb-recaudacion-label{font-size:0.6rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;}
@@ -337,6 +357,25 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 
 <!-- PARTES -->
 <div class="page" id="page-3">
+  <!-- Panel nivel de tanques -->
+  <div class="tanques-panel">
+    <div class="tanque-card tanque-gasoil">
+      <div class="tanque-label">⛽ Tanque Gasóil</div>
+      <div class="tanque-litros" id="tq-gasoil-litros">— <span>L</span></div>
+      <div class="tanque-barra-wrap"><div class="tanque-barra" id="tq-gasoil-barra" style="width:0%"></div></div>
+      <div class="tanque-pct"><span id="tq-gasoil-pct">—%</span><span id="tq-gasoil-cap"></span></div>
+      <div class="tanque-alerta" id="tq-gasoil-alerta" style="display:none;">⚠️ Nivel bajo</div>
+      <div class="tanque-cisterna" id="tq-gasoil-cisterna"></div>
+    </div>
+    <div class="tanque-card tanque-sp95">
+      <div class="tanque-label">🟢 Tanque S.P.95</div>
+      <div class="tanque-litros" id="tq-sp95-litros">— <span>L</span></div>
+      <div class="tanque-barra-wrap"><div class="tanque-barra" id="tq-sp95-barra" style="width:0%"></div></div>
+      <div class="tanque-pct"><span id="tq-sp95-pct">—%</span><span id="tq-sp95-cap"></span></div>
+      <div class="tanque-alerta" id="tq-sp95-alerta" style="display:none;">⚠️ Nivel bajo</div>
+      <div class="tanque-cisterna" id="tq-sp95-cisterna"></div>
+    </div>
+  </div>
   <div class="partes-header">
     <div class="partes-mes-nav">
       <button class="ynav-btn" onclick="partesChangeMes(-1)">&#9664;</button>
@@ -699,6 +738,21 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="parte-campo"><label>CAJAS GAS</label><input type="number" id="np-cajas" placeholder="0" min="0"></div>
       <div class="parte-campo"><label>AGUA ENTRADA (m³)</label><input type="number" id="np-agua-entrada" placeholder="0" min="0"></div>
       <div class="parte-campo"><label>AGUA SALIDA (m³)</label><input type="number" id="np-agua-salida" placeholder="0" min="0"></div>
+    </div>
+    <!-- Cisterna -->
+    <div class="cisterna-toggle" onclick="toggleCisterna()">
+      <input type="checkbox" id="np-cisterna-check" onchange="toggleCisterna()">
+      <label for="np-cisterna-check">🚛 ¿Ha llegado cisterna este turno?</label>
+    </div>
+    <div id="np-cisterna-fields" class="cisterna-fields" style="display:none;">
+      <div class="parte-campo" style="margin:0;">
+        <label>GASÓIL recibido (L)</label>
+        <input type="number" id="np-cisterna-gasoil" placeholder="0" min="0" step="0.01">
+      </div>
+      <div class="parte-campo" style="margin:0;">
+        <label>S.P.95 recibido (L)</label>
+        <input type="number" id="np-cisterna-sp95" placeholder="0" min="0" step="0.01">
+      </div>
     </div>
     <div class="parte-campo" style="margin-bottom:10px;">
       <label>OTROS</label>
@@ -1699,7 +1753,87 @@ window.guardarPrecios = async function() {
   showToast('Precios actualizados ✓');
 };
 
-// ── CÁLCULO RECAUDACIÓN ──
+// ── TANQUES DE COMBUSTIBLE ──
+const STOCK_REF_FECHA = '2026-04-22'; // fecha de referencia del stock inicial
+const STOCK_REF_GASOIL = 4475.30;    // litros gasóil al cierre del 22 abril
+const STOCK_REF_SP95 = 10651.56;     // litros S.P.95 al cierre del 22 abril
+const CAP_GASOIL = 5000;             // capacidad máxima tanque gasóil
+const CAP_SP95 = 15000;              // capacidad máxima tanque S.P.95
+const ALERTA_PCT = 20;               // % mínimo antes de alertar
+
+function calcularNivelTanques() {
+  const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
+  let entradasG = 0, entradasS = 0;
+  let salidasG = 0, salidasS = 0;
+
+  Object.values(partes).forEach(p => {
+    const fechaParte = new Date(p.fecha + 'T12:00:00');
+    if (fechaParte <= refDate) return; // solo partes posteriores al cierre del 22
+
+    // Entradas cisterna
+    if (p.cisterna) {
+      entradasG += parseFloat(p.cisterna.gasoil) || 0;
+      entradasS += parseFloat(p.cisterna.sp95) || 0;
+    }
+
+    // Salidas: litros vendidos calculados desde la recaudación guardada
+    if (p.recaudacion) {
+      salidasG += parseFloat(p.recaudacion.litrosGasoil) || 0;
+      salidasS += parseFloat(p.recaudacion.litrosSp95) || 0;
+    } else {
+      // Recalcular si no está guardada
+      const ant = getParteAnterior(p.fecha, p.turno);
+      if (ant) {
+        const iniG = parseFloat(ant.gasoil)||0, finG = parseFloat(p.gasoil)||0;
+        const iniS = parseFloat(ant.sp95)||0, finS = parseFloat(p.sp95)||0;
+        if (finG > 0) salidasG += iniG > finG ? finG+10000-iniG : finG-iniG;
+        if (finS > 0) salidasS += iniS > finS ? finS+10000-iniS : finS-iniS;
+      }
+    }
+  });
+
+  const nivelG = Math.max(0, STOCK_REF_GASOIL + entradasG - salidasG);
+  const nivelS = Math.max(0, STOCK_REF_SP95 + entradasS - salidasS);
+  renderTanques(nivelG, nivelS, entradasG, entradasS);
+}
+
+function renderTanques(nivelG, nivelS, entradasG, entradasS) {
+  const pctG = Math.min(100, (nivelG / CAP_GASOIL) * 100);
+  const pctS = Math.min(100, (nivelS / CAP_SP95) * 100);
+
+  const elG = document.getElementById('tq-gasoil-litros');
+  const elS = document.getElementById('tq-sp95-litros');
+  if (!elG) return;
+
+  elG.innerHTML = `${nivelG.toFixed(0)} <span>L</span>`;
+  elS.innerHTML = `${nivelS.toFixed(0)} <span>L</span>`;
+
+  document.getElementById('tq-gasoil-barra').style.width = pctG + '%';
+  document.getElementById('tq-sp95-barra').style.width = pctS + '%';
+
+  document.getElementById('tq-gasoil-pct').textContent = pctG.toFixed(1) + '%';
+  document.getElementById('tq-sp95-pct').textContent = pctS.toFixed(1) + '%';
+
+  document.getElementById('tq-gasoil-cap').textContent = `Cap. ~${(CAP_GASOIL/1000).toFixed(0)}k L`;
+  document.getElementById('tq-sp95-cap').textContent = `Cap. ~${(CAP_SP95/1000).toFixed(0)}k L`;
+
+  document.getElementById('tq-gasoil-alerta').style.display = pctG < ALERTA_PCT ? 'block' : 'none';
+  document.getElementById('tq-sp95-alerta').style.display = pctS < ALERTA_PCT ? 'block' : 'none';
+
+  document.getElementById('tq-gasoil-cisterna').textContent = entradasG > 0 ? `🚛 +${entradasG.toFixed(0)}L recibidos` : '';
+  document.getElementById('tq-sp95-cisterna').textContent = entradasS > 0 ? `🚛 +${entradasS.toFixed(0)}L recibidos` : '';
+}
+
+window.toggleCisterna = function() {
+  const check = document.getElementById('np-cisterna-check');
+  const fields = document.getElementById('np-cisterna-fields');
+  if (!check || !fields) return;
+  fields.style.display = check.checked ? 'grid' : 'none';
+  if (!check.checked) {
+    document.getElementById('np-cisterna-gasoil').value = '';
+    document.getElementById('np-cisterna-sp95').value = '';
+  }
+};
 // Encuentra el parte anterior en la secuencia de turnos
 function getParteAnterior(fechaStr, turno) {
   // Orden de turnos: mañana → tarde → noche → mañana(día sig)
@@ -1794,7 +1928,8 @@ window.calcularRecaudacion = function() {
 onValue(partesRef, snap => {
   partes = snap.val() || {};
   renderPartesCalendario();
-  calcularRecaudacion(); // recalcular si el form está abierto
+  calcularRecaudacion();
+  calcularNivelTanques();
 });
 
 // ── CALENDARIO PARTES ──
@@ -1968,6 +2103,7 @@ function verParteConcreto(p, id) {
       <div class="vp-dato"><label>AGUA SALIDA</label><span>${p.aguaSalida||'0'} m³</span></div>
     </div>
     ${recHtml}
+    ${p.cisterna ? `<div style="margin-top:6px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.62rem;color:#1b7a4a;"><strong>🚛 Cisterna recibida:</strong> Gasóil +${p.cisterna.gasoil||0}L · S.P.95 +${p.cisterna.sp95||0}L</div>` : ''}
     ${p.otros ? `<div style="font-size:0.65rem;color:#666;padding:4px 8px;margin-top:4px;">Otros: ${p.otros}</div>` : ''}
   </div>`;
 
@@ -2058,6 +2194,19 @@ window.editarParte = function() {
   document.getElementById('np-vidrio').value = p.vidrio || '';
   document.getElementById('np-plastico').value = p.plastico || '';
   document.getElementById('np-observaciones').value = p.observaciones || '';
+
+  // Cisterna
+  const cCheck = document.getElementById('np-cisterna-check');
+  const cFields = document.getElementById('np-cisterna-fields');
+  if (p.cisterna) {
+    cCheck.checked = true;
+    cFields.style.display = 'grid';
+    document.getElementById('np-cisterna-gasoil').value = p.cisterna.gasoil || '';
+    document.getElementById('np-cisterna-sp95').value = p.cisterna.sp95 || '';
+  } else {
+    cCheck.checked = false;
+    cFields.style.display = 'none';
+  }
 
   // Construir filas y marcar valores
   buildFilas(REVISIONES_ITEMS, 'np-revisiones', 'rev');
@@ -2170,6 +2319,7 @@ window.descargarPartesDia = function() {
         <div class="pdf-dato"><span>AGUA SALIDA</span><strong>${p.aguaSalida||'0'} m³</strong></div>
       </div>
       ${recRow}
+      ${p.cisterna ? `<div class="pdf-cisterna">🚛 Cisterna recibida: Gasóil +${p.cisterna.gasoil||0}L · S.P.95 +${p.cisterna.sp95||0}L</div>` : ''}
       ${p.otros ? `<div class="pdf-otros">Otros: ${p.otros}</div>` : ''}
     </div>`;
 
@@ -2250,6 +2400,7 @@ window.descargarPartesDia = function() {
     .pdf-rec-detalle{font-size:9px;color:#666;flex:1;}
     .pdf-rec-total{font-size:15px;font-weight:700;color:#cc0018;flex:none;margin-left:auto;}
     .pdf-otros{font-size:10px;color:#555;margin-top:6px;padding:4px 0;}
+    .pdf-cisterna{font-size:10px;color:#1b7a4a;font-weight:600;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:4px;padding:5px 8px;margin-top:6px;}
     .pdf-obs{font-size:10px;color:#333;background:#fffde7;border-left:3px solid #f0c030;padding:6px 10px;border-radius:3px;}
     @media print{body{padding:10px;}@page{margin:1cm;}}
   </style></head><body>
@@ -2377,6 +2528,12 @@ window.openNuevoParte = function(fechaIso) {
   // Limpiar campos combustible y calcular referencia
   document.getElementById('np-gasoil').value = '';
   document.getElementById('np-sp95').value = '';
+  // Reset cisterna
+  const cCheck = document.getElementById('np-cisterna-check');
+  if (cCheck) { cCheck.checked = false; }
+  document.getElementById('np-cisterna-fields').style.display = 'none';
+  document.getElementById('np-cisterna-gasoil').value = '';
+  document.getElementById('np-cisterna-sp95').value = '';
   calcularRecaudacion();
 
   openOv('ov-nuevo-parte');
@@ -2455,7 +2612,14 @@ window.guardarParte = async function() {
     vidrio: document.getElementById('np-vidrio').value || '0',
     plastico: document.getElementById('np-plastico').value || '0',
     observaciones: document.getElementById('np-observaciones').value.trim(),
-    recaudacion: recaudacionData
+    recaudacion: recaudacionData,
+    cisterna: (()=>{
+      const check = document.getElementById('np-cisterna-check');
+      if (!check || !check.checked) return null;
+      const g = parseFloat(document.getElementById('np-cisterna-gasoil').value)||0;
+      const s = parseFloat(document.getElementById('np-cisterna-sp95').value)||0;
+      return (g>0||s>0) ? {gasoil:g, sp95:s} : null;
+    })()
   };
 
   if (editingId) {
