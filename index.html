@@ -130,7 +130,23 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .pcal-day.tiene-parte-dot::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#1e9e5a;}
 .pcal-day.future{opacity:0.4;pointer-events:none;}
 
-/* ── TANQUES ── */
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#1a0008 0%,#2a0010 40%,#0a0a1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;}
+.login-logo{font-size:3rem;margin-bottom:8px;}
+.login-titulo{font-family:"Bebas Neue",sans-serif;font-size:2rem;letter-spacing:0.15em;color:#cc0018;margin-bottom:4px;}
+.login-sub{font-size:0.6rem;color:#888;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:36px;}
+.login-card{background:rgba(255,255,255,0.04);border:1px solid rgba(204,0,24,0.25);border-radius:14px;padding:28px 24px;width:100%;max-width:340px;backdrop-filter:blur(10px);}
+.login-label{font-size:0.58rem;color:#aaa;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.login-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:11px 14px;font-family:"IBM Plex Mono",monospace;font-size:0.85rem;color:#fff;margin-bottom:16px;outline:none;transition:border 0.2s;}
+.login-input:focus{border-color:#cc0018;}
+.login-btn{width:100%;background:#cc0018;color:#fff;border:none;border-radius:7px;padding:13px;font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.12em;cursor:pointer;margin-top:4px;transition:background 0.2s;}
+.login-btn:hover{background:#e8002a;}
+.login-btn:disabled{background:#555;cursor:not-allowed;}
+.login-error{background:rgba(204,0,24,0.15);border:1px solid rgba(204,0,24,0.4);border-radius:6px;padding:9px 12px;font-size:0.65rem;color:#ff8080;margin-bottom:14px;display:none;letter-spacing:0.03em;}
+.login-spinner{display:none;text-align:center;padding:8px;font-size:0.65rem;color:#888;}
+/* Botón cerrar sesión en topbar */
+.logout-btn{background:transparent;border:1px solid rgba(204,0,24,0.4);border-radius:20px;padding:4px 10px;font-size:0.55rem;color:#cc0018;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:6px;}
+
 .tanques-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .tanque-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);position:relative;overflow:hidden;}
 .tanque-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;}
@@ -305,9 +321,28 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 </head>
 <body>
 
+<!-- PANTALLA LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">⚓</div>
+  <div class="login-titulo">CN ÁGUILAS</div>
+  <div class="login-sub">Acceso restringido · Personal autorizado</div>
+  <div class="login-card">
+    <div class="login-error" id="login-error"></div>
+    <label class="login-label">Correo electrónico</label>
+    <input class="login-input" type="email" id="login-email" placeholder="nombre@cnaguilas.es" autocomplete="username">
+    <label class="login-label">Contraseña</label>
+    <input class="login-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    <div class="login-spinner" id="login-spinner">Verificando...</div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">ENTRAR</button>
+  </div>
+</div>
+
 <div class="topbar">
   <h1>&#9875; CN AGUILAS</h1>
-  <div class="user-pill" onclick="openUserModal()" id="user-pill">&#128100; USUARIO</div>
+  <div style="display:flex;align-items:center;gap:4px;">
+    <div class="user-pill" id="user-pill">&#128100; USUARIO</div>
+    <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">✕ SALIR</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -857,6 +892,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyDoz7_RlHIlzA3FZbgvIeJTB4YiliXgewk",
@@ -868,9 +904,20 @@ const app = initializeApp({
   appId:"1:297200323754:web:019c1803400169d08694d3"
 });
 const db = getDatabase(app);
+const auth = getAuth(app);
+
+// Mapa email → clave interna de usuario
+const EMAIL_TO_USER = {
+  'tomas@cnaguilas.es':       'tomas',
+  'joseluis@cnaguilas.es':    'joseluis',
+  'javi@cnaguilas.es':        'javi',
+  'juan@cnaguilas.es':        'juan',
+  'esteban@cnaguilas.es':     'esteban',
+  'administracion@cnaguilas.es': 'administracion'
+};
 
 // ── ESTADO ──
-let currentUser = localStorage.getItem('cna_user')||'';
+let currentUser = '';
 let activeMarinero = 'javi';
 let currentYear = 2026;
 let selectedDate = null;
@@ -891,19 +938,71 @@ let detFotoEdit = null; // base64 foto en detalle
 const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración','':"Sin asignar"};
 const TIPO_ICONS = {averia:'🔴',cabo:'🧵',grifo:'💧',luz:'💡',pintar:'🖌️',limpieza:'🧹',ordenar:'📦',reparacion:'🔨',rotura:'🚑',montaje:'🏗️',corrosion:'⚙️',otro:'🔧'};
 
-// ── USUARIO ──
+// ── USUARIO / AUTH ──
 function actualizarPill(){
   const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración'};
   document.getElementById('user-pill').textContent = currentUser ? '👤 '+(names[currentUser]||currentUser).toUpperCase() : '👤 USUARIO';
 }
-window.setUser = function(u){
-  currentUser=u; localStorage.setItem('cna_user',u);
-  actualizarPill(); closeOv('ov-user');
-  showToast('Bienvenido, '+(NOMBRES[u]||u));
+
+// Login con Firebase Auth
+window.doLogin = async function(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btnEl = document.getElementById('login-btn');
+  const spnEl = document.getElementById('login-spinner');
+  errEl.style.display='none';
+  btnEl.disabled=true;
+  spnEl.style.display='block';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    // onAuthStateChanged se encarga del resto
+  } catch(e) {
+    spnEl.style.display='none';
+    btnEl.disabled=false;
+    const msgs = {
+      'auth/invalid-credential':'Correo o contraseña incorrectos.',
+      'auth/user-not-found':'Usuario no encontrado.',
+      'auth/wrong-password':'Contraseña incorrecta.',
+      'auth/too-many-requests':'Demasiados intentos. Espera unos minutos.',
+      'auth/invalid-email':'Correo no válido.'
+    };
+    errEl.textContent = msgs[e.code] || 'Error al iniciar sesión. Inténtalo de nuevo.';
+    errEl.style.display='block';
+  }
 };
-window.openUserModal = ()=>openOv('ov-user');
-actualizarPill();
-if(!currentUser) setTimeout(()=>openOv('ov-user'),500);
+
+// Cerrar sesión
+window.doLogout = async function(){
+  if(!confirm('¿Cerrar sesión?')) return;
+  await signOut(auth);
+};
+
+// Enter en los campos del login
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-email').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
+
+// Observador de estado de autenticación
+onAuthStateChanged(auth, user => {
+  if (user) {
+    // Usuario autenticado
+    currentUser = EMAIL_TO_USER[user.email] || user.email.split('@')[0];
+    localStorage.setItem('cna_user', currentUser);
+    actualizarPill();
+    document.getElementById('login-screen').style.display = 'none';
+  } else {
+    // No autenticado — mostrar login
+    currentUser = '';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-spinner').style.display = 'none';
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value = '';
+  }
+});
+
+window.openUserModal = ()=>{}; // desactivado, ya no se usa
 
 // ── TABS ──
 window.switchTab = function(i){
