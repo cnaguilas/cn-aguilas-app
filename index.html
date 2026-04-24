@@ -662,6 +662,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="user-opt" onclick="setUser('javi')">Javi</div>
       <div class="user-opt" onclick="setUser('juan')">Juan</div>
       <div class="user-opt" onclick="setUser('esteban')" style="grid-column:1/-1;">Esteban</div>
+      <div class="user-opt" onclick="setUser('administracion')" style="grid-column:1/-1;background:linear-gradient(135deg,rgba(204,0,24,0.12),rgba(204,0,24,0.06));border-color:rgba(204,0,24,0.4);color:#cc0018;">🏛 Administración</div>
     </div>
   </div>
 </div>
@@ -887,12 +888,12 @@ let detUbicacion = null; // para detalle
 let incFotoNueva = null; // base64 foto nueva incidencia
 let detFotoEdit = null; // base64 foto en detalle
 
-const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban','':"Sin asignar"};
+const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración','':"Sin asignar"};
 const TIPO_ICONS = {averia:'🔴',cabo:'🧵',grifo:'💧',luz:'💡',pintar:'🖌️',limpieza:'🧹',ordenar:'📦',reparacion:'🔨',rotura:'🚑',montaje:'🏗️',corrosion:'⚙️',otro:'🔧'};
 
 // ── USUARIO ──
 function actualizarPill(){
-  const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban'};
+  const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración'};
   document.getElementById('user-pill').textContent = currentUser ? '👤 '+(names[currentUser]||currentUser).toUpperCase() : '👤 USUARIO';
 }
 window.setUser = function(u){
