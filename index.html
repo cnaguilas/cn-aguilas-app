@@ -146,6 +146,14 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .tanque-pct{font-size:0.55rem;color:#aaa;display:flex;justify-content:space-between;}
 .tanque-alerta{font-size:0.58rem;color:#cc0018;font-weight:600;margin-top:3px;}
 .tanque-cisterna{font-size:0.55rem;color:#1b7a4a;margin-top:2px;}
+/* Contadores del último parte */
+.contadores-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.contador-card{background:#fff;border:1px solid #e8e8e8;border-radius:7px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.contador-label{font-size:0.48rem;letter-spacing:0.1em;color:#bbb;text-transform:uppercase;margin-bottom:1px;}
+.contador-valor{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.06em;line-height:1.15;}
+.contador-gasoil .contador-valor{color:#cc0018;}
+.contador-sp95 .contador-valor{color:#1b7a4a;}
+.contador-sub{font-size:0.46rem;color:#ccc;letter-spacing:0.05em;margin-top:1px;}
 /* cisterna en el formulario */
 .cisterna-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:6px;margin-bottom:8px;cursor:pointer;}
 .cisterna-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#1b7a4a;cursor:pointer;}
@@ -374,6 +382,19 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="tanque-pct"><span id="tq-sp95-pct">—%</span><span id="tq-sp95-cap"></span></div>
       <div class="tanque-alerta" id="tq-sp95-alerta" style="display:none;">⚠️ Nivel bajo</div>
       <div class="tanque-cisterna" id="tq-sp95-cisterna"></div>
+    </div>
+  </div>
+  <!-- Contadores del último parte -->
+  <div class="contadores-panel">
+    <div class="contador-card contador-gasoil">
+      <div class="contador-label">⛽ Gasóil — Último parte</div>
+      <div class="contador-valor" id="cnt-gasoil">—</div>
+      <div class="contador-sub" id="cnt-gasoil-meta"></div>
+    </div>
+    <div class="contador-card contador-sp95">
+      <div class="contador-label">🟢 S.P.95 — Último parte</div>
+      <div class="contador-valor" id="cnt-sp95">—</div>
+      <div class="contador-sub" id="cnt-sp95-meta"></div>
     </div>
   </div>
   <div class="partes-header">
@@ -824,6 +845,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <button class="btn-danger" id="vp-btn-eliminar" onclick="eliminarParte()" style="display:none;">ELIMINAR</button>
       <button class="btn-secondary" id="vp-btn-editar" onclick="editarParte()" style="display:none;">✏️ EDITAR</button>
       <button class="btn-secondary" id="vp-btn-descargar-dia" onclick="descargarPartesDia()" style="background:#1b7a4a;color:#fff;border-color:#1b7a4a;">⬇ DÍA COMPLETO</button>
+      <button class="btn-secondary" id="vp-btn-resumen-adm" onclick="descargarResumenAdm()" style="background:#1b4a7a;color:#fff;border-color:#1b4a7a;">⬇ RESUMEN ADM.</button>
       <button class="btn-secondary" onclick="closeOv('ov-ver-parte')">CERRAR</button>
     </div>
   </div>
@@ -1930,7 +1952,30 @@ onValue(partesRef, snap => {
   renderPartesCalendario();
   calcularRecaudacion();
   calcularNivelTanques();
+  renderContadores();
 });
+
+function renderContadores() {
+  const TURNO_ORD = {mañana:0, tarde:1, noche:2};
+  const todos = Object.values(partes).filter(p => p.fecha);
+  if (!todos.length) return;
+  todos.sort((a, b) => {
+    if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+    return (TURNO_ORD[b.turno]||0) - (TURNO_ORD[a.turno]||0);
+  });
+  const u = todos[0];
+  const elG  = document.getElementById('cnt-gasoil');
+  const elS  = document.getElementById('cnt-sp95');
+  const elGM = document.getElementById('cnt-gasoil-meta');
+  const elSM = document.getElementById('cnt-sp95-meta');
+  if (!elG) return;
+  const tl = u.turno === 'mañana' ? 'Mañ' : u.turno === 'tarde' ? 'Tar' : 'Noc';
+  const meta = `${tl} · ${u.fecha}`;
+  elG.textContent = u.gasoil != null ? parseFloat(u.gasoil).toFixed(2) : '—';
+  elS.textContent = u.sp95   != null ? parseFloat(u.sp95).toFixed(2)   : '—';
+  elGM.textContent = meta;
+  elSM.textContent = meta;
+}
 
 // ── CALENDARIO PARTES ──
 function renderPartesCalendario() {
@@ -2146,6 +2191,8 @@ function verParteConcreto(p, id) {
 
   const btnDesc = document.getElementById('vp-btn-descargar-dia');
   btnDesc._parteFecha = fechaStr;
+  const btnAdm = document.getElementById('vp-btn-resumen-adm');
+  if (btnAdm) btnAdm._parteFecha = fechaStr;
 
   openOv('ov-ver-parte');
 };
@@ -2494,6 +2541,251 @@ window.descargarPartesDia = function() {
   a.click();
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
   showToast('Descargando partes del día...');
+};
+
+// ── DESCARGA RESUMEN ADMINISTRACIÓN (1 folio) ──
+window.descargarResumenAdm = function() {
+  const btn = document.getElementById('vp-btn-resumen-adm');
+  const fechaStr = btn._parteFecha;
+  if (!fechaStr) return;
+
+  const itemsDelDia = Object.values(partes).filter(p => p.fecha === fechaStr);
+  if (!itemsDelDia.length) { showToast('No hay partes para descargar'); return; }
+
+  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2 };
+  const TURNO_LABELS = { mañana: 'Turno I — Mañana (06-14h)', tarde: 'Turno II — Tarde (14-22h)', noche: 'Turno III — Noche (22-06h)' };
+  const TURNO_ROMAN = { mañana: 'I', tarde: 'II', noche: 'III' };
+  itemsDelDia.sort((a, b) => (TURNO_ORDER[a.turno] ?? 9) - (TURNO_ORDER[b.turno] ?? 9));
+
+  const fecha = new Date(fechaStr + 'T12:00:00');
+  const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+
+  function calcRec(p) {
+    if (p.recaudacion) return p.recaudacion;
+    const ant = getParteAnterior(p.fecha, p.turno);
+    if (!ant) return null;
+    const iniG=parseFloat(ant.gasoil)||0, iniS=parseFloat(ant.sp95)||0, iniA=parseFloat(ant.aceite)||0;
+    const finG=parseFloat(p.gasoil)||0, finS=parseFloat(p.sp95)||0, finA=parseFloat(p.aceite)||0;
+    const lG=iniG>finG?finG+10000-iniG:finG-iniG;
+    const lS=iniS>finS?finS+10000-iniS:finS-iniS;
+    const lA=iniA>finA?iniA-finA:0;
+    return {litrosGasoil:lG,litrosSp95:lS,litrosAceite:lA,precioGasoil,precioSp95,precioAceite,
+      totalEuros:parseFloat((lG*precioGasoil+lS*precioSp95+lA*precioAceite).toFixed(2))};
+  }
+
+  // Calcular nivel de tanques al cierre del día
+  const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
+  const diaDate = new Date(fechaStr + 'T23:59:59');
+  let acumEnG=0,acumEnS=0,acumSalG=0,acumSalS=0;
+  Object.values(partes).forEach(p => {
+    const fp = new Date(p.fecha + 'T12:00:00');
+    if (fp <= refDate || fp > diaDate) return;
+    if (p.cisterna) { acumEnG+=parseFloat(p.cisterna.gasoil)||0; acumEnS+=parseFloat(p.cisterna.sp95)||0; }
+    const r = p.recaudacion;
+    if (r) { acumSalG+=parseFloat(r.litrosGasoil)||0; acumSalS+=parseFloat(r.litrosSp95)||0; }
+    else {
+      const ant=getParteAnterior(p.fecha,p.turno);
+      if (ant) {
+        const iniG=parseFloat(ant.gasoil)||0,finG=parseFloat(p.gasoil)||0;
+        const iniS=parseFloat(ant.sp95)||0,finS=parseFloat(p.sp95)||0;
+        if(finG>0) acumSalG+=iniG>finG?finG+10000-iniG:finG-iniG;
+        if(finS>0) acumSalS+=iniS>finS?finS+10000-iniS:finS-iniS;
+      }
+    }
+  });
+  const nivelGDia = Math.max(0, STOCK_REF_GASOIL + acumEnG - acumSalG);
+  const nivelSDia = Math.max(0, STOCK_REF_SP95  + acumEnS - acumSalS);
+  const pctGDia = Math.min(100,(nivelGDia/CAP_GASOIL)*100);
+  const pctSDia = Math.min(100,(nivelSDia/CAP_SP95)*100);
+  const alertaG = pctGDia < ALERTA_PCT ? ' ⚠️ NIVEL BAJO' : '';
+  const alertaS = pctSDia < ALERTA_PCT ? ' ⚠️ NIVEL BAJO' : '';
+
+  // Totales del día
+  let totalDia=0, totalLG=0, totalLS=0, totalLA=0;
+  itemsDelDia.forEach(p => {
+    const r=calcRec(p);
+    if (r) { totalDia+=r.totalEuros||0; totalLG+=r.litrosGasoil||0; totalLS+=r.litrosSp95||0; totalLA+=r.litrosAceite||0; }
+  });
+
+  // Generar filas de cada turno
+  const turnosHtml = itemsDelDia.map(p => {
+    const rec = calcRec(p);
+    const marinero = NOMBRES[p.marinero] || p.marinero || '--';
+    const roman = TURNO_ROMAN[p.turno] || '';
+    const lG  = rec ? (rec.litrosGasoil||0).toFixed(2) : '—';
+    const lS  = rec ? (rec.litrosSp95||0).toFixed(2)   : '—';
+    const lA  = parseFloat(p.aceite)||0;
+    const botes = p.cajas || '0';
+    const total = rec ? (rec.totalEuros||0).toFixed(2)+' €' : '—';
+    const cisterna = p.cisterna ? `<div class="cisterna-nota">🚛 Cisterna: Gasóil +${p.cisterna.gasoil||0} L · S.P.95 +${p.cisterna.sp95||0} L</div>` : '';
+    return `
+    <div class="turno-bloque">
+      <div class="turno-hdr">
+        <span class="turno-roman">TURNO ${roman}</span>
+        <span class="turno-marinero">👤 ${marinero.toUpperCase()}</span>
+        <span class="turno-etiqueta">${TURNO_LABELS[p.turno]||''}</span>
+      </div>
+      <div class="turno-body">
+        <div class="dato-fila">
+          <div class="dato-item gasoil">
+            <div class="dato-label">⛽ Núm. Gasóil</div>
+            <div class="dato-valor">${p.gasoil || '—'}</div>
+            <div class="dato-sub">Vendidos: ${lG} L</div>
+          </div>
+          <div class="dato-item sp95">
+            <div class="dato-label">🟢 Núm. S.P.95</div>
+            <div class="dato-valor">${p.sp95 || '—'}</div>
+            <div class="dato-sub">Vendidos: ${lS} L</div>
+          </div>
+          <div class="dato-item aceite">
+            <div class="dato-label">🛢 Aceite 2T</div>
+            <div class="dato-valor">${lA.toFixed(2)} L</div>
+            <div class="dato-sub">Contador: ${p.aceite||'—'}</div>
+          </div>
+          <div class="dato-item botes">
+            <div class="dato-label">💨 Cajas Gas</div>
+            <div class="dato-valor">${botes}</div>
+            <div class="dato-sub">&nbsp;</div>
+          </div>
+          <div class="dato-item recaudacion">
+            <div class="dato-label">💶 Recaudación</div>
+            <div class="dato-valor rec-total">${total}</div>
+            <div class="dato-sub">&nbsp;</div>
+          </div>
+        </div>
+        ${cisterna}
+        ${p.observaciones ? `<div class="obs-nota">📝 ${p.observaciones}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Resumen Administración ${fechaStr}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    @page{size:A4 portrait;margin:1.2cm 1.4cm;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10.5px;color:#111;background:#fff;}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #cc0018;padding-bottom:8px;margin-bottom:10px;}
+    .cab-logo{display:flex;align-items:center;gap:8px;}
+    .cab-anchor{font-size:22px;}
+    .cab-titulo{font-size:17px;font-weight:700;color:#cc0018;letter-spacing:0.07em;line-height:1.1;}
+    .cab-sub{font-size:9px;color:#888;letter-spacing:0.05em;margin-top:2px;}
+    .cab-fecha{text-align:right;}
+    .cab-fecha-dia{font-size:12px;font-weight:700;color:#1a1a1a;text-transform:capitalize;}
+    .cab-fecha-iso{font-size:9px;color:#aaa;margin-top:2px;}
+
+    /* Turnos */
+    .turno-bloque{border:1.5px solid #ddd;border-radius:6px;margin-bottom:8px;overflow:hidden;page-break-inside:avoid;}
+    .turno-hdr{background:#cc0018;color:#fff;display:flex;align-items:center;gap:10px;padding:5px 10px;}
+    .turno-roman{font-size:11px;font-weight:700;letter-spacing:0.1em;background:rgba(255,255,255,0.2);border-radius:3px;padding:1px 7px;}
+    .turno-marinero{font-size:11px;font-weight:700;letter-spacing:0.05em;}
+    .turno-etiqueta{font-size:9px;opacity:0.85;margin-left:auto;}
+    .turno-body{padding:7px 10px 6px;}
+    .dato-fila{display:flex;gap:6px;flex-wrap:nowrap;}
+    .dato-item{background:#f8f8f8;border:1px solid #e8e8e8;border-radius:5px;padding:5px 8px;flex:1;min-width:0;}
+    .dato-item.gasoil{border-left:3px solid #cc0018;}
+    .dato-item.sp95{border-left:3px solid #1b7a4a;}
+    .dato-item.aceite{border-left:3px solid #e07820;}
+    .dato-item.botes{border-left:3px solid #7a5af8;}
+    .dato-item.recaudacion{border-left:3px solid #1b4a7a;background:#f0f6ff;}
+    .dato-label{font-size:7.5px;color:#888;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px;}
+    .dato-valor{font-size:13px;font-weight:700;color:#1a1a1a;line-height:1.2;}
+    .dato-valor.rec-total{color:#cc0018;}
+    .dato-sub{font-size:7.5px;color:#aaa;margin-top:1px;}
+    .cisterna-nota{font-size:8.5px;color:#1b7a4a;font-weight:600;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:3px;padding:3px 7px;margin-top:5px;}
+    .obs-nota{font-size:8.5px;color:#555;background:#fffde7;border-left:2px solid #f0c030;padding:3px 7px;margin-top:5px;border-radius:2px;}
+
+    /* Resumen totales */
+    .resumen-total{border:2px solid #cc0018;border-radius:6px;padding:9px 12px;margin-bottom:8px;background:#fff8f8;page-break-inside:avoid;}
+    .resumen-total-title{font-size:10px;font-weight:700;letter-spacing:0.1em;color:#cc0018;text-transform:uppercase;margin-bottom:7px;border-bottom:1px solid rgba(204,0,24,0.2);padding-bottom:4px;}
+    .resumen-row{display:flex;justify-content:space-between;font-size:9.5px;padding:2px 0;color:#444;}
+    .resumen-grand{display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:#cc0018;margin-top:6px;padding-top:5px;border-top:2px solid #cc0018;}
+
+    /* Tanques */
+    .tanques-cierre{border:2px solid #1b4a7a;border-radius:6px;padding:9px 12px;background:#f0f6ff;page-break-inside:avoid;}
+    .tanques-title{font-size:10px;font-weight:700;letter-spacing:0.08em;color:#1b4a7a;text-transform:uppercase;margin-bottom:8px;border-bottom:1px solid #c0d4f0;padding-bottom:4px;}
+    .tanques-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .tanque-item{background:#fff;border:1px solid #c0d4f0;border-radius:5px;padding:8px 10px;}
+    .tanque-nombre{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:3px;}
+    .tanque-litros{font-size:20px;font-weight:700;color:#1a1a1a;line-height:1;}
+    .tanque-litros small{font-size:10px;font-weight:400;color:#888;}
+    .tanque-barra-wrap{height:7px;background:#e0eaf5;border-radius:3px;overflow:hidden;margin:5px 0 3px;}
+    .tanque-barra-g{height:100%;border-radius:3px;background:linear-gradient(90deg,#cc0018,#ff6644);}
+    .tanque-barra-s{height:100%;border-radius:3px;background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
+    .tanque-pct{font-size:8.5px;color:#888;display:flex;justify-content:space-between;}
+    .tanque-vendido{font-size:8px;color:#aaa;margin-top:2px;}
+    .alerta{color:#cc0018;font-weight:700;}
+
+    .pie{text-align:center;font-size:8px;color:#ccc;margin-top:10px;border-top:1px solid #eee;padding-top:6px;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  </style></head><body>
+
+  <div class="cabecera">
+    <div class="cab-logo">
+      <span class="cab-anchor">⚓</span>
+      <div>
+        <div class="cab-titulo">CLUB NÁUTICO ÁGUILAS</div>
+        <div class="cab-sub">RESUMEN DIARIO — COMBUSTIBLE Y VENTAS</div>
+      </div>
+    </div>
+    <div class="cab-fecha">
+      <div class="cab-fecha-dia">${fecha.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+      <div class="cab-fecha-iso">${fechaStr}</div>
+    </div>
+  </div>
+
+  ${turnosHtml}
+
+  <div class="resumen-total">
+    <div class="resumen-total-title">⛽ Resumen combustible del día</div>
+    ${itemsDelDia.map(p => {
+      const r=calcRec(p);
+      const tl=p.turno==='mañana'?'I — Mañana':p.turno==='tarde'?'II — Tarde':'III — Noche';
+      const mar=NOMBRES[p.marinero]||p.marinero||'';
+      return `<div class="resumen-row"><span>Turno ${tl} &nbsp;(${mar})</span><span>${r?(r.totalEuros||0).toFixed(2)+' €':'—'}</span></div>`;
+    }).join('')}
+    <div style="display:flex;gap:20px;font-size:9px;color:#888;margin-top:6px;padding-top:4px;border-top:1px solid #eee;">
+      <span>Gasóil total vendido: <strong>${totalLG.toFixed(2)} L</strong></span>
+      <span>S.P.95 total vendido: <strong>${totalLS.toFixed(2)} L</strong></span>
+      ${totalLA>0?`<span>Aceite vendido: <strong>${totalLA.toFixed(2)} L</strong></span>`:''}
+    </div>
+    <div class="resumen-grand"><span>TOTAL RECAUDACIÓN DÍA</span><span>${totalDia.toFixed(2)} €</span></div>
+  </div>
+
+  <div class="tanques-cierre">
+    <div class="tanques-title">🛢 Nivel de tanques al cierre del día</div>
+    <div class="tanques-grid">
+      <div class="tanque-item">
+        <div class="tanque-nombre">⛽ Gasóil</div>
+        <div class="tanque-litros">${nivelGDia.toFixed(1)} <small>L</small>${pctGDia<ALERTA_PCT?'<span class="alerta"> ⚠️</span>':''}</div>
+        <div class="tanque-barra-wrap"><div class="tanque-barra-g" style="width:${pctGDia.toFixed(1)}%"></div></div>
+        <div class="tanque-pct"><span>${pctGDia.toFixed(1)}% del tanque</span><span>Cap. ${CAP_GASOIL.toLocaleString()} L</span></div>
+        <div class="tanque-vendido">Vendido hoy: ${acumSalG.toFixed(1)} L${acumEnG>0?` · 🚛 +${acumEnG.toFixed(0)} L cisterna`:''}</div>
+        ${pctGDia<ALERTA_PCT?'<div class="alerta" style="font-size:9px;margin-top:3px;">⚠️ NIVEL BAJO — PEDIR SUMINISTRO</div>':''}
+      </div>
+      <div class="tanque-item">
+        <div class="tanque-nombre">🟢 S.P. 95</div>
+        <div class="tanque-litros">${nivelSDia.toFixed(1)} <small>L</small>${pctSDia<ALERTA_PCT?'<span class="alerta"> ⚠️</span>':''}</div>
+        <div class="tanque-barra-wrap"><div class="tanque-barra-s" style="width:${pctSDia.toFixed(1)}%"></div></div>
+        <div class="tanque-pct"><span>${pctSDia.toFixed(1)}% del tanque</span><span>Cap. ${CAP_SP95.toLocaleString()} L</span></div>
+        <div class="tanque-vendido">Vendido hoy: ${acumSalS.toFixed(1)} L${acumEnS>0?` · 🚛 +${acumEnS.toFixed(0)} L cisterna`:''}</div>
+        ${pctSDia<ALERTA_PCT?'<div class="alerta" style="font-size:9px;margin-top:3px;">⚠️ NIVEL BAJO — PEDIR SUMINISTRO</div>':''}
+      </div>
+    </div>
+  </div>
+
+  <div class="pie">Generado: ${new Date().toLocaleString('es-ES')} · Club Náutico Águilas · Uso interno</div>
+  </body></html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `resumen_adm_${fechaStr}.html`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  showToast('Resumen administración descargado ✓');
 };
 
 // ────────────────────────────────────
