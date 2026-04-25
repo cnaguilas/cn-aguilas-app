@@ -146,6 +146,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .login-spinner{display:none;text-align:center;padding:8px;font-size:0.65rem;color:#888;}
 /* Botón cerrar sesión en topbar */
 .logout-btn{background:transparent;border:1px solid rgba(204,0,24,0.4);border-radius:20px;padding:4px 10px;font-size:0.55rem;color:#cc0018;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:6px;}
+.cambiar-pass-btn{background:transparent;border:1px solid rgba(100,100,200,0.4);border-radius:20px;padding:4px 10px;font-size:0.55rem;color:#8888ff;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:4px;}
 
 .tanques-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .tanque-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);position:relative;overflow:hidden;}
@@ -341,6 +342,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <h1>&#9875; CN AGUILAS</h1>
   <div style="display:flex;align-items:center;gap:4px;">
     <div class="user-pill" id="user-pill">&#128100; USUARIO</div>
+    <button class="cambiar-pass-btn" onclick="openCambiarPass()" title="Cambiar contraseña">🔑</button>
     <button class="logout-btn" onclick="doLogout()" title="Cerrar sesión">✕ SALIR</button>
   </div>
 </div>
@@ -889,10 +891,32 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 
 <div class="toast" id="toast"></div>
 
+<!-- MODAL CAMBIAR CONTRASEÑA -->
+<div class="overlay" id="ov-cambiar-pass" onclick="handleOv(event,'ov-cambiar-pass')">
+  <div class="modal" style="max-width:320px;">
+    <div class="modal-header">
+      <h3>🔑 CAMBIAR CONTRASEÑA</h3>
+      <button class="close-btn" onclick="closeOv('ov-cambiar-pass')">x</button>
+    </div>
+    <div id="cp-error" style="display:none;background:rgba(204,0,24,0.12);border:1px solid rgba(204,0,24,0.35);border-radius:6px;padding:8px 12px;font-size:0.62rem;color:#ff8080;margin-bottom:12px;"></div>
+    <div id="cp-ok" style="display:none;background:rgba(27,122,74,0.12);border:1px solid rgba(27,122,74,0.35);border-radius:6px;padding:8px 12px;font-size:0.62rem;color:#4caf50;margin-bottom:12px;"></div>
+    <label class="form-label">Contraseña actual</label>
+    <input class="form-input" type="password" id="cp-actual" placeholder="••••••••" autocomplete="current-password">
+    <label class="form-label">Nueva contraseña</label>
+    <input class="form-input" type="password" id="cp-nueva" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+    <label class="form-label">Repetir nueva contraseña</label>
+    <input class="form-input" type="password" id="cp-nueva2" placeholder="Repite la contraseña" autocomplete="new-password">
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeOv('ov-cambiar-pass')">CANCELAR</button>
+      <button class="btn-primary" onclick="doChangePass()">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const app = initializeApp({
   apiKey:"AIzaSyDoz7_RlHIlzA3FZbgvIeJTB4YiliXgewk",
@@ -908,12 +932,13 @@ const auth = getAuth(app);
 
 // Mapa email → clave interna de usuario
 const EMAIL_TO_USER = {
-  'tomas@cnaguilas.es':       'tomas',
-  'joseluis@cnaguilas.es':    'joseluis',
-  'javi@cnaguilas.es':        'javi',
-  'juan@cnaguilas.es':        'juan',
-  'esteban@cnaguilas.es':     'esteban',
-  'administracion@cnaguilas.es': 'administracion'
+  'tomas@cnaguilas.es':          'tomas',
+  'joseluis@cnaguilas.es':       'joseluis',
+  'javi@cnaguilas.es':           'javi',
+  'juan@cnaguilas.es':           'juan',
+  'esteban@cnaguilas.es':        'esteban',
+  'administracion@cnaguilas.es': 'administracion',
+  'marinero@cnaguilas.es':       'marinero'
 };
 
 // ── ESTADO ──
@@ -935,12 +960,12 @@ let detUbicacion = null; // para detalle
 let incFotoNueva = null; // base64 foto nueva incidencia
 let detFotoEdit = null; // base64 foto en detalle
 
-const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración','':"Sin asignar"};
+const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración',marinero:'Marinero','':"Sin asignar"};
 const TIPO_ICONS = {averia:'🔴',cabo:'🧵',grifo:'💧',luz:'💡',pintar:'🖌️',limpieza:'🧹',ordenar:'📦',reparacion:'🔨',rotura:'🚑',montaje:'🏗️',corrosion:'⚙️',otro:'🔧'};
 
 // ── USUARIO / AUTH ──
 function actualizarPill(){
-  const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración'};
+  const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración',marinero:'Marinero'};
   document.getElementById('user-pill').textContent = currentUser ? '👤 '+(names[currentUser]||currentUser).toUpperCase() : '👤 USUARIO';
 }
 
@@ -976,6 +1001,58 @@ window.doLogin = async function(){
 window.doLogout = async function(){
   if(!confirm('¿Cerrar sesión?')) return;
   await signOut(auth);
+};
+
+// Cambiar contraseña
+window.openCambiarPass = function(){
+  document.getElementById('cp-actual').value='';
+  document.getElementById('cp-nueva').value='';
+  document.getElementById('cp-nueva2').value='';
+  document.getElementById('cp-error').style.display='none';
+  document.getElementById('cp-ok').style.display='none';
+  openOv('ov-cambiar-pass');
+};
+
+window.doChangePass = async function(){
+  const actual = document.getElementById('cp-actual').value;
+  const nueva  = document.getElementById('cp-nueva').value;
+  const nueva2 = document.getElementById('cp-nueva2').value;
+  const errEl  = document.getElementById('cp-error');
+  const okEl   = document.getElementById('cp-ok');
+  errEl.style.display='none';
+  okEl.style.display='none';
+
+  if (!actual || !nueva || !nueva2) {
+    errEl.textContent='Rellena todos los campos.'; errEl.style.display='block'; return;
+  }
+  if (nueva.length < 8) {
+    errEl.textContent='La nueva contraseña debe tener al menos 8 caracteres.'; errEl.style.display='block'; return;
+  }
+  if (nueva !== nueva2) {
+    errEl.textContent='Las contraseñas nuevas no coinciden.'; errEl.style.display='block'; return;
+  }
+
+  try {
+    const user = auth.currentUser;
+    const cred = EmailAuthProvider.credential(user.email, actual);
+    await reauthenticateWithCredential(user, cred);
+    await updatePassword(user, nueva);
+    okEl.textContent='✅ Contraseña cambiada correctamente.';
+    okEl.style.display='block';
+    document.getElementById('cp-actual').value='';
+    document.getElementById('cp-nueva').value='';
+    document.getElementById('cp-nueva2').value='';
+    setTimeout(()=>closeOv('ov-cambiar-pass'), 2000);
+  } catch(e) {
+    const msgs = {
+      'auth/wrong-password':'La contraseña actual es incorrecta.',
+      'auth/invalid-credential':'La contraseña actual es incorrecta.',
+      'auth/too-many-requests':'Demasiados intentos. Espera unos minutos.',
+      'auth/weak-password':'La contraseña es demasiado débil.'
+    };
+    errEl.textContent = msgs[e.code] || 'Error al cambiar la contraseña.';
+    errEl.style.display='block';
+  }
 };
 
 // Enter en los campos del login
