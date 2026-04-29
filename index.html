@@ -166,9 +166,9 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 /* Contadores del último parte */
 .contadores-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .contador-card{background:#fff;border:1px solid #e8e8e8;border-radius:7px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
-.contador-label{font-size:0.48rem;letter-spacing:0.1em;color:#bbb;text-transform:uppercase;margin-bottom:1px;}
-.contador-valor{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.06em;line-height:1.15;}
-.contador-gasoil .contador-valor{color:#cc0018;}
+.contador-label{font-size:0.48rem;letter-spacing:0.1em;color:#bbb;text-transform:uppercase;margin-bottom:2px;}
+.contador-valor{font-family:"Bebas Neue",sans-serif;font-size:1.5rem;letter-spacing:0.06em;line-height:1.1;font-weight:700;}
+.contador-gasoil .contador-valor{color:#111;}
 .contador-sp95 .contador-valor{color:#1b7a4a;}
 .contador-sub{font-size:0.46rem;color:#ccc;letter-spacing:0.05em;margin-top:1px;}
 /* cisterna en el formulario */
@@ -731,6 +731,22 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <label>ACEITE 2T (€/L)</label>
         <input type="number" id="precio-aceite-input" step="0.01" min="0" placeholder="12.00">
       </div>
+      <div class="parte-campo">
+        <label>TRÁNSITO ≤10m (€)</label>
+        <input type="number" id="precio-t10-input" step="0.01" min="0" placeholder="25.00">
+      </div>
+      <div class="parte-campo">
+        <label>TRÁNSITO ≤12m (€)</label>
+        <input type="number" id="precio-t12-input" step="0.01" min="0" placeholder="30.00">
+      </div>
+      <div class="parte-campo">
+        <label>RAMPA SIMPLE (€)</label>
+        <input type="number" id="precio-rs-input" step="0.01" min="0" placeholder="15.00">
+      </div>
+      <div class="parte-campo">
+        <label>RAMPA DOBLE (€)</label>
+        <input type="number" id="precio-rd-input" step="0.01" min="0" placeholder="25.00">
+      </div>
     </div>
     <div class="btn-row" style="margin-top:14px;">
       <button class="btn-secondary" onclick="closeOv('ov-precios')">CANCELAR</button>
@@ -813,6 +829,33 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <input type="number" id="np-cisterna-sp95" placeholder="0" min="0" step="0.01">
       </div>
     </div>
+
+    <!-- TRÁNSITOS -->
+    <div class="parte-seccion-hdr" style="margin-top:10px;">⚓ TRÁNSITOS</div>
+    <div class="comb-grid" style="margin-bottom:6px;">
+      <div class="parte-campo">
+        <label>BARCOS ≤10m <span style="font-weight:400;color:#aaa;" id="np-lbl-t10">—</span></label>
+        <input type="number" id="np-transito-10" placeholder="0" min="0" step="1" oninput="calcularRecaudacion()">
+      </div>
+      <div class="parte-campo">
+        <label>BARCOS ≤12m <span style="font-weight:400;color:#aaa;" id="np-lbl-t12">—</span></label>
+        <input type="number" id="np-transito-12" placeholder="0" min="0" step="1" oninput="calcularRecaudacion()">
+      </div>
+    </div>
+
+    <!-- RAMPAS -->
+    <div class="parte-seccion-hdr" style="margin-top:4px;">🛥 RAMPAS</div>
+    <div class="comb-grid" style="margin-bottom:6px;">
+      <div class="parte-campo">
+        <label>RAMPA SIMPLE <span style="font-weight:400;color:#aaa;" id="np-lbl-rs">—</span></label>
+        <input type="number" id="np-rampa-simple" placeholder="0" min="0" step="1" oninput="calcularRecaudacion()">
+      </div>
+      <div class="parte-campo">
+        <label>RAMPA DOBLE <span style="font-weight:400;color:#aaa;" id="np-lbl-rd">—</span></label>
+        <input type="number" id="np-rampa-doble" placeholder="0" min="0" step="1" oninput="calcularRecaudacion()">
+      </div>
+    </div>
+
     <div class="parte-campo" style="margin-bottom:10px;">
       <label>OTROS</label>
       <input type="text" id="np-otros" placeholder="Anotaciones...">
@@ -937,7 +980,7 @@ const EMAIL_TO_USER = {
   'javi@cnaguilas.es':           'javi',
   'juan@cnaguilas.es':           'juan',
   'esteban@cnaguilas.es':        'esteban',
-  'gerencia@cnaguilas.es':       'administracion',
+  'gerencia@cnaguilas.es':       'gerencia',
   'marinero@cnaguilas.es':       'marinero'
 };
 
@@ -960,12 +1003,12 @@ let detUbicacion = null; // para detalle
 let incFotoNueva = null; // base64 foto nueva incidencia
 let detFotoEdit = null; // base64 foto en detalle
 
-const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración',marinero:'Marinero','':"Sin asignar"};
+const NOMBRES = {tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',gerencia:'Gerencia',marinero:'Marinero','':"Sin asignar"};
 const TIPO_ICONS = {averia:'🔴',cabo:'🧵',grifo:'💧',luz:'💡',pintar:'🖌️',limpieza:'🧹',ordenar:'📦',reparacion:'🔨',rotura:'🚑',montaje:'🏗️',corrosion:'⚙️',otro:'🔧'};
 
 // ── USUARIO / AUTH ──
 function actualizarPill(){
-  const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',administracion:'Administración',marinero:'Marinero'};
+  const names={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan',esteban:'Esteban',gerencia:'Gerencia',marinero:'Marinero'};
   document.getElementById('user-pill').textContent = currentUser ? '👤 '+(names[currentUser]||currentUser).toUpperCase() : '👤 USUARIO';
 }
 
@@ -1918,6 +1961,10 @@ let preciosRef = ref(db, 'config/precios');
 let precioGasoil = 1.790;
 let precioSp95 = 1.509;
 let precioAceite = 12.00;
+let precioT10 = 25.00;   // tránsito ≤10m
+let precioT12 = 30.00;   // tránsito ≤12m
+let precioRS  = 15.00;   // rampa simple
+let precioRD  = 25.00;   // rampa doble
 
 onValue(preciosRef, snap => {
   const v = snap.val();
@@ -1925,6 +1972,10 @@ onValue(preciosRef, snap => {
     precioGasoil = v.gasoil ?? 1.790;
     precioSp95 = v.sp95 ?? 1.509;
     precioAceite = v.aceite ?? 12.00;
+    precioT10 = v.t10 ?? 25.00;
+    precioT12 = v.t12 ?? 30.00;
+    precioRS  = v.rs  ?? 15.00;
+    precioRD  = v.rd  ?? 25.00;
   }
   const lg = document.getElementById('np-precio-gasoil-lbl');
   const ls = document.getElementById('np-precio-sp95-lbl');
@@ -1932,6 +1983,15 @@ onValue(preciosRef, snap => {
   if (lg) lg.textContent = precioGasoil.toFixed(3);
   if (ls) ls.textContent = precioSp95.toFixed(3);
   if (la) la.textContent = precioAceite.toFixed(2);
+  // Actualizar labels de tránsitos y rampas en el formulario
+  const lt10 = document.getElementById('np-lbl-t10');
+  const lt12 = document.getElementById('np-lbl-t12');
+  const lrs  = document.getElementById('np-lbl-rs');
+  const lrd  = document.getElementById('np-lbl-rd');
+  if (lt10) lt10.textContent = precioT10.toFixed(2)+'€/barco';
+  if (lt12) lt12.textContent = precioT12.toFixed(2)+'€/barco';
+  if (lrs)  lrs.textContent  = precioRS.toFixed(2)+'€';
+  if (lrd)  lrd.textContent  = precioRD.toFixed(2)+'€';
   calcularRecaudacion();
 });
 
@@ -1939,15 +1999,23 @@ window.abrirPrecios = function() {
   document.getElementById('precio-gasoil-input').value = precioGasoil;
   document.getElementById('precio-sp95-input').value = precioSp95;
   document.getElementById('precio-aceite-input').value = precioAceite;
+  document.getElementById('precio-t10-input').value = precioT10;
+  document.getElementById('precio-t12-input').value = precioT12;
+  document.getElementById('precio-rs-input').value = precioRS;
+  document.getElementById('precio-rd-input').value = precioRD;
   openOv('ov-precios');
 };
 
 window.guardarPrecios = async function() {
-  const g = parseFloat(document.getElementById('precio-gasoil-input').value);
-  const s = parseFloat(document.getElementById('precio-sp95-input').value);
-  const a = parseFloat(document.getElementById('precio-aceite-input').value);
-  if (isNaN(g) || isNaN(s) || isNaN(a) || g <= 0 || s <= 0 || a <= 0) { showToast('Precio no válido'); return; }
-  await set(preciosRef, { gasoil: g, sp95: s, aceite: a });
+  const g  = parseFloat(document.getElementById('precio-gasoil-input').value);
+  const s  = parseFloat(document.getElementById('precio-sp95-input').value);
+  const a  = parseFloat(document.getElementById('precio-aceite-input').value);
+  const t10 = parseFloat(document.getElementById('precio-t10-input').value);
+  const t12 = parseFloat(document.getElementById('precio-t12-input').value);
+  const rs  = parseFloat(document.getElementById('precio-rs-input').value);
+  const rd  = parseFloat(document.getElementById('precio-rd-input').value);
+  if (isNaN(g)||isNaN(s)||isNaN(a)||g<=0||s<=0||a<=0) { showToast('Precio no válido'); return; }
+  await set(preciosRef, { gasoil:g, sp95:s, aceite:a, t10:t10||25, t12:t12||30, rs:rs||15, rd:rd||25 });
   closeOv('ov-precios');
   showToast('Precios actualizados ✓');
 };
@@ -2108,9 +2176,26 @@ window.calcularRecaudacion = function() {
 
       const total = recG + recS + recA;
       recBox.style.display = 'flex';
-      recValor.textContent = total.toFixed(2) + ' €';
+
+      // Tránsitos y rampas
+      const nT10 = parseInt(document.getElementById('np-transito-10')?.value) || 0;
+      const nT12 = parseInt(document.getElementById('np-transito-12')?.value) || 0;
+      const nRS  = parseInt(document.getElementById('np-rampa-simple')?.value) || 0;
+      const nRD  = parseInt(document.getElementById('np-rampa-doble')?.value)  || 0;
+      const recT10 = nT10 * precioT10;
+      const recT12 = nT12 * precioT12;
+      const recRS  = nRS  * precioRS;
+      const recRD  = nRD  * precioRD;
+      const totalExtras = recT10 + recT12 + recRS + recRD;
+      const totalFinal = total + totalExtras;
+
+      recValor.textContent = totalFinal.toFixed(2) + ' €';
       let detalle = `Gasóil ${lG.toFixed(2)}L×${precioGasoil.toFixed(3)}=${recG.toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L×${precioSp95.toFixed(3)}=${recS.toFixed(2)}€`;
       if (!isNaN(finAceite)) detalle += ` · Aceite ${lA.toFixed(2)}L×${precioAceite.toFixed(2)}=${recA.toFixed(2)}€`;
+      if (nT10 > 0) detalle += ` · Tráns.10m ${nT10}×${precioT10.toFixed(2)}=${recT10.toFixed(2)}€`;
+      if (nT12 > 0) detalle += ` · Tráns.12m ${nT12}×${precioT12.toFixed(2)}=${recT12.toFixed(2)}€`;
+      if (nRS  > 0) detalle += ` · R.Simple ${nRS}×${precioRS.toFixed(2)}=${recRS.toFixed(2)}€`;
+      if (nRD  > 0) detalle += ` · R.Doble ${nRD}×${precioRD.toFixed(2)}=${recRD.toFixed(2)}€`;
       recDetalle.textContent = detalle;
     } else {
       recBox.style.display = 'none';
@@ -2324,6 +2409,13 @@ function verParteConcreto(p, id) {
       <div class="vp-dato"><label>AGUA ENTRADA</label><span>${p.aguaEntrada||'0'} m³</span></div>
       <div class="vp-dato"><label>AGUA SALIDA</label><span>${p.aguaSalida||'0'} m³</span></div>
     </div>
+    ${(p.transito10||p.transito12||p.rampaSimple||p.rampaDoble) ? `
+    <div class="vp-datos" style="margin-top:6px;">
+      ${p.transito10 ? `<div class="vp-dato"><label>TRÁNS. ≤10m</label><span>${p.transito10} barco${p.transito10>1?'s':''}</span></div>` : ''}
+      ${p.transito12 ? `<div class="vp-dato"><label>TRÁNS. ≤12m</label><span>${p.transito12} barco${p.transito12>1?'s':''}</span></div>` : ''}
+      ${p.rampaSimple ? `<div class="vp-dato"><label>RAMPA SIMPLE</label><span>${p.rampaSimple}</span></div>` : ''}
+      ${p.rampaDoble  ? `<div class="vp-dato"><label>RAMPA DOBLE</label><span>${p.rampaDoble}</span></div>` : ''}
+    </div>` : ''}
     ${recHtml}
     ${p.cisterna ? `<div style="margin-top:6px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.62rem;color:#1b7a4a;"><strong>🚛 Cisterna recibida:</strong> Gasóil +${p.cisterna.gasoil||0}L · S.P.95 +${p.cisterna.sp95||0}L</div>` : ''}
     ${p.otros ? `<div style="font-size:0.65rem;color:#666;padding:4px 8px;margin-top:4px;">Otros: ${p.otros}</div>` : ''}
@@ -2418,6 +2510,11 @@ window.editarParte = function() {
   document.getElementById('np-vidrio').value = p.vidrio || '';
   document.getElementById('np-plastico').value = p.plastico || '';
   document.getElementById('np-observaciones').value = p.observaciones || '';
+  // Tránsitos y rampas
+  document.getElementById('np-transito-10').value = p.transito10 || '';
+  document.getElementById('np-transito-12').value = p.transito12 || '';
+  document.getElementById('np-rampa-simple').value = p.rampaSimple || '';
+  document.getElementById('np-rampa-doble').value = p.rampaDoble || '';
 
   // Cisterna
   const cCheck = document.getElementById('np-cisterna-check');
@@ -3074,6 +3171,10 @@ window.openNuevoParte = function(fechaIso) {
   document.getElementById('np-cisterna-fields').style.display = 'none';
   document.getElementById('np-cisterna-gasoil').value = '';
   document.getElementById('np-cisterna-sp95').value = '';
+  document.getElementById('np-transito-10').value = '';
+  document.getElementById('np-transito-12').value = '';
+  document.getElementById('np-rampa-simple').value = '';
+  document.getElementById('np-rampa-doble').value = '';
   calcularRecaudacion();
 
   openOv('ov-nuevo-parte');
@@ -3112,6 +3213,13 @@ window.guardarParte = async function() {
   // Calcular recaudación para guardar
   const anteriorParte = getParteAnterior(fechaStr, turno);
   let recaudacionData = null;
+  // Tránsitos y rampas
+  const nT10 = parseInt(document.getElementById('np-transito-10').value) || 0;
+  const nT12 = parseInt(document.getElementById('np-transito-12').value) || 0;
+  const nRS  = parseInt(document.getElementById('np-rampa-simple').value)  || 0;
+  const nRD  = parseInt(document.getElementById('np-rampa-doble').value)   || 0;
+  const extrasTotal = nT10*precioT10 + nT12*precioT12 + nRS*precioRS + nRD*precioRD;
+
   if (anteriorParte) {
     const iniG = parseFloat(anteriorParte.gasoil) || 0;
     const iniS = parseFloat(anteriorParte.sp95) || 0;
@@ -3127,7 +3235,10 @@ window.guardarParte = async function() {
         inicioGasoil: iniG, inicioSp95: iniS, inicioAceite: iniA,
         litrosGasoil: lG, litrosSp95: lS, litrosAceite: lA,
         precioGasoil, precioSp95, precioAceite,
-        totalEuros: parseFloat((lG * precioGasoil + lS * precioSp95 + lA * precioAceite).toFixed(2))
+        transitosT10: nT10, transitosT12: nT12, rampasSimple: nRS, rampasDoble: nRD,
+        precioT10, precioT12, precioRS, precioRD,
+        extrasTotal: parseFloat(extrasTotal.toFixed(2)),
+        totalEuros: parseFloat((lG*precioGasoil + lS*precioSp95 + lA*precioAceite + extrasTotal).toFixed(2))
       };
     }
   }
@@ -3152,6 +3263,10 @@ window.guardarParte = async function() {
     vidrio: document.getElementById('np-vidrio').value || '0',
     plastico: document.getElementById('np-plastico').value || '0',
     observaciones: document.getElementById('np-observaciones').value.trim(),
+    transito10: nT10 || null,
+    transito12: nT12 || null,
+    rampaSimple: nRS  || null,
+    rampaDoble:  nRD  || null,
     recaudacion: recaudacionData,
     cisterna: (()=>{
       const check = document.getElementById('np-cisterna-check');
