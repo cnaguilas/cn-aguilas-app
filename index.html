@@ -2367,14 +2367,21 @@ function verParteConcreto(p, id) {
   }
 
   // Combustible / Agua
-  function buildRecHtml(lG, lS, lA, pG, pS, pA, guardado) {
+  function buildRecHtml(lG, lS, lA, pG, pS, pA, guardado, extras) {
     const recG = lG * pG, recS = lS * pS, recA = (lA||0) * pA;
-    const total = recG + recS + recA;
+    const extrasTotal = extras ? extras.total : 0;
+    const total = recG + recS + recA + extrasTotal;
     const border = guardado ? 'border:1.5px solid rgba(204,0,24,0.3);background:linear-gradient(135deg,rgba(204,0,24,0.07),rgba(204,0,24,0.03));' : 'border:1.5px dashed rgba(240,165,0,0.4);background:rgba(240,165,0,0.08);';
     const color = guardado ? '#cc0018' : '#e07820';
-    const label = guardado ? '⛽ Recaudación combustible' : '⛽ Recaudación (calculada ahora)';
+    const label = guardado ? '⛽ Recaudación total' : '⛽ Recaudación (calculada ahora)';
     let detalle = `Gasóil ${lG.toFixed(2)}L×${pG.toFixed(3)}=${recG.toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L×${pS.toFixed(3)}=${recS.toFixed(2)}€`;
     if (lA > 0) detalle += ` · Aceite ${lA.toFixed(2)}L×${pA.toFixed(2)}=${recA.toFixed(2)}€`;
+    if (extras) {
+      if (extras.t10 > 0) detalle += ` · Tráns.≤10m ${extras.t10}×${extras.pt10.toFixed(2)}=${(extras.t10*extras.pt10).toFixed(2)}€`;
+      if (extras.t12 > 0) detalle += ` · Tráns.≤12m ${extras.t12}×${extras.pt12.toFixed(2)}=${(extras.t12*extras.pt12).toFixed(2)}€`;
+      if (extras.rs  > 0) detalle += ` · R.Simple ${extras.rs}×${extras.prs.toFixed(2)}=${(extras.rs*extras.prs).toFixed(2)}€`;
+      if (extras.rd  > 0) detalle += ` · R.Doble ${extras.rd}×${extras.prd.toFixed(2)}=${(extras.rd*extras.prd).toFixed(2)}€`;
+    }
     return `<div style="margin-top:8px;${border}border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:0.55rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;">${label}</div>
@@ -2387,7 +2394,14 @@ function verParteConcreto(p, id) {
   let recHtml = '';
   if (p.recaudacion) {
     const r = p.recaudacion;
-    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, r.precioGasoil||precioGasoil, r.precioSp95||precioSp95, r.precioAceite||precioAceite, true);
+    const extras = {
+      t10: r.transitosT10||0, t12: r.transitosT12||0,
+      rs: r.rampasSimple||0, rd: r.rampasDoble||0,
+      pt10: r.precioT10||precioT10, pt12: r.precioT12||precioT12,
+      prs: r.precioRS||precioRS, prd: r.precioRD||precioRD,
+      total: r.extrasTotal||0
+    };
+    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, r.precioGasoil||precioGasoil, r.precioSp95||precioSp95, r.precioAceite||precioAceite, true, extras);
   } else {
     const ant = getParteAnterior(p.fecha, p.turno);
     if (ant) {
@@ -2396,7 +2410,13 @@ function verParteConcreto(p, id) {
       const lG = iniG > finG ? finG+10000-iniG : finG-iniG;
       const lS = iniS > finS ? finS+10000-iniS : finS-iniS;
       const lA = iniA > finA ? iniA-finA : 0;
-      recHtml = buildRecHtml(lG, lS, lA, precioGasoil, precioSp95, precioAceite, false);
+      const extras = {
+        t10: p.transito10||0, t12: p.transito12||0,
+        rs: p.rampaSimple||0, rd: p.rampaDoble||0,
+        pt10: precioT10, pt12: precioT12, prs: precioRS, prd: precioRD,
+        total: (p.transito10||0)*precioT10 + (p.transito12||0)*precioT12 + (p.rampaSimple||0)*precioRS + (p.rampaDoble||0)*precioRD
+      };
+      recHtml = buildRecHtml(lG, lS, lA, precioGasoil, precioSp95, precioAceite, false, extras);
     }
   }
 
