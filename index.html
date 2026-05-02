@@ -872,6 +872,12 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div id="np-consumos-lista" style="margin-bottom:4px;"></div>
     <button type="button" onclick="addConsumoFila()" style="width:100%;background:rgba(204,0,24,0.08);border:1px dashed rgba(204,0,24,0.35);border-radius:6px;padding:7px;font-size:0.65rem;color:#cc0018;cursor:pointer;margin-bottom:8px;">+ AÑADIR CONSUMO INTERNO</button>
     <div class="consumos-total" id="np-consumos-total" style="display:none;"></div>
+
+    <!-- COBROS EXTRA -->
+    <div class="parte-seccion-hdr" style="margin-top:4px;background:#1b4a7a;">💶 COBROS EXTRA (se suman a recaudación)</div>
+    <div id="np-cobros-lista" style="margin-bottom:4px;"></div>
+    <button type="button" onclick="addCobroFila()" style="width:100%;background:rgba(27,74,122,0.08);border:1px dashed rgba(27,74,122,0.35);border-radius:6px;padding:7px;font-size:0.65rem;color:#1b4a7a;cursor:pointer;margin-bottom:8px;">+ AÑADIR COBRO EXTRA</button>
+    <div class="consumos-total" id="np-cobros-total" style="display:none;color:#1b4a7a;border-top:1px solid rgba(27,74,122,0.2);"></div>
     <div class="parte-seccion-hdr" style="margin-top:4px;">RECICLAJE</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
       <div class="parte-campo"><label>PAPEL (kg)</label><input type="number" id="np-papel" placeholder="0" min="0"></div>
@@ -2149,6 +2155,54 @@ function setConsumosInternos(consumos) {
   actualizarConsumosTotal();
 }
 
+// ── COBROS EXTRA ──
+let cobrosCount = 0;
+window.addCobroFila = function(desc='', importe='') {
+  cobrosCount++;
+  const id = cobrosCount;
+  const lista = document.getElementById('np-cobros-lista');
+  const div = document.createElement('div');
+  div.className = 'consumo-fila';
+  div.id = `cobro-fila-${id}`;
+  div.innerHTML = `
+    <input type="text" class="form-input cobro-desc" placeholder="Descripción (ej: Amarre especial)" value="${desc}" oninput="actualizarCobrosTotal()" style="font-size:0.7rem;">
+    <input type="number" class="form-input cobro-importe" placeholder="€" min="0" step="0.01" value="${importe}" oninput="actualizarCobrosTotal()" style="width:75px;text-align:right;font-size:0.7rem;">
+    <button class="consumo-del-btn" style="color:#1b4a7a;" onclick="document.getElementById('cobro-fila-${id}').remove();actualizarCobrosTotal()">✕</button>`;
+  lista.appendChild(div);
+  actualizarCobrosTotal();
+};
+
+window.actualizarCobrosTotal = function() {
+  const importes = [...document.querySelectorAll('.cobro-importe')].map(i => parseFloat(i.value)||0);
+  const total = importes.reduce((a,b) => a+b, 0);
+  const el = document.getElementById('np-cobros-total');
+  if (importes.length > 0 && total > 0) {
+    el.style.display = 'block';
+    el.textContent = `Total cobros extra: +${total.toFixed(2)} €`;
+  } else {
+    el.style.display = 'none';
+  }
+  calcularRecaudacion();
+};
+
+function getCobrosExtra() {
+  const filas = document.querySelectorAll('.cobro-fila');
+  const result = [];
+  filas.forEach(f => {
+    const desc = f.querySelector('.cobro-desc')?.value?.trim();
+    const imp  = parseFloat(f.querySelector('.cobro-importe')?.value) || 0;
+    if (desc || imp > 0) result.push({ desc: desc||'Sin descripción', importe: imp });
+  });
+  return result;
+}
+
+function setCobrosExtra(cobros) {
+  document.getElementById('np-cobros-lista').innerHTML = '';
+  cobrosCount = 0;
+  (cobros||[]).forEach(c => addCobroFila(c.desc||'', c.importe||''));
+  actualizarCobrosTotal();
+}
+
 window.toggleCisterna = function() {
   const check = document.getElementById('np-cisterna-check');
   const fields = document.getElementById('np-cisterna-fields');
@@ -2248,7 +2302,9 @@ window.calcularRecaudacion = function() {
       // Consumos internos (se restan)
       const consumos = getConsumosInternos();
       const totalConsumos = consumos.reduce((a,c) => a + (c.importe||0), 0);
-      const totalFinal = total + totalExtras - totalConsumos;
+      const cobros = getCobrosExtra();
+      const totalCobros = cobros.reduce((a,c) => a + (c.importe||0), 0);
+      const totalFinal = total + totalExtras - totalConsumos + totalCobros;
 
       recValor.textContent = totalFinal.toFixed(2) + ' €';
       let detalle = `Gasóil ${lG.toFixed(2)}L×${precioGasoil.toFixed(3)}=${recG.toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L×${precioSp95.toFixed(3)}=${recS.toFixed(2)}€`;
@@ -2258,6 +2314,7 @@ window.calcularRecaudacion = function() {
       if (nRS  > 0) detalle += ` · R.Simple ${nRS}×${precioRS.toFixed(2)}=${recRS.toFixed(2)}€`;
       if (nRD  > 0) detalle += ` · R.Doble ${nRD}×${precioRD.toFixed(2)}=${recRD.toFixed(2)}€`;
       if (totalConsumos > 0) detalle += ` · Consumos internos -${totalConsumos.toFixed(2)}€`;
+      if (totalCobros   > 0) detalle += ` · Cobros extra +${totalCobros.toFixed(2)}€`;
       recDetalle.textContent = detalle;
     } else {
       recBox.style.display = 'none';
@@ -2429,11 +2486,12 @@ function verParteConcreto(p, id) {
   }
 
   // Combustible / Agua
-  function buildRecHtml(lG, lS, lA, pG, pS, pA, guardado, extras, consumosTotal, consumosList) {
+  function buildRecHtml(lG, lS, lA, pG, pS, pA, guardado, extras, consumosTotal, cobrosTotal) {
     const recG = lG * pG, recS = lS * pS, recA = (lA||0) * pA;
     const extrasTotal = extras ? extras.total : 0;
     const conTotal = consumosTotal || 0;
-    const total = recG + recS + recA + extrasTotal - conTotal;
+    const cobTotal = cobrosTotal  || 0;
+    const total = recG + recS + recA + extrasTotal - conTotal + cobTotal;
     const border = guardado ? 'border:1.5px solid rgba(204,0,24,0.3);background:linear-gradient(135deg,rgba(204,0,24,0.07),rgba(204,0,24,0.03));' : 'border:1.5px dashed rgba(240,165,0,0.4);background:rgba(240,165,0,0.08);';
     const color = guardado ? '#cc0018' : '#e07820';
     const label = guardado ? '⛽ Recaudación total' : '⛽ Recaudación (calculada ahora)';
@@ -2446,6 +2504,7 @@ function verParteConcreto(p, id) {
       if (extras.rd  > 0) detalle += ` · R.Doble ${extras.rd}×${extras.prd.toFixed(2)}=${(extras.rd*extras.prd).toFixed(2)}€`;
     }
     if (conTotal > 0) detalle += ` · Consumos internos -${conTotal.toFixed(2)}€`;
+    if (cobTotal > 0) detalle += ` · Cobros extra +${cobTotal.toFixed(2)}€`;
     return `<div style="margin-top:8px;${border}border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:0.55rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;">${label}</div>
@@ -2466,7 +2525,8 @@ function verParteConcreto(p, id) {
       total: r.extrasTotal||0
     };
     const consumosTotal = (p.consumosInternos||[]).reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
-    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, r.precioGasoil||precioGasoil, r.precioSp95||precioSp95, r.precioAceite||precioAceite, true, extras, consumosTotal, p.consumosInternos||[]);
+    const cobrosTotal   = (p.cobrosExtra||[]).reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
+    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, r.precioGasoil||precioGasoil, r.precioSp95||precioSp95, r.precioAceite||precioAceite, true, extras, consumosTotal, cobrosTotal);
   } else {
     const ant = getParteAnterior(p.fecha, p.turno);
     if (ant) {
@@ -2510,6 +2570,17 @@ function verParteConcreto(p, id) {
       <div style="display:flex;justify-content:space-between;font-size:0.68rem;font-weight:700;color:#cc0018;margin-top:4px;">
         <span>TOTAL CONSUMOS</span>
         <span>-${p.consumosInternos.reduce((a,c)=>a+(parseFloat(c.importe)||0),0).toFixed(2)} €</span>
+      </div>
+    </div>` : ''}
+    ${p.cobrosExtra && p.cobrosExtra.length > 0 ? `
+    <div style="margin-top:6px;background:#f0f4ff;border:1px solid rgba(27,74,122,0.2);border-radius:5px;padding:7px 10px;">
+      <div style="font-size:0.55rem;color:#1b4a7a;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px;">💶 Cobros extra</div>
+      ${p.cobrosExtra.map(c => `<div style="display:flex;justify-content:space-between;font-size:0.65rem;color:#555;padding:2px 0;border-bottom:1px solid rgba(27,74,122,0.08);">
+        <span>${c.desc}</span><span style="color:#1b4a7a;font-weight:600;">+${parseFloat(c.importe||0).toFixed(2)} €</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;font-size:0.68rem;font-weight:700;color:#1b4a7a;margin-top:4px;">
+        <span>TOTAL COBROS EXTRA</span>
+        <span>+${p.cobrosExtra.reduce((a,c)=>a+(parseFloat(c.importe)||0),0).toFixed(2)} €</span>
       </div>
     </div>` : ''}
     ${recHtml}
@@ -2612,6 +2683,7 @@ window.editarParte = function() {
   document.getElementById('np-rampa-simple').value = p.rampaSimple || '';
   document.getElementById('np-rampa-doble').value = p.rampaDoble || '';
   setConsumosInternos(p.consumosInternos || []);
+  setCobrosExtra(p.cobrosExtra || []);
 
   // Cisterna
   const cCheck = document.getElementById('np-cisterna-check');
@@ -3273,6 +3345,7 @@ window.openNuevoParte = function(fechaIso) {
   document.getElementById('np-rampa-simple').value = '';
   document.getElementById('np-rampa-doble').value = '';
   setConsumosInternos([]);
+  setCobrosExtra([]);
   calcularRecaudacion();
 
   openOv('ov-nuevo-parte');
@@ -3366,6 +3439,7 @@ window.guardarParte = async function() {
     rampaSimple: nRS  || null,
     rampaDoble:  nRD  || null,
     consumosInternos: getConsumosInternos().length > 0 ? getConsumosInternos() : null,
+    cobrosExtra: getCobrosExtra().length > 0 ? getCobrosExtra() : null,
     recaudacion: recaudacionData,
     cisterna: (()=>{
       const check = document.getElementById('np-cisterna-check');
