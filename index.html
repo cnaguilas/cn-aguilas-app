@@ -428,16 +428,26 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     </div>
   </div>
   <!-- Contadores del último parte -->
-  <div class="contadores-panel">
+  <div class="contadores-panel" style="grid-template-columns:1fr 1fr;">
     <div class="contador-card contador-gasoil">
       <div class="contador-label">⛽ Gasóil — Último parte</div>
-      <div class="contador-valor" id="cnt-gasoil">—</div>
+      <div class="contador-valor" id="cnt-gasoil" style="font-size:1.2rem;">—</div>
       <div class="contador-sub" id="cnt-gasoil-meta"></div>
     </div>
     <div class="contador-card contador-sp95">
       <div class="contador-label">🟢 S.P.95 — Último parte</div>
-      <div class="contador-valor" id="cnt-sp95">—</div>
+      <div class="contador-valor" id="cnt-sp95" style="font-size:1.2rem;">—</div>
       <div class="contador-sub" id="cnt-sp95-meta"></div>
+    </div>
+    <div class="contador-card contador-agua">
+      <div class="contador-label">💧 Agua salida — Último parte</div>
+      <div class="contador-valor" id="cnt-agua" style="font-size:1.2rem;color:#1b6a9a;">—</div>
+      <div class="contador-sub" id="cnt-agua-meta"></div>
+    </div>
+    <div class="contador-card contador-aceite">
+      <div class="contador-label">🛢 Aceite 2T — Último parte</div>
+      <div class="contador-valor" id="cnt-aceite" style="font-size:1.2rem;color:#e07820;">—</div>
+      <div class="contador-sub" id="cnt-aceite-meta"></div>
     </div>
   </div>
   <div class="partes-header">
@@ -2345,17 +2355,20 @@ function renderContadores() {
     return (TURNO_ORD[b.turno]||0) - (TURNO_ORD[a.turno]||0);
   });
   const u = todos[0];
-  const elG  = document.getElementById('cnt-gasoil');
-  const elS  = document.getElementById('cnt-sp95');
-  const elGM = document.getElementById('cnt-gasoil-meta');
-  const elSM = document.getElementById('cnt-sp95-meta');
-  if (!elG) return;
   const tl = u.turno === 'mañana' ? 'Mañ' : u.turno === 'tarde' ? 'Tar' : 'Noc';
   const meta = `${tl} · ${u.fecha}`;
-  elG.textContent = u.gasoil != null ? parseFloat(u.gasoil).toFixed(2) : '—';
-  elS.textContent = u.sp95   != null ? parseFloat(u.sp95).toFixed(2)   : '—';
-  elGM.textContent = meta;
-  elSM.textContent = meta;
+
+  const set = (id, val, metaId) => {
+    const el = document.getElementById(id);
+    const em = document.getElementById(metaId);
+    if (el) el.textContent = val != null && val !== '' ? parseFloat(val).toFixed(2) : '—';
+    if (em) em.textContent = meta;
+  };
+
+  set('cnt-gasoil',  u.gasoil,     'cnt-gasoil-meta');
+  set('cnt-sp95',    u.sp95,       'cnt-sp95-meta');
+  set('cnt-agua',    u.aguaSalida, 'cnt-agua-meta');
+  set('cnt-aceite',  u.aceite,     'cnt-aceite-meta');
 }
 
 // ── CALENDARIO PARTES ──
