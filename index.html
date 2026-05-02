@@ -444,10 +444,19 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="contador-valor" id="cnt-agua" style="font-size:1.2rem;color:#1b6a9a;">—</div>
       <div class="contador-sub" id="cnt-agua-meta"></div>
     </div>
-    <div class="contador-card contador-aceite">
-      <div class="contador-label">🛢 Aceite 2T — Último parte</div>
-      <div class="contador-valor" id="cnt-aceite" style="font-size:1.2rem;color:#e07820;">—</div>
-      <div class="contador-sub" id="cnt-aceite-meta"></div>
+    <div class="contador-card contador-aceite" style="grid-column:1/-1;">
+      <div class="contador-label" style="margin-bottom:4px;">🛢 Aceite 2T — Cajas Gas · Último parte</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:0.42rem;color:#e07820;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:1px;">Botellas aceite 2T</div>
+          <div class="contador-valor" id="cnt-aceite" style="font-size:1.2rem;color:#e07820;">—</div>
+        </div>
+        <div style="border-left:1px solid #f0e0cc;padding-left:10px;">
+          <div style="font-size:0.42rem;color:#7a5af8;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:1px;">Cajas gas</div>
+          <div class="contador-valor" id="cnt-cajas" style="font-size:1.2rem;color:#7a5af8;">—</div>
+        </div>
+      </div>
+      <div class="contador-sub" id="cnt-aceite-meta" style="margin-top:3px;"></div>
     </div>
   </div>
   <div class="partes-header">
@@ -2369,7 +2378,8 @@ function renderContadores() {
   set('cnt-sp95',    u.sp95,       'cnt-sp95-meta');
   set('cnt-agua',    u.aguaSalida, 'cnt-agua-meta');
   set('cnt-aceite',  u.aceite,     'cnt-aceite-meta');
-}
+  const elCajas = document.getElementById('cnt-cajas');
+  if (elCajas) elCajas.textContent = u.cajas != null && u.cajas !== '' ? u.cajas : '—';
 
 // ── CALENDARIO PARTES ──
 function renderPartesCalendario() {
