@@ -431,13 +431,32 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <div class="contadores-panel">
     <div class="contador-card contador-gasoil">
       <div class="contador-label">⛽ Gasóil — Último parte</div>
-      <div class="contador-valor" id="cnt-gasoil">—</div>
+      <div class="contador-valor" id="cnt-gasoil" style="font-size:1.2rem;">—</div>
       <div class="contador-sub" id="cnt-gasoil-meta"></div>
     </div>
     <div class="contador-card contador-sp95">
       <div class="contador-label">🟢 S.P.95 — Último parte</div>
-      <div class="contador-valor" id="cnt-sp95">—</div>
+      <div class="contador-valor" id="cnt-sp95" style="font-size:1.2rem;">—</div>
       <div class="contador-sub" id="cnt-sp95-meta"></div>
+    </div>
+    <div class="contador-card" style="background:#fff;border:1px solid #e8e8e8;border-radius:7px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+      <div class="contador-label">💧 Agua salida — Último parte</div>
+      <div class="contador-valor" id="cnt-agua" style="font-size:1.2rem;color:#1b6a9a;">—</div>
+      <div class="contador-sub" id="cnt-agua-meta"></div>
+    </div>
+    <div class="contador-card" style="background:#fff;border:1px solid #e8e8e8;border-radius:7px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);grid-column:1/-1;">
+      <div class="contador-label" style="margin-bottom:4px;">🛢 Aceite 2T — Cajas Gas · Último parte</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:0.42rem;color:#e07820;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:1px;">Botellas aceite 2T</div>
+          <div class="contador-valor" id="cnt-aceite" style="font-size:1.2rem;color:#e07820;">—</div>
+        </div>
+        <div style="border-left:1px solid #f0e0cc;padding-left:10px;">
+          <div style="font-size:0.42rem;color:#7a5af8;letter-spacing:0.09em;text-transform:uppercase;margin-bottom:1px;">Cajas gas</div>
+          <div class="contador-valor" id="cnt-cajas" style="font-size:1.2rem;color:#7a5af8;">—</div>
+        </div>
+      </div>
+      <div class="contador-sub" id="cnt-aceite-meta" style="margin-top:3px;"></div>
     </div>
   </div>
   <div class="partes-header">
@@ -2345,17 +2364,26 @@ function renderContadores() {
     return (TURNO_ORD[b.turno]||0) - (TURNO_ORD[a.turno]||0);
   });
   const u = todos[0];
-  const elG  = document.getElementById('cnt-gasoil');
-  const elS  = document.getElementById('cnt-sp95');
-  const elGM = document.getElementById('cnt-gasoil-meta');
-  const elSM = document.getElementById('cnt-sp95-meta');
-  if (!elG) return;
+  if (!document.getElementById('cnt-gasoil')) return;
   const tl = u.turno === 'mañana' ? 'Mañ' : u.turno === 'tarde' ? 'Tar' : 'Noc';
   const meta = `${tl} · ${u.fecha}`;
-  elG.textContent = u.gasoil != null ? parseFloat(u.gasoil).toFixed(2) : '—';
-  elS.textContent = u.sp95   != null ? parseFloat(u.sp95).toFixed(2)   : '—';
-  elGM.textContent = meta;
-  elSM.textContent = meta;
+
+  const setVal = (id, val, decimals=2) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val != null && val !== '' ? parseFloat(val).toFixed(decimals) : '—';
+  };
+  const setMeta = (id) => { const el = document.getElementById(id); if (el) el.textContent = meta; };
+
+  setVal('cnt-gasoil',  u.gasoil);
+  setVal('cnt-sp95',    u.sp95);
+  setVal('cnt-agua',    u.aguaSalida);
+  setVal('cnt-aceite',  u.aceite);
+  setMeta('cnt-gasoil-meta');
+  setMeta('cnt-sp95-meta');
+  setMeta('cnt-agua-meta');
+  setMeta('cnt-aceite-meta');
+  const elCajas = document.getElementById('cnt-cajas');
+  if (elCajas) elCajas.textContent = u.cajas != null && u.cajas !== '' ? u.cajas : '—';
 }
 
 // ── CALENDARIO PARTES ──
