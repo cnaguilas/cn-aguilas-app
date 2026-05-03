@@ -445,11 +445,10 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="contador-sub" id="cnt-agua-meta"></div>
     </div>
     <div class="contador-card" style="background:#fff;border:1px solid #e8e8e8;border-radius:7px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-      <div class="contador-label">🛢 Aceite 2T · <span style="color:#7a5af8;">Cajas gas</span></div>
-      <div style="display:flex;align-items:baseline;gap:8px;">
+      <div class="contador-label">🛢 Aceite 2T · <span style="color:#7a5af8;">Cajas aceite</span></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;">
         <div class="contador-valor" id="cnt-aceite" style="font-size:1.2rem;color:#e07820;">—</div>
-        <div style="font-size:0.55rem;color:#ccc;">·</div>
-        <div class="contador-valor" id="cnt-cajas" style="font-size:1.2rem;color:#7a5af8;">—</div>
+        <div class="contador-valor" id="cnt-cajas" style="font-size:1.2rem;color:#7a5af8;text-align:right;">—</div>
       </div>
       <div class="contador-sub" id="cnt-aceite-meta"></div>
     </div>
@@ -2372,7 +2371,8 @@ function renderContadores() {
   setVal('cnt-gasoil',  u.gasoil);
   setVal('cnt-sp95',    u.sp95);
   setVal('cnt-agua',    u.aguaSalida);
-  setVal('cnt-aceite',  u.aceite);
+  const elAceite = document.getElementById('cnt-aceite');
+  if (elAceite) elAceite.textContent = u.aceite != null && u.aceite !== '' ? Math.round(parseFloat(u.aceite)) : '—';
   setMeta('cnt-gasoil-meta');
   setMeta('cnt-sp95-meta');
   setMeta('cnt-agua-meta');
