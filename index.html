@@ -2807,18 +2807,40 @@ window.descargarPartesDia = function() {
       h += `</table></div>`;
     }
 
-    // Combustible con recaudación
+    // Combustible con recaudación completa
     let recRow = '';
     if (rec) {
       const pG = rec.precioGasoil||precioGasoil, pS = rec.precioSp95||precioSp95, pA = rec.precioAceite||precioAceite;
       const lG = rec.litrosGasoil||0, lS = rec.litrosSp95||0, lA = rec.litrosAceite||0;
       const rG = lG*pG, rS = lS*pS, rA = lA*pA;
-      let detalle = `Gasóil ${lG.toFixed(2)}L × ${pG.toFixed(3)} = ${rG.toFixed(2)}€ &nbsp;·&nbsp; S.P.95 ${lS.toFixed(2)}L × ${pS.toFixed(3)} = ${rS.toFixed(2)}€`;
-      if (lA > 0) detalle += ` &nbsp;·&nbsp; Aceite ${lA.toFixed(2)}L × ${pA.toFixed(2)} = ${rA.toFixed(2)}€`;
+      // Tránsitos y rampas
+      const nT10 = p.transito10||0, nT12 = p.transito12||0;
+      const nRS  = p.rampaSimple||0, nRD = p.rampaDoble||0;
+      const pt10 = rec.precioT10||precioT10, pt12 = rec.precioT12||precioT12;
+      const prs  = rec.precioRS||precioRS,   prd  = rec.precioRD||precioRD;
+      const rT10 = nT10*pt10, rT12 = nT12*pt12, rRS = nRS*prs, rRD = nRD*prd;
+      // Consumos y cobros
+      const consumos = p.consumosInternos||[];
+      const cobros   = p.cobrosExtra||[];
+      const totalCon = consumos.reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
+      const totalCob = cobros.reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
+      const totalFinal = rG+rS+rA+rT10+rT12+rRS+rRD-totalCon+totalCob;
+
+      let lineas = '';
+      if (lG > 0 || lS > 0) lineas += `<div class="pdf-rec-fila"><span>⛽ Gasóil ${lG.toFixed(2)}L × ${pG.toFixed(3)} €/L</span><span>${rG.toFixed(2)} €</span></div>`;
+      if (lS > 0) lineas += `<div class="pdf-rec-fila"><span>🟢 S.P.95 ${lS.toFixed(2)}L × ${pS.toFixed(3)} €/L</span><span>${rS.toFixed(2)} €</span></div>`;
+      if (lA > 0) lineas += `<div class="pdf-rec-fila"><span>🛢 Aceite ${lA.toFixed(2)}L × ${pA.toFixed(2)} €/L</span><span>${rA.toFixed(2)} €</span></div>`;
+      if (nT10 > 0) lineas += `<div class="pdf-rec-fila"><span>⚓ Tránsito ≤10m × ${nT10}</span><span>${rT10.toFixed(2)} €</span></div>`;
+      if (nT12 > 0) lineas += `<div class="pdf-rec-fila"><span>⚓ Tránsito ≤12m × ${nT12}</span><span>${rT12.toFixed(2)} €</span></div>`;
+      if (nRS  > 0) lineas += `<div class="pdf-rec-fila"><span>🛥 Rampa simple × ${nRS}</span><span>${rRS.toFixed(2)} €</span></div>`;
+      if (nRD  > 0) lineas += `<div class="pdf-rec-fila"><span>🛥 Rampa doble × ${nRD}</span><span>${rRD.toFixed(2)} €</span></div>`;
+      consumos.forEach(c => { lineas += `<div class="pdf-rec-fila" style="color:#cc0018;"><span>⛽ Consumo interno: ${c.desc}</span><span>-${parseFloat(c.importe||0).toFixed(2)} €</span></div>`; });
+      cobros.forEach(c =>   { lineas += `<div class="pdf-rec-fila" style="color:#1b4a7a;"><span>💶 Cobro extra: ${c.desc}</span><span>+${parseFloat(c.importe||0).toFixed(2)} €</span></div>`; });
+
       recRow = `<div class="pdf-recaudacion">
-        <div class="pdf-rec-label">⛽ RECAUDACIÓN COMBUSTIBLE</div>
-        <div class="pdf-rec-detalle">${detalle}</div>
-        <div class="pdf-rec-total">${(rec.totalEuros||0).toFixed(2)} €</div>
+        <div class="pdf-rec-label">💶 RECAUDACIÓN TOTAL</div>
+        <div class="pdf-rec-lineas">${lineas}</div>
+        <div class="pdf-rec-total">${totalFinal.toFixed(2)} €</div>
       </div>`;
     }
 
@@ -2954,9 +2976,11 @@ window.descargarPartesDia = function() {
     .pdf-dato{background:#f9f9f9;border:1px solid #eee;border-radius:4px;padding:4px 10px;min-width:90px;}
     .pdf-dato span{display:block;font-size:8px;color:#888;text-transform:uppercase;letter-spacing:0.06em;}
     .pdf-dato strong{font-size:11px;color:#111;}
-    .pdf-recaudacion{margin-top:8px;background:#fff0f0;border:1.5px solid rgba(204,0,24,0.3);border-radius:5px;padding:7px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-    .pdf-rec-label{font-size:9px;font-weight:700;color:#cc0018;letter-spacing:0.06em;flex:none;}
-    .pdf-rec-detalle{font-size:9px;color:#666;flex:1;}
+    .pdf-recaudacion{margin-top:8px;background:#fff0f0;border:1.5px solid rgba(204,0,24,0.3);border-radius:5px;padding:7px 10px;display:flex;flex-direction:column;}
+    .pdf-rec-label{font-size:9px;font-weight:700;color:#cc0018;letter-spacing:0.06em;margin-bottom:4px;}
+    .pdf-rec-lineas{width:100%;}
+    .pdf-rec-fila{display:flex;justify-content:space-between;font-size:8.5px;color:#555;padding:2px 0;border-bottom:1px solid rgba(204,0,24,0.08);}
+    .pdf-rec-total{font-size:13px;font-weight:700;color:#cc0018;margin-top:5px;text-align:right;}
     .pdf-rec-total{font-size:15px;font-weight:700;color:#cc0018;flex:none;margin-left:auto;}
     .pdf-otros{font-size:10px;color:#555;margin-top:6px;padding:4px 0;}
     .pdf-cisterna{font-size:10px;color:#1b7a4a;font-weight:600;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:4px;padding:5px 8px;margin-top:6px;}
