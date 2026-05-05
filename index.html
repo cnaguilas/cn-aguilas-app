@@ -406,6 +406,39 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <div class="herr-list" id="herr-list"><div class="loading">Cargando...</div></div>
 </div>
 
+<!-- MODAL DÍAS TRABAJADOS -->
+<div class="overlay" id="ov-dias-trabajados" onclick="handleOv(event,'ov-dias-trabajados')">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-header">
+      <h3>📅 DÍAS TRABAJADOS</h3>
+      <button class="close-btn" onclick="closeOv('ov-dias-trabajados')">x</button>
+    </div>
+    <p style="font-size:0.65rem;color:#888;margin-bottom:14px;">Selecciona el trimestre para descargar el informe de días trabajados por marinero.</p>
+    <div style="display:grid;gap:8px;">
+      <button class="btn-secondary" onclick="descargarDiasTrabajados(1,3,'Enero — Marzo')" style="text-align:left;padding:10px 14px;">
+        <div style="font-size:0.75rem;font-weight:700;">1er Trimestre</div>
+        <div style="font-size:0.6rem;color:#aaa;">Enero — Marzo</div>
+      </button>
+      <button class="btn-secondary" onclick="descargarDiasTrabajados(4,6,'Abril — Junio')" style="text-align:left;padding:10px 14px;">
+        <div style="font-size:0.75rem;font-weight:700;">2º Trimestre</div>
+        <div style="font-size:0.6rem;color:#aaa;">Abril — Junio</div>
+      </button>
+      <button class="btn-secondary" onclick="descargarDiasTrabajados(7,9,'Julio — Septiembre')" style="text-align:left;padding:10px 14px;">
+        <div style="font-size:0.75rem;font-weight:700;">3er Trimestre</div>
+        <div style="font-size:0.6rem;color:#aaa;">Julio — Septiembre</div>
+      </button>
+      <button class="btn-secondary" onclick="descargarDiasTrabajados(10,12,'Octubre — Diciembre')" style="text-align:left;padding:10px 14px;">
+        <div style="font-size:0.75rem;font-weight:700;">4º Trimestre</div>
+        <div style="font-size:0.6rem;color:#aaa;">Octubre — Diciembre</div>
+      </button>
+    </div>
+    <div style="margin-top:12px;">
+      <label style="font-size:0.62rem;color:#888;display:block;margin-bottom:4px;">AÑO</label>
+      <input type="number" id="dias-year" value="2026" min="2024" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;">
+    </div>
+  </div>
+</div>
+
 <!-- PARTES -->
 <div class="page" id="page-3">
   <!-- Panel nivel de tanques -->
@@ -460,6 +493,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <button class="ynav-btn" onclick="partesChangeMes(1)">&#9654;</button>
     </div>
     <button class="btn-primary" style="font-size:0.75rem;padding:6px 12px;" onclick="openNuevoParte(null)">+ NUEVO PARTE</button>
+    <button class="btn-secondary" onclick="openDiasTrabajados()" style="font-size:0.65rem;padding:6px 10px;">📅 DÍAS</button>
   </div>
   <div class="partes-cal" id="partes-cal"></div>
   <div style="text-align:center;padding:18px 0 8px;font-size:0.62rem;color:#bbb;letter-spacing:0.06em;">Toca un día del calendario para ver el parte</div>
@@ -2023,6 +2057,138 @@ onValue(preciosRef, snap => {
   if (lrd)  lrd.textContent  = precioRD.toFixed(2)+'€';
   calcularRecaudacion();
 });
+
+// ── DÍAS TRABAJADOS ──
+window.openDiasTrabajados = function() {
+  document.getElementById('dias-year').value = new Date().getFullYear();
+  openOv('ov-dias-trabajados');
+};
+
+window.descargarDiasTrabajados = function(mesIni, mesFin, label) {
+  const year = parseInt(document.getElementById('dias-year').value) || new Date().getFullYear();
+
+  // Filtrar partes del periodo
+  const todosPart = Object.values(partes).filter(p => {
+    if (!p.fecha || !p.marinero) return false;
+    const [y, m] = p.fecha.split('-').map(Number);
+    return y === year && m >= mesIni && m <= mesFin;
+  });
+
+  // Agrupar días únicos por marinero
+  const diasPorMarinero = {};
+  const TODOS_MARINEROS = ['tomas','joseluis','javi','juan','esteban','marinero'];
+  TODOS_MARINEROS.forEach(m => { diasPorMarinero[m] = new Set(); });
+
+  todosPart.forEach(p => {
+    const mar = p.marinero;
+    if (!diasPorMarinero[mar]) diasPorMarinero[mar] = new Set();
+    diasPorMarinero[mar].add(p.fecha);
+  });
+
+  // Construir tabla de detalle por marinero
+  const TURNO_LABELS = {mañana:'Mañana', tarde:'Tarde', noche:'Noche'};
+  const MONTH_NAMES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  let tablaHtml = '';
+  TODOS_MARINEROS.forEach(mar => {
+    const dias = diasPorMarinero[mar];
+    if (!dias || dias.size === 0) return;
+    const nombre = NOMBRES[mar] || mar;
+
+    // Agrupar por mes
+    const porMes = {};
+    [...dias].sort().forEach(fecha => {
+      const [,m] = fecha.split('-').map(Number);
+      if (!porMes[m]) porMes[m] = [];
+      porMes[m].push(fecha);
+    });
+
+    let filasHtml = '';
+    let totalMar = 0;
+    Object.keys(porMes).sort((a,b)=>a-b).forEach(mes => {
+      const fechasMes = porMes[mes];
+      totalMar += fechasMes.length;
+      // Desglose por turno en ese mes
+      const turnos = {mañana:[], tarde:[], noche:[]};
+      fechasMes.forEach(fecha => {
+        const partesDelDia = todosPart.filter(p => p.fecha===fecha && p.marinero===mar);
+        partesDelDia.forEach(p => { if (turnos[p.turno]) turnos[p.turno].push(fecha); });
+      });
+      filasHtml += `<tr>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;color:#555;">${MONTH_NAMES[mes]}</td>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;font-weight:700;">${fechasMes.length}</td>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#e07820;">${turnos.mañana.length||'—'}</td>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#1b4a7a;">${turnos.tarde.length||'—'}</td>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#1a1a2e;">${turnos.noche.length||'—'}</td>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:8px;color:#aaa;">${fechasMes.join(', ')}</td>
+      </tr>`;
+    });
+
+    tablaHtml += `
+    <div style="margin-bottom:18px;page-break-inside:avoid;">
+      <div style="background:#cc0018;color:#fff;padding:7px 12px;border-radius:6px 6px 0 0;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.06em;">👤 ${nombre.toUpperCase()}</span>
+        <span style="font-size:11px;background:rgba(255,255,255,0.2);padding:2px 10px;border-radius:10px;">${totalMar} días</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-top:none;border-radius:0 0 6px 6px;overflow:hidden;font-size:9px;">
+        <thead>
+          <tr style="background:#f8f8f8;">
+            <th style="padding:5px 8px;text-align:left;font-size:8px;color:#888;letter-spacing:0.06em;">MES</th>
+            <th style="padding:5px 8px;text-align:center;font-size:8px;color:#888;">DÍAS</th>
+            <th style="padding:5px 8px;text-align:center;font-size:8px;color:#e07820;">MAÑ</th>
+            <th style="padding:5px 8px;text-align:center;font-size:8px;color:#1b4a7a;">TAR</th>
+            <th style="padding:5px 8px;text-align:center;font-size:8px;color:#1a1a2e;">NOC</th>
+            <th style="padding:5px 8px;text-align:left;font-size:8px;color:#888;">FECHAS</th>
+          </tr>
+        </thead>
+        <tbody>${filasHtml}</tbody>
+        <tfoot>
+          <tr style="background:#fff8f8;">
+            <td style="padding:6px 8px;font-weight:700;color:#cc0018;font-size:10px;">TOTAL</td>
+            <td style="padding:6px 8px;text-align:center;font-weight:700;color:#cc0018;font-size:12px;">${totalMar}</td>
+            <td colspan="4"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+  });
+
+  if (!tablaHtml) { showToast('No hay partes en este periodo'); return; }
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Días Trabajados ${label} ${year}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    @page{size:A4 portrait;margin:1.2cm 1.4cm;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#111;background:#fff;}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #cc0018;padding-bottom:8px;margin-bottom:16px;}
+    .cab-titulo{font-size:18px;font-weight:700;color:#cc0018;letter-spacing:0.08em;}
+    .cab-sub{font-size:9px;color:#888;margin-top:3px;}
+    .cab-fecha{text-align:right;font-size:9px;color:#aaa;}
+    .pie{text-align:center;font-size:8px;color:#ccc;margin-top:16px;border-top:1px solid #eee;padding-top:6px;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  </style></head><body>
+  <div class="cabecera">
+    <div>
+      <div class="cab-titulo">⚓ CLUB NÁUTICO ÁGUILAS</div>
+      <div class="cab-sub">INFORME DE DÍAS TRABAJADOS · ${label.toUpperCase()} ${year}</div>
+    </div>
+    <div class="cab-fecha">Generado: ${new Date().toLocaleDateString('es-ES')}</div>
+  </div>
+  ${tablaHtml}
+  <div class="pie">Club Náutico Águilas · Uso interno · ${label} ${year}</div>
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dias_trabajados_${label.replace(/ /g,'_')}_${year}.html`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  showToast('Informe descargado ✓');
+};
 
 window.abrirPrecios = function() {
   document.getElementById('precio-gasoil-input').value = precioGasoil;
