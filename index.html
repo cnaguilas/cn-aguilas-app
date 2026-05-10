@@ -2852,7 +2852,7 @@ window.editarParte = function() {
   document.getElementById('np-fecha').value = p.fecha;
   document.getElementById('np-fecha').disabled = true; // no cambiar fecha en edición
   document.getElementById('np-turno').value = p.turno;
-  document.getElementById('np-turno').disabled = true; // no cambiar turno en edición
+  document.getElementById('np-turno').disabled = false; // permitir cambiar turno en edición
   document.getElementById('np-editing-id').value = id;
   document.getElementById('np-btn-guardar').textContent = '💾 ACTUALIZAR PARTE';
 
