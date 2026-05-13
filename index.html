@@ -830,6 +830,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
           <option value="mañana">I — Mañana (06-14h)</option>
           <option value="tarde">II — Tarde (14-22h)</option>
           <option value="noche">III — Noche (22-06h)</option>
+          <option value="fuera">⚙️ Fuera de turno</option>
         </select>
       </div>
     </div>
@@ -841,7 +842,8 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div id="np-revisiones"></div>
     </div>
 
-    <!-- SECCIÓN: COMBUSTIBLE Y AGUA -->
+    <!-- SECCIÓN: COMBUSTIBLE Y AGUA (oculto en fuera de turno) -->
+    <div id="np-seccion-combustible">
     <div class="parte-seccion-hdr" style="margin-top:12px;">COMBUSTIBLE · AGUA · VENTAS</div>
     <!-- Barra de precios actuales -->
     <div class="precio-combustible-bar">
@@ -927,6 +929,8 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div id="np-cobros-lista" style="margin-bottom:4px;"></div>
     <button type="button" onclick="addCobroFila()" style="width:100%;background:rgba(27,74,122,0.08);border:1px dashed rgba(27,74,122,0.35);border-radius:6px;padding:7px;font-size:0.65rem;color:#1b4a7a;cursor:pointer;margin-bottom:8px;">+ AÑADIR COBRO EXTRA</button>
     <div class="consumos-total" id="np-cobros-total" style="display:none;color:#1b4a7a;border-top:1px solid rgba(27,74,122,0.2);"></div>
+    </div><!-- fin np-seccion-combustible -->
+
     <div class="parte-seccion-hdr" style="margin-top:4px;">RECICLAJE</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
       <div class="parte-campo"><label>PAPEL (kg)</label><input type="number" id="np-papel" placeholder="0" min="0"></div>
@@ -2088,7 +2092,7 @@ window.descargarDiasTrabajados = function(mesIni, mesFin, label) {
   });
 
   // Construir tabla de detalle por marinero
-  const TURNO_LABELS = {mañana:'Mañana', tarde:'Tarde', noche:'Noche'};
+  const TURNO_LABELS = {mañana:'Mañana', tarde:'Tarde', noche:'Noche', fuera:'Fuera de turno'};
   const MONTH_NAMES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
   let tablaHtml = '';
@@ -2111,7 +2115,7 @@ window.descargarDiasTrabajados = function(mesIni, mesFin, label) {
       const fechasMes = porMes[mes];
       totalMar += fechasMes.length;
       // Desglose por turno en ese mes
-      const turnos = {mañana:[], tarde:[], noche:[]};
+      const turnos = {mañana:[], tarde:[], noche:[], fuera:[]};
       fechasMes.forEach(fecha => {
         const partesDelDia = todosPart.filter(p => p.fecha===fecha && p.marinero===mar);
         partesDelDia.forEach(p => { if (turnos[p.turno]) turnos[p.turno].push(fecha); });
@@ -2122,6 +2126,7 @@ window.descargarDiasTrabajados = function(mesIni, mesFin, label) {
         <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#e07820;">${turnos.mañana.length||'—'}</td>
         <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#1b4a7a;">${turnos.tarde.length||'—'}</td>
         <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#1a1a2e;">${turnos.noche.length||'—'}</td>
+        <td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;color:#888;">${turnos.fuera.length||'—'}</td>
         <td style="padding:5px 8px;border-bottom:1px solid #eee;font-size:8px;color:#aaa;">${fechasMes.join(', ')}</td>
       </tr>`;
     });
@@ -2140,6 +2145,7 @@ window.descargarDiasTrabajados = function(mesIni, mesFin, label) {
             <th style="padding:5px 8px;text-align:center;font-size:8px;color:#e07820;">MAÑ</th>
             <th style="padding:5px 8px;text-align:center;font-size:8px;color:#1b4a7a;">TAR</th>
             <th style="padding:5px 8px;text-align:center;font-size:8px;color:#1a1a2e;">NOC</th>
+            <th style="padding:5px 8px;text-align:center;font-size:8px;color:#888;">F.TURNO</th>
             <th style="padding:5px 8px;text-align:left;font-size:8px;color:#888;">FECHAS</th>
           </tr>
         </thead>
@@ -2616,8 +2622,8 @@ window.partesVerDia = function(fechaStr) {
   }
 
   // Varios partes: mostrar selector de turno
-  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2 };
-  const TURNO_LABELS = { mañana: 'I Turno — Mañana (06-14h)', tarde: 'II Turno — Tarde (14-22h)', noche: 'III Turno — Noche (22-06h)' };
+  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2, fuera: 3 };
+  const TURNO_LABELS = { mañana: 'I Turno — Mañana (06-14h)', tarde: 'II Turno — Tarde (14-22h)', noche: 'III Turno — Noche (22-06h)', fuera: '⚙️ Fuera de turno' };
   itemsEntries.sort((a, b) => (TURNO_ORDER[a[1].turno] ?? 9) - (TURNO_ORDER[b[1].turno] ?? 9));
 
   const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -2937,8 +2943,8 @@ window.descargarPartesDia = function() {
   const itemsDelDia = Object.values(partes).filter(p => p.fecha === fechaStr);
   if (!itemsDelDia.length) { showToast('No hay partes para descargar'); return; }
 
-  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2 };
-  const TURNO_LABELS = { mañana: 'I TURNO — MAÑANA (06-14h)', tarde: 'II TURNO — TARDE (14-22h)', noche: 'III TURNO — NOCHE (22-06h)' };
+  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2, fuera: 3 };
+  const TURNO_LABELS = { mañana: 'I TURNO — MAÑANA (06-14h)', tarde: 'II TURNO — TARDE (14-22h)', noche: 'III TURNO — NOCHE (22-06h)', fuera: '⚙️ FUERA DE TURNO' };
   itemsDelDia.sort((a, b) => (TURNO_ORDER[a.turno] ?? 9) - (TURNO_ORDER[b.turno] ?? 9));
 
   const fecha = new Date(fechaStr + 'T12:00:00');
@@ -3210,7 +3216,7 @@ window.descargarResumenAdm = function() {
   const itemsDelDia = Object.values(partes).filter(p => p.fecha === fechaStr);
   if (!itemsDelDia.length) { showToast('No hay partes para descargar'); return; }
 
-  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2 };
+  const TURNO_ORDER = { mañana: 0, tarde: 1, noche: 2, fuera: 3 };
   const TURNO_LABELS = { mañana: 'Turno I — Mañana (06-14h)', tarde: 'Turno II — Tarde (14-22h)', noche: 'Turno III — Noche (22-06h)' };
   const TURNO_ROMAN = { mañana: 'I', tarde: 'II', noche: 'III' };
   itemsDelDia.sort((a, b) => (TURNO_ORDER[a.turno] ?? 9) - (TURNO_ORDER[b.turno] ?? 9));
@@ -3501,11 +3507,26 @@ window.checkboxExclusivo = function(prefix, idx, tipo) {
 
 window.actualizarRondasSegunTurno = function() {
   const turno = document.getElementById('np-turno')?.value || 'mañana';
-  buildRondas(turno);
-  // Actualizar trabajos según turno
-  const trabajos = turno === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
-  buildFilas(trabajos, 'np-trabajos', 'trab');
-  calcularRecaudacion();
+  const esFuera = turno === 'fuera';
+
+  // Ocultar sección combustible si es fuera de turno
+  const secComb = document.getElementById('np-seccion-combustible');
+  if (secComb) secComb.style.display = esFuera ? 'none' : 'block';
+
+  if (!esFuera) {
+    buildRondas(turno);
+    const trabajos = turno === 'tarde' ? TRABAJOS_TARDE : TRABAJOS_BASE;
+    buildFilas(trabajos, 'np-trabajos', 'trab');
+    calcularRecaudacion();
+  } else {
+    // Fuera de turno: limpiar rondas y trabajos
+    const elRondas = document.getElementById('np-rondas');
+    if (elRondas) elRondas.innerHTML = '<div style="font-size:0.65rem;color:#aaa;padding:8px;">No aplica en fuera de turno</div>';
+    const elTrab = document.getElementById('np-trabajos');
+    if (elTrab) elTrab.innerHTML = '';
+    const recBox = document.getElementById('np-recaudacion-box');
+    if (recBox) recBox.style.display = 'none';
+  }
 };
 
 window.openNuevoParte = function(fechaIso) {
@@ -3599,14 +3620,15 @@ window.guardarParte = async function() {
   // Calcular recaudación para guardar
   const anteriorParte = getParteAnterior(fechaStr, turno);
   let recaudacionData = null;
-  // Tránsitos y rampas
-  const nT10 = parseInt(document.getElementById('np-transito-10').value) || 0;
-  const nT12 = parseInt(document.getElementById('np-transito-12').value) || 0;
-  const nRS  = parseInt(document.getElementById('np-rampa-simple').value)  || 0;
-  const nRD  = parseInt(document.getElementById('np-rampa-doble').value)   || 0;
+  const esFuera = turno === 'fuera';
+  // Tránsitos y rampas (solo si no es fuera de turno)
+  const nT10 = esFuera ? 0 : (parseInt(document.getElementById('np-transito-10').value) || 0);
+  const nT12 = esFuera ? 0 : (parseInt(document.getElementById('np-transito-12').value) || 0);
+  const nRS  = esFuera ? 0 : (parseInt(document.getElementById('np-rampa-simple').value)  || 0);
+  const nRD  = esFuera ? 0 : (parseInt(document.getElementById('np-rampa-doble').value)   || 0);
   const extrasTotal = nT10*precioT10 + nT12*precioT12 + nRS*precioRS + nRD*precioRD;
 
-  if (anteriorParte) {
+  if (!esFuera && anteriorParte) {
     const iniG = parseFloat(anteriorParte.gasoil) || 0;
     const iniS = parseFloat(anteriorParte.sp95) || 0;
     const iniA = parseFloat(anteriorParte.aceite) || 0;
