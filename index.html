@@ -2951,6 +2951,7 @@ window.descargarPartesDia = function() {
   const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
 
   function calcRec(p) {
+    if (p.turno === 'fuera') return null;
     const ant = getParteAnterior(p.fecha, p.turno);
     if (p.recaudacion) return p.recaudacion;
     if (!ant) return null;
@@ -2968,10 +2969,20 @@ window.descargarPartesDia = function() {
     const turno = TURNO_LABELS[p.turno] || p.turno;
     const rec = calcRec(p);
     let h = `<div class="parte-bloque">
-      <div class="parte-bloque-hdr">
+      <div class="parte-bloque-hdr" style="${p.turno==='fuera'?'background:#555;':''}">
         <span class="parte-bloque-turno">${turno}</span>
         <span class="parte-bloque-mar">👤 ${marinero}</span>
       </div>`;
+
+    // Fuera de turno: solo mostrar observaciones
+    if (p.turno === 'fuera') {
+      h += `<div class="pdf-seccion" style="background:#f8f8f8;border:1px solid #eee;border-radius:5px;padding:8px 12px;margin:8px 0;">
+        <div style="font-size:8px;color:#888;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">⚙️ Fuera de turno — Sin venta de combustible</div>
+        ${p.observaciones ? `<div style="font-size:9px;color:#444;">${p.observaciones}</div>` : '<div style="font-size:9px;color:#bbb;">Sin observaciones</div>'}
+      </div>`;
+      h += `</div>`;
+      return h;
+    }
 
     if (p.revisiones && p.revisiones.length) {
       h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">REVISIONES</div><table class="pdf-tabla"><tr><th>ÍTEM</th><th>SÍ</th><th>NO</th><th>OBSERVACIONES</th></tr>`;
@@ -3225,6 +3236,7 @@ window.descargarResumenAdm = function() {
   const fechaLegible = fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
 
   function calcRec(p) {
+    if (p.turno === 'fuera') return null;
     if (p.recaudacion) return p.recaudacion;
     const ant = getParteAnterior(p.fecha, p.turno);
     if (!ant) return null;
@@ -3275,7 +3287,22 @@ window.descargarResumenAdm = function() {
   const turnosHtml = itemsDelDia.map(p => {
     const rec = calcRec(p);
     const marinero = NOMBRES[p.marinero] || p.marinero || '--';
-    const roman = TURNO_ROMAN[p.turno] || '';
+    const roman = TURNO_ROMAN[p.turno] || '—';
+
+    // Fuera de turno: renderizado simplificado
+    if (p.turno === 'fuera') {
+      return `
+      <div class="turno-bloque">
+        <div class="turno-hdr" style="background:#555;">
+          <span class="turno-roman">⚙️ FUERA DE TURNO</span>
+          <span class="turno-marinero">👤 ${marinero.toUpperCase()}</span>
+        </div>
+        <div class="turno-body">
+          <div style="font-size:9px;color:#666;padding:4px 0;">${p.observaciones || 'Sin observaciones'}</div>
+        </div>
+      </div>`;
+    }
+
     const lG  = rec ? (rec.litrosGasoil||0).toFixed(2) : '—';
     const lS  = rec ? (rec.litrosSp95||0).toFixed(2)   : '—';
     const lA  = parseFloat(p.aceite)||0;
