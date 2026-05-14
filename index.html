@@ -2712,6 +2712,7 @@ function verParteConcreto(p, id) {
   }
 
   let recHtml = '';
+  if (p.turno !== 'fuera') {
   if (p.recaudacion) {
     const r = p.recaudacion;
     const extras = {
@@ -2741,7 +2742,9 @@ function verParteConcreto(p, id) {
       recHtml = buildRecHtml(lG, lS, lA, precioGasoil, precioSp95, precioAceite, false, extras);
     }
   }
+  } // fin if turno !== fuera
 
+  if (p.turno !== 'fuera') {
   html += `<div class="vp-seccion"><div class="vp-seccion-hdr">COMBUSTIBLE · AGUA · VENTAS</div>
     <div class="vp-datos">
       <div class="vp-dato"><label>GASÓIL</label><span>${p.gasoil||'0'}</span></div>
@@ -2784,6 +2787,7 @@ function verParteConcreto(p, id) {
     ${p.cisterna ? `<div style="margin-top:6px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.62rem;color:#1b7a4a;"><strong>🚛 Cisterna recibida:</strong> Gasóil +${p.cisterna.gasoil||0}L · S.P.95 +${p.cisterna.sp95||0}L</div>` : ''}
     ${p.otros ? `<div style="font-size:0.65rem;color:#666;padding:4px 8px;margin-top:4px;">Otros: ${p.otros}</div>` : ''}
   </div>`;
+  } // fin if turno !== fuera
 
   // Reciclaje
   html += `<div class="vp-seccion"><div class="vp-seccion-hdr">RECICLAJE</div>
