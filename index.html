@@ -2325,7 +2325,7 @@ window.actualizarConsumosTotal = function() {
 };
 
 function getConsumosInternos() {
-  const filas = document.querySelectorAll('.consumo-fila');
+  const filas = document.querySelectorAll('#np-consumos-lista .consumo-fila');
   const result = [];
   filas.forEach(f => {
     const desc = f.querySelector('.consumo-desc')?.value?.trim();
@@ -2349,7 +2349,7 @@ window.addCobroFila = function(desc='', importe='') {
   const id = cobrosCount;
   const lista = document.getElementById('np-cobros-lista');
   const div = document.createElement('div');
-  div.className = 'consumo-fila';
+  div.className = 'cobro-fila consumo-fila';
   div.id = `cobro-fila-${id}`;
   div.innerHTML = `
     <input type="text" class="form-input cobro-desc" placeholder="Descripción (ej: Amarre especial)" value="${desc}" oninput="actualizarCobrosTotal()" style="font-size:0.7rem;">
@@ -2373,7 +2373,7 @@ window.actualizarCobrosTotal = function() {
 };
 
 function getCobrosExtra() {
-  const filas = document.querySelectorAll('.cobro-fila');
+  const filas = document.querySelectorAll('#np-cobros-lista .cobro-fila');
   const result = [];
   filas.forEach(f => {
     const desc = f.querySelector('.cobro-desc')?.value?.trim();
