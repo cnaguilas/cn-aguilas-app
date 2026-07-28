@@ -3349,6 +3349,26 @@ window.descargarResumenAdm = function() {
           </div>
         </div>
         ${cisterna}
+        ${p.consumosInternos && p.consumosInternos.length > 0 ? `
+        <div style="margin-top:5px;background:#fff0f0;border:1px solid rgba(204,0,24,0.2);border-radius:3px;padding:5px 8px;">
+          <div style="font-size:7.5px;color:#cc0018;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">⛽ Consumos internos (restados)</div>
+          ${p.consumosInternos.map(c=>`<div style="display:flex;justify-content:space-between;font-size:8px;color:#555;padding:1px 0;">
+            <span>${c.desc}</span><span style="color:#cc0018;font-weight:600;">-${parseFloat(c.importe||0).toFixed(2)} €</span>
+          </div>`).join('')}
+          <div style="display:flex;justify-content:space-between;font-size:8px;font-weight:700;color:#cc0018;margin-top:2px;padding-top:2px;border-top:1px solid rgba(204,0,24,0.15);">
+            <span>Total consumos</span><span>-${p.consumosInternos.reduce((a,c)=>a+(parseFloat(c.importe)||0),0).toFixed(2)} €</span>
+          </div>
+        </div>` : ''}
+        ${p.cobrosExtra && p.cobrosExtra.length > 0 ? `
+        <div style="margin-top:5px;background:#f0f4ff;border:1px solid rgba(27,74,122,0.2);border-radius:3px;padding:5px 8px;">
+          <div style="font-size:7.5px;color:#1b4a7a;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;">💶 Cobros extra (sumados)</div>
+          ${p.cobrosExtra.map(c=>`<div style="display:flex;justify-content:space-between;font-size:8px;color:#555;padding:1px 0;">
+            <span>${c.desc}</span><span style="color:#1b4a7a;font-weight:600;">+${parseFloat(c.importe||0).toFixed(2)} €</span>
+          </div>`).join('')}
+          <div style="display:flex;justify-content:space-between;font-size:8px;font-weight:700;color:#1b4a7a;margin-top:2px;padding-top:2px;border-top:1px solid rgba(27,74,122,0.15);">
+            <span>Total cobros</span><span>+${p.cobrosExtra.reduce((a,c)=>a+(parseFloat(c.importe)||0),0).toFixed(2)} €</span>
+          </div>
+        </div>` : ''}
         ${p.observaciones ? `<div class="obs-nota">📝 ${p.observaciones}</div>` : ''}
       </div>
     </div>`;
