@@ -168,6 +168,14 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .tanque-sp95 .tanque-barra{background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
 .tanque-pct{font-size:0.55rem;color:#aaa;display:flex;justify-content:space-between;}
 .tanque-alerta{font-size:0.58rem;color:#cc0018;font-weight:600;margin-top:3px;}
+.tanque-utiles{margin-top:5px;padding:5px 8px;border-radius:6px;border:1px dashed rgba(0,0,0,0.15);background:rgba(0,0,0,0.03);}
+.tanque-utiles-label{font-size:0.45rem;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1px;}
+.tanque-utiles-valor{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;line-height:1;}
+.tanque-utiles-sub{font-size:0.42rem;color:#bbb;margin-top:1px;}
+.tanque-gasoil .tanque-utiles{border-color:rgba(204,0,24,0.2);background:rgba(204,0,24,0.04);}
+.tanque-gasoil .tanque-utiles-valor{color:#cc0018;}
+.tanque-sp95 .tanque-utiles{border-color:rgba(27,122,74,0.2);background:rgba(27,122,74,0.04);}
+.tanque-sp95 .tanque-utiles-valor{color:#1b7a4a;}
 .tanque-cisterna{font-size:0.55rem;color:#1b7a4a;margin-top:2px;}
 /* Contadores del último parte */
 .contadores-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
@@ -450,6 +458,11 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="tanque-pct"><span id="tq-gasoil-pct">—%</span><span id="tq-gasoil-cap"></span></div>
       <div class="tanque-alerta" id="tq-gasoil-alerta" style="display:none;">⚠️ Nivel bajo</div>
       <div class="tanque-cisterna" id="tq-gasoil-cisterna"></div>
+      <div class="tanque-utiles">
+        <div class="tanque-utiles-label">Litros útiles (excl. fondo reserva ~1500L)</div>
+        <div class="tanque-utiles-valor" id="tq-gasoil-utiles">—</div>
+        <div class="tanque-utiles-sub" id="tq-gasoil-utiles-sub"></div>
+      </div>
     </div>
     <div class="tanque-card tanque-sp95">
       <div class="tanque-label">🟢 Tanque S.P.95</div>
@@ -458,6 +471,11 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="tanque-pct"><span id="tq-sp95-pct">—%</span><span id="tq-sp95-cap"></span></div>
       <div class="tanque-alerta" id="tq-sp95-alerta" style="display:none;">⚠️ Nivel bajo</div>
       <div class="tanque-cisterna" id="tq-sp95-cisterna"></div>
+      <div class="tanque-utiles">
+        <div class="tanque-utiles-label">Litros útiles (excl. fondo reserva ~3550L)</div>
+        <div class="tanque-utiles-valor" id="tq-sp95-utiles">—</div>
+        <div class="tanque-utiles-sub" id="tq-sp95-utiles-sub"></div>
+      </div>
     </div>
   </div>
   <!-- Contadores del último parte -->
@@ -2230,6 +2248,8 @@ const STOCK_REF_SP95 = 10651.56;     // litros S.P.95 al cierre del 22 abril
 const CAP_GASOIL = 5000;             // capacidad máxima tanque gasóil
 const CAP_SP95 = 15000;              // capacidad máxima tanque S.P.95
 const ALERTA_PCT = 20;               // % mínimo antes de alertar
+const RESERVA_GASOIL = 1500;         // litros de fondo de reserva gasóil (no utilizables)
+const RESERVA_SP95 = 3550;           // litros de fondo de reserva S.P.95 (no utilizables)
 
 function calcularNivelTanques() {
   const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
@@ -2292,6 +2312,18 @@ function renderTanques(nivelG, nivelS, entradasG, entradasS) {
 
   document.getElementById('tq-gasoil-cisterna').textContent = entradasG > 0 ? `🚛 +${entradasG.toFixed(0)}L recibidos` : '';
   document.getElementById('tq-sp95-cisterna').textContent = entradasS > 0 ? `🚛 +${entradasS.toFixed(0)}L recibidos` : '';
+
+  // Litros útiles (descontando fondo de reserva)
+  const utilesG = Math.max(0, nivelG - RESERVA_GASOIL);
+  const utilesS = Math.max(0, nivelS - RESERVA_SP95);
+  const elUG = document.getElementById('tq-gasoil-utiles');
+  const elUS = document.getElementById('tq-sp95-utiles');
+  const elUGS = document.getElementById('tq-gasoil-utiles-sub');
+  const elUSS = document.getElementById('tq-sp95-utiles-sub');
+  if (elUG) elUG.textContent = utilesG.toFixed(0) + ' L';
+  if (elUS) elUS.textContent = utilesS.toFixed(0) + ' L';
+  if (elUGS) elUGS.textContent = utilesG <= 0 ? '⚠️ Sin litros útiles' : `${((utilesG/CAP_GASOIL)*100).toFixed(1)}% utilizable`;
+  if (elUSS) elUSS.textContent = utilesS <= 0 ? '⚠️ Sin litros útiles' : `${((utilesS/CAP_SP95)*100).toFixed(1)}% utilizable`;
 }
 
 // ── CONSUMOS INTERNOS ──
