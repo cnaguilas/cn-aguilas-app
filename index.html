@@ -414,6 +414,42 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <div class="herr-list" id="herr-list"><div class="loading">Cargando...</div></div>
 </div>
 
+<!-- MODAL RECICLAJE -->
+<div class="overlay" id="ov-reciclaje" onclick="handleOv(event,'ov-reciclaje')">
+  <div class="modal" style="max-width:320px;">
+    <div class="modal-header">
+      <h3>♻️ INFORME RECICLAJE</h3>
+      <button class="close-btn" onclick="closeOv('ov-reciclaje')">x</button>
+    </div>
+    <p style="font-size:0.65rem;color:#888;margin-bottom:12px;">Descarga el informe de contenedores de reciclaje por mes.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <div>
+        <label style="font-size:0.62rem;color:#888;display:block;margin-bottom:4px;">AÑO</label>
+        <input type="number" id="rec-year" value="2026" min="2024" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;">
+      </div>
+      <div>
+        <label style="font-size:0.62rem;color:#888;display:block;margin-bottom:4px;">MES</label>
+        <select id="rec-mes" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;">
+          <option value="0">Año completo</option>
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="descargarReciclaje()" style="width:100%;">⬇ DESCARGAR INFORME</button>
+  </div>
+</div>
+
 <!-- MODAL DÍAS TRABAJADOS -->
 <div class="overlay" id="ov-dias-trabajados" onclick="handleOv(event,'ov-dias-trabajados')">
   <div class="modal" style="max-width:340px;">
@@ -514,6 +550,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   </div>
   <div style="text-align:right;margin-bottom:8px;">
     <button class="btn-secondary" onclick="openDiasTrabajados()" style="font-size:0.65rem;padding:6px 12px;">📅 DÍAS TRABAJADOS</button>
+    <button class="btn-secondary" onclick="openReciclajeModal()" style="font-size:0.65rem;padding:6px 12px;margin-left:6px;">♻️ RECICLAJE</button>
   </div>
   <div class="partes-cal" id="partes-cal"></div>
   <div style="text-align:center;padding:18px 0 8px;font-size:0.62rem;color:#bbb;letter-spacing:0.06em;">Toca un día del calendario para ver el parte</div>
@@ -949,11 +986,11 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div class="consumos-total" id="np-cobros-total" style="display:none;color:#1b4a7a;border-top:1px solid rgba(27,74,122,0.2);"></div>
     </div><!-- fin np-seccion-combustible -->
 
-    <div class="parte-seccion-hdr" style="margin-top:4px;">RECICLAJE</div>
+    <div class="parte-seccion-hdr" style="margin-top:4px;">♻️ RECICLAJE</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
-      <div class="parte-campo"><label>PAPEL (kg)</label><input type="number" id="np-papel" placeholder="0" min="0"></div>
-      <div class="parte-campo"><label>VIDRIO (kg)</label><input type="number" id="np-vidrio" placeholder="0" min="0"></div>
-      <div class="parte-campo"><label>PLÁSTICOS (kg)</label><input type="number" id="np-plastico" placeholder="0" min="0"></div>
+      <div class="parte-campo"><label>📦 PAPEL</label><input type="number" id="np-papel" placeholder="0" min="0" step="1"><small style="font-size:0.5rem;color:#aaa;">contenedores</small></div>
+      <div class="parte-campo"><label>🍶 VIDRIO</label><input type="number" id="np-vidrio" placeholder="0" min="0" step="1"><small style="font-size:0.5rem;color:#aaa;">contenedores</small></div>
+      <div class="parte-campo"><label>♻️ PLÁSTICOS</label><input type="number" id="np-plastico" placeholder="0" min="0" step="1"><small style="font-size:0.5rem;color:#aaa;">contenedores</small></div>
     </div>
 
     <!-- SECCIÓN: TRABAJOS E INCIDENCIAS -->
@@ -2083,6 +2120,131 @@ onValue(preciosRef, snap => {
 });
 
 // ── DÍAS TRABAJADOS ──
+// ── RECICLAJE ──
+window.openReciclajeModal = function() {
+  document.getElementById('rec-year').value = new Date().getFullYear();
+  document.getElementById('rec-mes').value = new Date().getMonth() + 1;
+  openOv('ov-reciclaje');
+};
+
+window.descargarReciclaje = function() {
+  const year = parseInt(document.getElementById('rec-year').value) || new Date().getFullYear();
+  const mes  = parseInt(document.getElementById('rec-mes').value);
+  const MONTH_NAMES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const periodoLabel = mes === 0 ? `Año ${year}` : `${MONTH_NAMES[mes]} ${year}`;
+
+  const todosPart = Object.values(partes).filter(p => {
+    if (!p.fecha) return false;
+    const [y, m] = p.fecha.split('-').map(Number);
+    if (y !== year) return false;
+    if (mes !== 0 && m !== mes) return false;
+    return (parseInt(p.papel)||0) > 0 || (parseInt(p.vidrio)||0) > 0 || (parseInt(p.plastico)||0) > 0;
+  });
+
+  if (!todosPart.length) { showToast('No hay datos de reciclaje en este periodo'); return; }
+
+  todosPart.sort((a,b) => a.fecha < b.fecha ? -1 : 1);
+
+  // Agrupar por mes
+  const porMes = {};
+  todosPart.forEach(p => {
+    const [,m] = p.fecha.split('-').map(Number);
+    if (!porMes[m]) porMes[m] = [];
+    porMes[m].push(p);
+  });
+
+  let tablaHtml = '';
+  let totalPapel = 0, totalVidrio = 0, totalPlastico = 0;
+
+  Object.keys(porMes).sort((a,b)=>a-b).forEach(m => {
+    const ps = porMes[m];
+    let mesPapel=0, mesVidrio=0, mesPlastico=0;
+    let filasHtml = '';
+    ps.forEach(p => {
+      const pa = parseInt(p.papel)||0, vi = parseInt(p.vidrio)||0, pl = parseInt(p.plastico)||0;
+      if (pa+vi+pl === 0) return;
+      mesPapel += pa; mesVidrio += vi; mesPlastico += pl;
+      const marinero = NOMBRES[p.marinero] || p.marinero || '—';
+      const turnoLabel = p.turno==='mañana'?'Mañana':p.turno==='tarde'?'Tarde':p.turno==='noche'?'Noche':'—';
+      filasHtml += `<tr>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee;font-size:9px;color:#555;">${p.fecha}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee;font-size:9px;color:#555;">${turnoLabel}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee;font-size:9px;color:#555;">${marinero}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:center;font-size:9px;">${pa||'—'}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:center;font-size:9px;">${vi||'—'}</td>
+        <td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:center;font-size:9px;">${pl||'—'}</td>
+      </tr>`;
+    });
+    totalPapel += mesPapel; totalVidrio += mesVidrio; totalPlastico += mesPlastico;
+    tablaHtml += `
+    <div style="margin-bottom:16px;page-break-inside:avoid;">
+      <div style="background:#2d6a4f;color:#fff;padding:6px 12px;border-radius:6px 6px 0 0;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;">♻️ ${MONTH_NAMES[m].toUpperCase()} ${year}</span>
+        <span style="font-size:10px;opacity:0.85;">📦 ${mesPapel} · 🍶 ${mesVidrio} · ♻️ ${mesPlastico}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-top:none;font-size:9px;">
+        <thead><tr style="background:#f8f8f8;">
+          <th style="padding:4px 8px;text-align:left;font-size:8px;color:#888;">FECHA</th>
+          <th style="padding:4px 8px;text-align:left;font-size:8px;color:#888;">TURNO</th>
+          <th style="padding:4px 8px;text-align:left;font-size:8px;color:#888;">MARINERO</th>
+          <th style="padding:4px 8px;text-align:center;font-size:8px;color:#888;">📦 PAPEL</th>
+          <th style="padding:4px 8px;text-align:center;font-size:8px;color:#888;">🍶 VIDRIO</th>
+          <th style="padding:4px 8px;text-align:center;font-size:8px;color:#888;">♻️ PLÁSTICO</th>
+        </tr></thead>
+        <tbody>${filasHtml}</tbody>
+        <tfoot><tr style="background:#f0f8f4;">
+          <td colspan="3" style="padding:5px 8px;font-weight:700;color:#2d6a4f;font-size:9px;">TOTAL MES</td>
+          <td style="padding:5px 8px;text-align:center;font-weight:700;color:#2d6a4f;">${mesPapel}</td>
+          <td style="padding:5px 8px;text-align:center;font-weight:700;color:#2d6a4f;">${mesVidrio}</td>
+          <td style="padding:5px 8px;text-align:center;font-weight:700;color:#2d6a4f;">${mesPlastico}</td>
+        </tr></tfoot>
+      </table>
+    </div>`;
+  });
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Reciclaje ${periodoLabel}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    @page{size:A4 portrait;margin:1.2cm 1.4cm;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;color:#111;background:#fff;}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #2d6a4f;padding-bottom:8px;margin-bottom:16px;}
+    .cab-titulo{font-size:17px;font-weight:700;color:#2d6a4f;letter-spacing:0.08em;}
+    .cab-sub{font-size:9px;color:#888;margin-top:3px;}
+    .resumen-total{border:2px solid #2d6a4f;border-radius:6px;padding:10px 14px;margin-top:16px;background:#f0f8f4;display:flex;justify-content:space-around;}
+    .res-item{text-align:center;}
+    .res-label{font-size:8px;color:#888;text-transform:uppercase;letter-spacing:0.06em;}
+    .res-valor{font-size:22px;font-weight:700;color:#2d6a4f;margin-top:2px;}
+    .pie{text-align:center;font-size:8px;color:#ccc;margin-top:14px;border-top:1px solid #eee;padding-top:6px;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  </style></head><body>
+  <div class="cabecera">
+    <div>
+      <div class="cab-titulo">⚓ CLUB NÁUTICO ÁGUILAS</div>
+      <div class="cab-sub">INFORME DE RECICLAJE · ${periodoLabel.toUpperCase()}</div>
+    </div>
+    <div style="font-size:9px;color:#aaa;">Generado: ${new Date().toLocaleDateString('es-ES')}</div>
+  </div>
+  ${tablaHtml}
+  <div class="resumen-total">
+    <div class="res-item"><div class="res-label">📦 Papel total</div><div class="res-valor">${totalPapel}</div><div class="res-label">contenedores</div></div>
+    <div class="res-item"><div class="res-label">🍶 Vidrio total</div><div class="res-valor">${totalVidrio}</div><div class="res-label">contenedores</div></div>
+    <div class="res-item"><div class="res-label">♻️ Plástico total</div><div class="res-valor">${totalPlastico}</div><div class="res-label">contenedores</div></div>
+  </div>
+  <div class="pie">Club Náutico Águilas · Uso interno · ${periodoLabel}</div>
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `reciclaje_${periodoLabel.replace(/ /g,'_')}.html`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  showToast('Informe de reciclaje descargado ✓');
+};
+
 window.openDiasTrabajados = function() {
   document.getElementById('dias-year').value = new Date().getFullYear();
   openOv('ov-dias-trabajados');
@@ -2824,9 +2986,9 @@ function verParteConcreto(p, id) {
   // Reciclaje
   html += `<div class="vp-seccion"><div class="vp-seccion-hdr">RECICLAJE</div>
     <div class="vp-datos" style="grid-template-columns:1fr 1fr 1fr;">
-      <div class="vp-dato"><label>PAPEL</label><span>${p.papel||'0'} kg</span></div>
-      <div class="vp-dato"><label>VIDRIO</label><span>${p.vidrio||'0'} kg</span></div>
-      <div class="vp-dato"><label>PLÁSTICOS</label><span>${p.plastico||'0'} kg</span></div>
+      <div class="vp-dato"><label>PAPEL</label><span>${p.papel||'0'} cont.</span></div>
+      <div class="vp-dato"><label>VIDRIO</label><span>${p.vidrio||'0'} cont.</span></div>
+      <div class="vp-dato"><label>PLÁSTICOS</label><span>${p.plastico||'0'} cont.</span></div>
     </div>
   </div>`;
 
@@ -3081,9 +3243,9 @@ window.descargarPartesDia = function() {
 
     h += `<div class="pdf-seccion"><div class="pdf-seccion-hdr">RECICLAJE</div>
       <div class="pdf-datos">
-        <div class="pdf-dato"><span>PAPEL</span><strong>${p.papel||'0'} kg</strong></div>
-        <div class="pdf-dato"><span>VIDRIO</span><strong>${p.vidrio||'0'} kg</strong></div>
-        <div class="pdf-dato"><span>PLÁSTICOS</span><strong>${p.plastico||'0'} kg</strong></div>
+        <div class="pdf-dato"><span>PAPEL</span><strong>${p.papel||'0'} cont.</strong></div>
+        <div class="pdf-dato"><span>VIDRIO</span><strong>${p.vidrio||'0'} cont.</strong></div>
+        <div class="pdf-dato"><span>PLÁSTICOS</span><strong>${p.plastico||'0'} cont.</strong></div>
       </div>
     </div>`;
 
