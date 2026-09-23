@@ -22,7 +22,7 @@
   --red:#e8002a;--green:#1e9e5a;--orange:#e07820;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;}
+html,body{height:100%;overflow:hidden;font-size:15px;}
 body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;display:flex;flex-direction:column;
   background-image:radial-gradient(ellipse at 20% 0%,rgba(204,0,24,0.06) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(204,0,24,0.04) 0%,transparent 55%);}
 
@@ -363,7 +363,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 
 <div class="tabs">
   <div class="tab active" onclick="switchTab(0)">&#128197; TURNOS</div>
-  <div class="tab" onclick="switchTab(1)">&#128296; INCIDENCIAS</div>
+  <div class="tab" onclick="switchTab(1)">📋 TAREAS</div>
   <div class="tab" onclick="switchTab(2)">&#128295; HERRAMIENTAS</div>
   <div class="tab" onclick="switchTab(3)">&#128196; PARTES</div>
 </div>
@@ -391,15 +391,18 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <div class="months-grid" id="months-grid"></div>
 </div>
 
-<!-- INCIDENCIAS -->
+<!-- TAREAS -->
 <div class="page" id="page-1">
+  <!-- Pestañas por marinero (solo gerencia/admin ve todas) -->
+  <div id="tareas-tabs" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;"></div>
   <div class="inc-toolbar">
-    <button class="btn-primary" onclick="openNuevaInc()">+ NUEVA</button>
+    <button class="btn-primary" id="btn-nueva-tarea" onclick="openNuevaInc()" style="display:none;">+ NUEVA TAREA</button>
     <button class="filter-btn active" onclick="setFiltro('todas')" id="f-todas">ACTIVAS</button>
     <button class="filter-btn" onclick="setFiltro('pend')" id="f-pend">PEND</button>
     <button class="filter-btn" onclick="setFiltro('prog')" id="f-prog">CURSO</button>
     <button class="filter-btn" onclick="setFiltro('res')" id="f-res">RESUELTAS</button>
-    <button class="filter-btn" onclick="descargarPendientes()" style="margin-left:auto;" title="Descargar pendientes">&#128229; PEND</button>
+    <button class="filter-btn" onclick="descargarTareasMarinero()" style="margin-left:auto;" id="btn-desc-tareas" title="Descargar tareas del marinero seleccionado">⬇ PDF</button>
+    <button class="filter-btn" onclick="descargarPendientes()" title="Descargar pendientes">&#128229; PEND</button>
     <button class="filter-btn" onclick="descargarHistorial()" title="Descargar historial resueltas">&#128229; HIST</button>
   </div>
   <div id="res-nav" style="display:none;padding:8px 0 4px;"></div>
@@ -569,11 +572,11 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   </div>
 </div>
 
-<!-- MODAL NUEVA INCIDENCIA -->
+<!-- MODAL NUEVA TAREA -->
 <div class="overlay" id="ov-nueva-inc" onclick="handleOv(event,'ov-nueva-inc')">
   <div class="modal">
     <div class="modal-header">
-      <h3>NUEVA INCIDENCIA</h3>
+      <h3>📋 NUEVA TAREA</h3>
       <button class="close-btn" onclick="closeOv('ov-nueva-inc')">x</button>
     </div>
     <div class="form-group">
@@ -635,12 +638,17 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
           <option value="javi">Javi</option>
           <option value="juan">Juan</option>
           <option value="esteban">Esteban</option>
+          <option value="marinero">Marinero</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label>⏱ PLAZO (días para realizarla)</label>
+        <input type="number" id="ni-plazo" placeholder="Ej: 3" min="1" step="1" style="font-size:1rem;">
       </div>
     </div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nueva-inc')">CANCELAR</button>
-      <button class="btn-primary" onclick="guardarInc()">GUARDAR</button>
+      <button class="btn-primary" onclick="guardarInc()">GUARDAR TAREA</button>
     </div>
   </div>
 </div>
@@ -666,13 +674,14 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   </div>
 </div>
 
-<!-- MODAL DETALLE INCIDENCIA -->
+<!-- MODAL DETALLE TAREA -->
 <div class="overlay" id="ov-detalle-inc" onclick="handleOv(event,'ov-detalle-inc')">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="d-titulo">-</h3>
+      <h3 id="d-titulo" style="font-size:0.9rem;">-</h3>
       <button class="close-btn" onclick="closeOv('ov-detalle-inc')">x</button>
     </div>
+    <div id="d-plazo-badge" style="display:none;background:#fff3e0;border:1px solid #e07820;border-radius:6px;padding:5px 10px;font-size:0.7rem;color:#e07820;margin-bottom:8px;"></div>
     <div class="form-group">
       <label>ESTADO</label>
       <div class="inc-detail-estado">
@@ -692,6 +701,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
             <option value="javi">Javi</option>
             <option value="juan">Juan</option>
             <option value="esteban">Esteban</option>
+            <option value="marinero">Marinero</option>
           </select>
         </div>
         <div class="form-group">
@@ -1234,6 +1244,9 @@ onAuthStateChanged(auth, user => {
     localStorage.setItem('cna_user', currentUser);
     actualizarPill();
     document.getElementById('login-screen').style.display = 'none';
+    if (!GERENCIA_ROLES.includes(currentUser)) tareaMarineroFiltro = currentUser;
+    else tareaMarineroFiltro = '';
+    renderTareasTabs();
   } else {
     // No autenticado — mostrar login
     currentUser = '';
@@ -1402,10 +1415,44 @@ function selectDay(date){
 renderCal(currentYear);
 
 // ═══════════════════════════════
-// INCIDENCIAS
+// TAREAS
 // ═══════════════════════════════
+const GERENCIA_ROLES = ['gerencia', 'administracion'];
+let tareaMarineroFiltro = ''; // marinero tab seleccionado en tareas
+
 const incRef=ref(db,'incidencias');
-onValue(incRef,snap=>{incidencias=snap.val()||{};renderInc();renderCal(currentYear);if(filtroActivo==='res')renderResNav();});
+onValue(incRef,snap=>{incidencias=snap.val()||{};renderTareasTabs();renderInc();renderCal(currentYear);if(filtroActivo==='res')renderResNav();});
+
+function renderTareasTabs() {
+  const esGerencia = GERENCIA_ROLES.includes(currentUser);
+  const btnNueva = document.getElementById('btn-nueva-tarea');
+  if (btnNueva) btnNueva.style.display = esGerencia ? 'inline-flex' : 'none';
+
+  const tabsEl = document.getElementById('tareas-tabs');
+  if (!tabsEl) return;
+
+  if (esGerencia) {
+    // Gerencia: pestañas por marinero
+    const marineros = ['tomas','joseluis','javi','juan','esteban','marinero'];
+    let html = `<button class="filter-btn${tareaMarineroFiltro===''?' active':''}" onclick="setTareaMarinero('')" style="font-size:0.6rem;">👥 TODOS</button>`;
+    marineros.forEach(m => {
+      const tiene = Object.values(incidencias).some(i => i.asignadoA === m && i.estado !== 'res');
+      const activo = tareaMarineroFiltro === m ? ' active' : '';
+      html += `<button class="filter-btn${activo}" onclick="setTareaMarinero('${m}')" style="font-size:0.6rem;">${tiene?'🔴 ':''}${NOMBRES[m]||m}</button>`;
+    });
+    tabsEl.innerHTML = html;
+  } else {
+    // Marinero: solo ve sus propias tareas, sin pestañas
+    tabsEl.innerHTML = `<div style="font-size:0.65rem;color:#888;padding:4px 0;">📋 Mis tareas asignadas</div>`;
+    tareaMarineroFiltro = currentUser;
+  }
+}
+
+window.setTareaMarinero = function(mar) {
+  tareaMarineroFiltro = mar;
+  renderTareasTabs();
+  renderInc();
+};
 
 window.setFiltro=function(f){
   filtroActivo=f;
@@ -1481,8 +1528,12 @@ function renderInc(){
   const list=document.getElementById('inc-list');
   let items=Object.entries(incidencias).map(([id,v])=>({id,...v}));
 
+  // Filtrar por marinero tab
+  if (tareaMarineroFiltro) {
+    items = items.filter(i => i.asignadoA === tareaMarineroFiltro);
+  }
+
   if(filtroActivo==='todas'){
-    // ACTIVAS: solo pendientes y en curso
     items=items.filter(i=>i.estado!=='res');
     items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   } else if(filtroActivo==='pend'){
@@ -1493,7 +1544,6 @@ function renderInc(){
     items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   } else if(filtroActivo==='res'){
     items=items.filter(i=>i.estado==='res');
-    // Filtrar por periodo seleccionado
     if(resPeriodo){
       items=items.filter(inc=>{
         const ts=inc.fechaResolucion||inc.createdAt;
@@ -1504,19 +1554,18 @@ function renderInc(){
         return d.getFullYear()===resPeriodo.año&&d.getMonth()===resPeriodo.mes;
       });
     }
-    items.sort((a,b)=>(b.fechaResolucion||b.createdAt||0)<(a.fechaResolucion||a.createdAt||0)?1:-1);
     items.sort((a,b)=>{
       const ta=a.fechaResolucion||a.createdAt||0;
       const tb=b.fechaResolucion||b.createdAt||0;
       const da=new Date(typeof ta==='string'&&ta.includes('-')?ta+'T12:00:00':Number(ta));
-      const db=new Date(typeof tb==='string'&&tb.includes('-')?tb+'T12:00:00':Number(tb));
-      return db-da;
+      const db2=new Date(typeof tb==='string'&&tb.includes('-')?tb+'T12:00:00':Number(tb));
+      return db2-da;
     });
   }
 
   if(!items.length){
-    const msg=filtroActivo==='res'?'No hay resueltas en este periodo':'No hay incidencias';
-    list.innerHTML=`<div class="empty-state"><div>🔧</div>${msg}</div>`;
+    const msg=filtroActivo==='res'?'No hay resueltas en este periodo':'No hay tareas';
+    list.innerHTML=`<div class="empty-state"><div>📋</div>${msg}</div>`;
     return;
   }
 
@@ -1526,12 +1575,14 @@ function renderInc(){
     const icon=TIPO_ICONS[inc.tipo]||'🔧';
     const asig=inc.asignadoA?'👤 '+NOMBRES[inc.asignadoA]:'';
     const ubic=inc.ubicacion?'📍 Marcado en mapa':'';
+    const plazo=inc.plazo?`⏱ ${inc.plazo} día${inc.plazo>1?'s':''}`:'';
     const resFecha=inc.estado==='res'&&inc.fechaResolucion
       ?'<span style="color:var(--green)">✓ '+new Date(inc.fechaResolucion+'T12:00:00').toLocaleDateString('es-ES')+'</span>':'';
     return `<div class="inc-card ${inc.estado||'pend'}" onclick="openDetalleInc('${inc.id}')">`
-      +`<div class="inc-card-top"><div class="inc-titulo">${icon} ${inc.titulo||'Sin titulo'}</div>`
+      +`<div class="inc-card-top"><div class="inc-titulo" style="font-size:0.85rem;">${icon} ${inc.titulo||'Sin titulo'}</div>`
       +'<span class="inc-estado estado-'+(inc.estado||'pend')+'">'+ESTADO_LBL[inc.estado||'pend']+'</span></div>'
-      +'<div class="inc-meta">'+(ubic?'<span>'+ubic+'</span>':'')+(asig?'<span>'+asig+'</span>':'')
+      +'<div class="inc-meta" style="font-size:0.7rem;">'+(ubic?'<span>'+ubic+'</span>':'')+(asig?'<span>'+asig+'</span>':'')
+      +(plazo?'<span style="color:#e07820;">'+plazo+'</span>':'')
       +'<span>📅 '+fecha+'</span>'+(resFecha?'<span>'+resFecha+'</span>':'')
       +(prio!=='normal'?'<span style="color:'+PRIO_COL[prio]+'">⚠ '+prio.toUpperCase()+'</span>':'')
       +'</div></div>';
@@ -1551,7 +1602,8 @@ window.openNuevaInc=function(){
   document.querySelectorAll('.tipo-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
   ['ni-titulo','ni-desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ni-prio').value='normal';
-  document.getElementById('ni-asig').value='';
+  document.getElementById('ni-asig').value=tareaMarineroFiltro||'';
+  document.getElementById('ni-plazo').value='';
   document.getElementById('ni-ubic-preview').style.display='none';
   document.getElementById('btn-mapa-nueva').style.display='block';
   document.getElementById('ni-foto-preview').style.display='none';
@@ -1561,7 +1613,8 @@ window.openNuevaInc=function(){
 
 window.guardarInc=async function(){
   const titulo=document.getElementById('ni-titulo').value.trim();
-  if(!titulo){showToast('El titulo es obligatorio');return;}
+  if(!titulo){showToast('El título es obligatorio');return;}
+  const plazo = parseInt(document.getElementById('ni-plazo').value) || null;
   await push(incRef,{
     titulo,tipo:tipoSeleccionado,
     descripcion:document.getElementById('ni-desc').value.trim(),
@@ -1569,9 +1622,10 @@ window.guardarInc=async function(){
     foto:incFotoNueva||null,
     prioridad:document.getElementById('ni-prio').value,
     asignadoA:document.getElementById('ni-asig').value,
+    plazo,
     estado:'pend',creadaPor:currentUser,createdAt:Date.now()
   });
-  closeOv('ov-nueva-inc');showToast('Incidencia guardada ✓');
+  closeOv('ov-nueva-inc');showToast('Tarea guardada ✓');
 };
 
 // ── FOTO NUEVA ──
@@ -1681,6 +1735,81 @@ function _buildInforme(items, titulo, subtitulo){
 </div></body></html>`;
 }
 
+// Descargar PDF de tareas de un marinero
+window.descargarTareasMarinero = function() {
+  const mar = tareaMarineroFiltro;
+  const nombre = mar ? (NOMBRES[mar]||mar) : 'Todos';
+  const items = Object.values(incidencias).filter(i =>
+    (mar === '' || i.asignadoA === mar) && i.estado !== 'res'
+  );
+  if (!items.length) { showToast('No hay tareas activas para '+nombre); return; }
+  items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  const hoy = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const PRIO_COLOR = {normal:'#555',alta:'#e07820',urgente:'#cc0018'};
+
+  const filasHtml = items.map(inc => {
+    const icon = TIPO_ICONS[inc.tipo]||'🔧';
+    const fecha = inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('es-ES') : '—';
+    const prio = inc.prioridad||'normal';
+    const plazoTxt = inc.plazo ? `⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}` : '';
+    const estadoColor = inc.estado==='prog'?'#1b4a7a':'#e07820';
+    const estadoTxt = inc.estado==='prog'?'EN CURSO':'PENDIENTE';
+    return `
+    <div style="border:1.5px solid #e0e0e0;border-radius:7px;padding:10px 13px;margin-bottom:8px;page-break-inside:avoid;border-left:4px solid ${PRIO_COLOR[prio]};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div style="font-size:11px;font-weight:700;color:#111;">${icon} ${inc.titulo||'Sin título'}</div>
+        <span style="font-size:8px;background:${estadoColor};color:#fff;padding:2px 7px;border-radius:10px;">${estadoTxt}</span>
+      </div>
+      ${inc.descripcion?`<div style="font-size:9px;color:#555;margin-bottom:4px;">${inc.descripcion}</div>`:''}
+      <div style="display:flex;gap:12px;font-size:8px;color:#888;flex-wrap:wrap;">
+        <span>📅 ${fecha}</span>
+        ${plazoTxt?`<span style="color:#e07820;">${plazoTxt}</span>`:''}
+        ${prio!=='normal'?`<span style="color:${PRIO_COLOR[prio]};font-weight:700;">⚠ ${prio.toUpperCase()}</span>`:''}
+        ${inc.ubicacion?'<span>📍 Ubicación marcada</span>':''}
+      </div>
+      <div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:8px;color:#aaa;">✓ Completada el:</span>
+        <span style="display:inline-block;width:100px;border-bottom:1px solid #ccc;"></span>
+        <span style="font-size:8px;color:#aaa;">Firma:</span>
+        <span style="display:inline-block;width:80px;border-bottom:1px solid #ccc;"></span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Tareas ${nombre}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    @page{size:A4 portrait;margin:1.2cm 1.4cm;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;background:#fff;}
+    .cab{border-bottom:3px solid #cc0018;padding-bottom:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;}
+    .cab-titulo{font-size:18px;font-weight:700;color:#cc0018;}
+    .cab-sub{font-size:9px;color:#888;margin-top:2px;}
+    .marinero-badge{background:#cc0018;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;}
+    .pie{text-align:center;font-size:8px;color:#ccc;margin-top:14px;border-top:1px solid #eee;padding-top:6px;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  </style></head><body>
+  <div class="cab">
+    <div>
+      <div class="cab-titulo">⚓ CLUB NÁUTICO ÁGUILAS</div>
+      <div class="cab-sub">TAREAS ASIGNADAS · ${hoy.toUpperCase()}</div>
+    </div>
+    <div class="marinero-badge">👤 ${nombre.toUpperCase()}</div>
+  </div>
+  ${filasHtml}
+  <div class="pie">Club Náutico Águilas · ${items.length} tarea(s) activa(s) · ${nombre}</div>
+  </body></html>`;
+
+  const blob = new Blob([html],{type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`tareas_${mar||'todos'}_${new Date().toISOString().slice(0,10)}.html`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
+  showToast('PDF de tareas descargado ✓');
+};
+
 function _descargarHtml(html, nombre){
   const blob = new Blob([html],{type:'text/html;charset=utf-8'});
   const a = document.createElement('a');
@@ -1714,6 +1843,21 @@ window.openDetalleInc=function(id){
   detUbicacion=inc.ubicacion||null;
   detFotoEdit=inc.foto||null;
   document.getElementById('d-titulo').textContent=(TIPO_ICONS[inc.tipo]||'🔧')+' '+(inc.titulo||'--');
+  // Plazo badge
+  const plazoBadge = document.getElementById('d-plazo-badge');
+  if (inc.plazo) {
+    const creado = inc.createdAt ? new Date(inc.createdAt) : null;
+    let venceStr = '';
+    if (creado) {
+      const vence = new Date(creado);
+      vence.setDate(vence.getDate() + parseInt(inc.plazo));
+      venceStr = ` — vence el ${vence.toLocaleDateString('es-ES')}`;
+    }
+    plazoBadge.textContent = `⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}${venceStr}`;
+    plazoBadge.style.display = 'block';
+  } else {
+    plazoBadge.style.display = 'none';
+  }
   document.getElementById('d-asig').value=inc.asignadoA||'';
   document.getElementById('d-notas').value=inc.notas||'';
   document.getElementById('d-res-quien').value=inc.resueltaPor||'';
