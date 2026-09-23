@@ -1244,9 +1244,11 @@ onAuthStateChanged(auth, user => {
     localStorage.setItem('cna_user', currentUser);
     actualizarPill();
     document.getElementById('login-screen').style.display = 'none';
-    if (!GERENCIA_ROLES.includes(currentUser)) tareaMarineroFiltro = currentUser;
-    else tareaMarineroFiltro = '';
+    // Fijar filtro de tareas según rol
+    if (PUEDE_ASIGNAR.includes(currentUser)) tareaMarineroFiltro = '';
+    else tareaMarineroFiltro = currentUser;
     renderTareasTabs();
+    renderInc();
   } else {
     // No autenticado — mostrar login
     currentUser = '';
@@ -1418,21 +1420,32 @@ renderCal(currentYear);
 // TAREAS
 // ═══════════════════════════════
 const GERENCIA_ROLES = ['gerencia', 'administracion'];
-let tareaMarineroFiltro = ''; // marinero tab seleccionado en tareas
+const PUEDE_ASIGNAR = ['gerencia', 'administracion', 'javi']; // contramaestre puede asignar
+let tareaMarineroFiltro = '';
 
 const incRef=ref(db,'incidencias');
-onValue(incRef,snap=>{incidencias=snap.val()||{};renderTareasTabs();renderInc();renderCal(currentYear);if(filtroActivo==='res')renderResNav();});
+onValue(incRef,snap=>{
+  incidencias=snap.val()||{};
+  // Si currentUser ya está cargado, usarlo; si no, renderInc sin filtro
+  if (!tareaMarineroFiltro && currentUser && !PUEDE_ASIGNAR.includes(currentUser)) {
+    tareaMarineroFiltro = currentUser;
+  }
+  renderTareasTabs();
+  renderInc();
+  renderCal(currentYear);
+  if(filtroActivo==='res')renderResNav();
+});
 
 function renderTareasTabs() {
-  const esGerencia = GERENCIA_ROLES.includes(currentUser);
+  const puedeAsignar = PUEDE_ASIGNAR.includes(currentUser);
   const btnNueva = document.getElementById('btn-nueva-tarea');
-  if (btnNueva) btnNueva.style.display = esGerencia ? 'inline-flex' : 'none';
+  // Todos pueden añadir tareas
+  if (btnNueva) btnNueva.style.display = currentUser ? 'inline-flex' : 'none';
 
   const tabsEl = document.getElementById('tareas-tabs');
   if (!tabsEl) return;
 
-  if (esGerencia) {
-    // Gerencia: pestañas por marinero
+  if (puedeAsignar) {
     const marineros = ['tomas','joseluis','javi','juan','esteban','marinero'];
     let html = `<button class="filter-btn${tareaMarineroFiltro===''?' active':''}" onclick="setTareaMarinero('')" style="font-size:0.6rem;">👥 TODOS</button>`;
     marineros.forEach(m => {
@@ -1442,8 +1455,7 @@ function renderTareasTabs() {
     });
     tabsEl.innerHTML = html;
   } else {
-    // Marinero: solo ve sus propias tareas, sin pestañas
-    tabsEl.innerHTML = `<div style="font-size:0.65rem;color:#888;padding:4px 0;">📋 Mis tareas asignadas</div>`;
+    tabsEl.innerHTML = `<div style="font-size:0.65rem;color:#888;padding:4px 0;">📋 Mis tareas asignadas · <strong>${NOMBRES[currentUser]||currentUser}</strong></div>`;
     tareaMarineroFiltro = currentUser;
   }
 }
@@ -1602,8 +1614,19 @@ window.openNuevaInc=function(){
   document.querySelectorAll('.tipo-opt').forEach((o,i)=>o.classList.toggle('selected',i===0));
   ['ni-titulo','ni-desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ni-prio').value='normal';
-  document.getElementById('ni-asig').value=tareaMarineroFiltro||'';
   document.getElementById('ni-plazo').value='';
+  // Si puede asignar: preseleccionar marinero del tab activo
+  // Si no puede: auto-asignarse y ocultar el selector
+  const puedeAsignar = PUEDE_ASIGNAR.includes(currentUser);
+  const asigEl = document.getElementById('ni-asig');
+  const asigGrp = asigEl?.closest('.form-group');
+  if (puedeAsignar) {
+    asigEl.value = tareaMarineroFiltro || '';
+    if (asigGrp) asigGrp.style.display = '';
+  } else {
+    asigEl.value = currentUser;
+    if (asigGrp) asigGrp.style.display = 'none';
+  }
   document.getElementById('ni-ubic-preview').style.display='none';
   document.getElementById('btn-mapa-nueva').style.display='block';
   document.getElementById('ni-foto-preview').style.display='none';
@@ -1738,41 +1761,53 @@ function _buildInforme(items, titulo, subtitulo){
 // Descargar PDF de tareas de un marinero
 window.descargarTareasMarinero = function() {
   const mar = tareaMarineroFiltro;
-  const nombre = mar ? (NOMBRES[mar]||mar) : 'Todos';
+  const nombre = mar ? (NOMBRES[mar]||mar) : 'Todos los marineros';
   const items = Object.values(incidencias).filter(i =>
     (mar === '' || i.asignadoA === mar) && i.estado !== 'res'
   );
   if (!items.length) { showToast('No hay tareas activas para '+nombre); return; }
   items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 
-  const hoy = new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const PRIO_COLOR = {normal:'#555',alta:'#e07820',urgente:'#cc0018'};
+  const ahora = new Date().toLocaleString('es-ES');
+  const PRIO_COLOR = {normal:'#888',alta:'#e07820',urgente:'#cc0018'};
+  const PRIO_BG    = {normal:'#f0f0f0',alta:'#fff3e0',urgente:'#ffeaea'};
+  const ESTADO_COLOR = {pend:'#e07820',prog:'#1b4a7a'};
+  const ESTADO_TXT   = {pend:'PENDIENTE',prog:'EN CURSO'};
 
-  const filasHtml = items.map(inc => {
+  const itemsHtml = items.map((inc,idx) => {
     const icon = TIPO_ICONS[inc.tipo]||'🔧';
-    const fecha = inc.createdAt ? new Date(inc.createdAt).toLocaleDateString('es-ES') : '—';
     const prio = inc.prioridad||'normal';
-    const plazoTxt = inc.plazo ? `⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}` : '';
-    const estadoColor = inc.estado==='prog'?'#1b4a7a':'#e07820';
-    const estadoTxt = inc.estado==='prog'?'EN CURSO':'PENDIENTE';
+    const estado = inc.estado||'pend';
+    const fechaApertura = inc.createdAt
+      ? new Date(inc.createdAt).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})
+        +' ('+(NOMBRES[inc.creadaPor]||inc.creadaPor||'—')+')'
+      : '—';
+    const asignadoNombre = inc.asignadoA ? (NOMBRES[inc.asignadoA]||inc.asignadoA) : '—';
+    const plazoHtml = inc.plazo
+      ? `<div style="margin-top:6px;display:inline-block;background:#fff3e0;border:1px solid #e07820;border-radius:4px;padding:3px 10px;font-size:9px;color:#e07820;">⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}</div>`
+      : '';
     return `
-    <div style="border:1.5px solid #e0e0e0;border-radius:7px;padding:10px 13px;margin-bottom:8px;page-break-inside:avoid;border-left:4px solid ${PRIO_COLOR[prio]};">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-        <div style="font-size:11px;font-weight:700;color:#111;">${icon} ${inc.titulo||'Sin título'}</div>
-        <span style="font-size:8px;background:${estadoColor};color:#fff;padding:2px 7px;border-radius:10px;">${estadoTxt}</span>
+    <div style="background:#fff;border-radius:10px;border:1.5px solid #e0e0e0;border-left:5px solid ${PRIO_COLOR[prio]};margin-bottom:14px;padding:14px 16px;page-break-inside:avoid;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="font-size:14px;font-weight:700;color:#111;flex:1;">${idx+1}. ${icon} ${inc.titulo||'Sin título'}</div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-left:10px;">
+          <span style="background:${ESTADO_COLOR[estado]};color:#fff;font-size:9px;font-weight:700;padding:3px 9px;border-radius:12px;">${ESTADO_TXT[estado]||estado.toUpperCase()}</span>
+          ${prio!=='normal'?`<span style="background:${PRIO_BG[prio]};color:${PRIO_COLOR[prio]};border:1px solid ${PRIO_COLOR[prio]};font-size:9px;font-weight:700;padding:3px 9px;border-radius:12px;">⚠ ${prio.toUpperCase()}</span>`:''}
+        </div>
       </div>
-      ${inc.descripcion?`<div style="font-size:9px;color:#555;margin-bottom:4px;">${inc.descripcion}</div>`:''}
-      <div style="display:flex;gap:12px;font-size:8px;color:#888;flex-wrap:wrap;">
-        <span>📅 ${fecha}</span>
-        ${plazoTxt?`<span style="color:#e07820;">${plazoTxt}</span>`:''}
-        ${prio!=='normal'?`<span style="color:${PRIO_COLOR[prio]};font-weight:700;">⚠ ${prio.toUpperCase()}</span>`:''}
-        ${inc.ubicacion?'<span>📍 Ubicación marcada</span>':''}
+      ${inc.descripcion?`<div style="background:#f8f8f8;border-radius:6px;padding:8px 10px;font-size:11px;color:#444;margin-bottom:8px;">${inc.descripcion}</div>`:''}
+      ${plazoHtml}
+      <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+        <div style="font-size:9px;color:#666;"><strong>Tipo:</strong> ${inc.tipo||'—'}</div>
+        <div style="font-size:9px;color:#666;"><strong>Asignado a:</strong> ${asignadoNombre}</div>
+        <div style="font-size:9px;color:#666;"><strong>Apertura:</strong> ${fechaApertura}</div>
+        <div style="font-size:9px;color:#666;"><strong>Creada por:</strong> ${NOMBRES[inc.creadaPor]||inc.creadaPor||'—'}</div>
       </div>
-      <div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:8px;color:#aaa;">✓ Completada el:</span>
-        <span style="display:inline-block;width:100px;border-bottom:1px solid #ccc;"></span>
-        <span style="font-size:8px;color:#aaa;">Firma:</span>
-        <span style="display:inline-block;width:80px;border-bottom:1px solid #ccc;"></span>
+      <div style="margin-top:12px;border-top:1px dashed #ddd;padding-top:8px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:9px;color:#aaa;">✓ Completada el:</span>
+        <span style="display:inline-block;width:90px;border-bottom:1px solid #bbb;"></span>
+        <span style="font-size:9px;color:#aaa;">Firma:</span>
+        <span style="display:inline-block;flex:1;border-bottom:1px solid #bbb;"></span>
       </div>
     </div>`;
   }).join('');
@@ -1781,24 +1816,21 @@ window.descargarTareasMarinero = function() {
   <title>Tareas ${nombre}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    @page{size:A4 portrait;margin:1.2cm 1.4cm;}
-    body{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;background:#fff;}
-    .cab{border-bottom:3px solid #cc0018;padding-bottom:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end;}
-    .cab-titulo{font-size:18px;font-weight:700;color:#cc0018;}
-    .cab-sub{font-size:9px;color:#888;margin-top:2px;}
-    .marinero-badge{background:#cc0018;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;}
-    .pie{text-align:center;font-size:8px;color:#ccc;margin-top:14px;border-top:1px solid #eee;padding-top:6px;}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+    @page{size:A4 portrait;margin:1.4cm 1.6cm;}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;padding:0;}
+    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#f0f2f5;}}
   </style></head><body>
-  <div class="cab">
-    <div>
-      <div class="cab-titulo">⚓ CLUB NÁUTICO ÁGUILAS</div>
-      <div class="cab-sub">TAREAS ASIGNADAS · ${hoy.toUpperCase()}</div>
+  <div style="background:#1a1a2e;color:#fff;border-radius:12px;padding:18px 20px;margin-bottom:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#e8a020;">⚓ CN Águilas — Tareas</div>
+        <div style="font-size:10px;color:#aaa;margin-top:4px;">TAREAS ASIGNADAS · Pendientes y en curso · Generado: ${ahora}</div>
+      </div>
+      <div style="background:#cc0018;color:#fff;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;">👤 ${nombre.toUpperCase()}</div>
     </div>
-    <div class="marinero-badge">👤 ${nombre.toUpperCase()}</div>
   </div>
-  ${filasHtml}
-  <div class="pie">Club Náutico Águilas · ${items.length} tarea(s) activa(s) · ${nombre}</div>
+  ${itemsHtml}
+  <div style="text-align:center;font-size:8px;color:#aaa;margin-top:10px;">Club Náutico Águilas · ${items.length} tarea(s) · ${nombre}</div>
   </body></html>`;
 
   const blob = new Blob([html],{type:'text/html;charset=utf-8'});
