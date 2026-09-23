@@ -1758,7 +1758,7 @@ function _buildInforme(items, titulo, subtitulo){
 </div></body></html>`;
 }
 
-// Descargar PDF de tareas de un marinero
+// Descargar PDF de tareas de un marinero — usa mismo formato que PEND
 window.descargarTareasMarinero = function() {
   const mar = tareaMarineroFiltro;
   const nombre = mar ? (NOMBRES[mar]||mar) : 'Todos los marineros';
@@ -1768,72 +1768,30 @@ window.descargarTareasMarinero = function() {
   if (!items.length) { showToast('No hay tareas activas para '+nombre); return; }
   items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 
-  const ahora = new Date().toLocaleString('es-ES');
-  const PRIO_COLOR = {normal:'#888',alta:'#e07820',urgente:'#cc0018'};
-  const PRIO_BG    = {normal:'#f0f0f0',alta:'#fff3e0',urgente:'#ffeaea'};
-  const ESTADO_COLOR = {pend:'#e07820',prog:'#1b4a7a'};
-  const ESTADO_TXT   = {pend:'PENDIENTE',prog:'EN CURSO'};
+  // Añadir línea de firma a cada tarjeta usando _buildInforme y post-procesar
+  const html = _buildInforme(
+    items,
+    `Tareas — ${nombre}`,
+    `Tareas asignadas a ${nombre} · Pendientes y en curso`
+  );
 
-  const itemsHtml = items.map((inc,idx) => {
-    const icon = TIPO_ICONS[inc.tipo]||'🔧';
-    const prio = inc.prioridad||'normal';
-    const estado = inc.estado||'pend';
-    const fechaApertura = inc.createdAt
-      ? new Date(inc.createdAt).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})
-        +' ('+(NOMBRES[inc.creadaPor]||inc.creadaPor||'—')+')'
-      : '—';
-    const asignadoNombre = inc.asignadoA ? (NOMBRES[inc.asignadoA]||inc.asignadoA) : '—';
-    const plazoHtml = inc.plazo
-      ? `<div style="margin-top:8px;display:inline-block;background:#fff3e0;border:1px solid #e07820;border-radius:4px;padding:4px 12px;font-size:12px;color:#e07820;font-weight:600;">⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}</div>`
-      : '';
-    return `
-    <div style="background:#fff;border-radius:10px;border:1.5px solid #e0e0e0;border-left:6px solid ${PRIO_COLOR[prio]};margin-bottom:16px;padding:18px 20px;page-break-inside:avoid;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:12px;">
-        <div style="font-size:18px;font-weight:700;color:#111;flex:1;line-height:1.3;">${idx+1}. ${icon} ${inc.titulo||'Sin título'}</div>
-        <div style="display:flex;gap:6px;flex-shrink:0;">
-          <span style="background:${ESTADO_COLOR[estado]};color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:14px;white-space:nowrap;">${ESTADO_TXT[estado]||estado.toUpperCase()}</span>
-          ${prio!=='normal'?`<span style="background:${PRIO_BG[prio]};color:${PRIO_COLOR[prio]};border:1.5px solid ${PRIO_COLOR[prio]};font-size:11px;font-weight:700;padding:4px 12px;border-radius:14px;white-space:nowrap;">⚠ ${prio.toUpperCase()}</span>`:''}
-        </div>
-      </div>
-      ${inc.descripcion?`<div style="background:#f8f8f8;border-radius:7px;padding:10px 14px;font-size:14px;color:#444;margin-bottom:10px;line-height:1.5;">${inc.descripcion}</div>`:''}
-      ${plazoHtml}
-      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:5px;">
-        <div style="font-size:12px;color:#555;"><strong>Tipo:</strong> ${inc.tipo||'—'}</div>
-        <div style="font-size:12px;color:#555;"><strong>Asignado a:</strong> ${asignadoNombre}</div>
-        <div style="font-size:12px;color:#555;"><strong>Apertura:</strong> ${fechaApertura}</div>
-        <div style="font-size:12px;color:#555;"><strong>Creada por:</strong> ${NOMBRES[inc.creadaPor]||inc.creadaPor||'—'}</div>
-      </div>
-      <div style="margin-top:14px;border-top:1px dashed #ddd;padding-top:10px;display:flex;align-items:center;gap:12px;">
-        <span style="font-size:11px;color:#aaa;white-space:nowrap;">✓ Completada el:</span>
-        <span style="display:inline-block;width:110px;border-bottom:1px solid #bbb;"></span>
-        <span style="font-size:11px;color:#aaa;">Firma:</span>
+  // Inyectar línea de firma antes del cierre de cada tarjeta
+  const htmlConFirma = html.replace(
+    /<\/div>\s*<\/div>\s*<div class="footer">/,
+    m => m
+  ).replace(
+    /(<div style="display:grid[^<]+<\/div>)\s*(<\/div>)/g,
+    (match, detalles, cierre) =>
+      detalles +
+      `<div style="margin-top:12px;border-top:1px dashed #ddd;padding-top:8px;display:flex;align-items:center;gap:12px;font-size:.75rem;color:#aaa;">
+        <span>✓ Completada el:</span>
+        <span style="display:inline-block;width:100px;border-bottom:1px solid #bbb;"></span>
+        <span>Firma:</span>
         <span style="display:inline-block;flex:1;border-bottom:1px solid #bbb;"></span>
-      </div>
-    </div>`;
-  }).join('');
+      </div>` + cierre
+  );
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-  <title>Tareas ${nombre}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    @page{size:A4 portrait;margin:1.4cm 1.6cm;}
-    body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f0f2f5;padding:0;font-size:14px;}
-    @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#f0f2f5;}}
-  </style></head><body>
-  <div style="background:#1a1a2e;color:#fff;border-radius:12px;padding:24px 26px;margin-bottom:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
-      <div>
-        <div style="font-size:26px;font-weight:700;color:#e8a020;line-height:1.2;">⚓ CN Águilas —<br>Tareas Asignadas</div>
-        <div style="font-size:12px;color:#aaa;margin-top:8px;">Pendientes y en curso · Generado: ${ahora}</div>
-      </div>
-      <div style="background:#cc0018;color:#fff;padding:8px 20px;border-radius:22px;font-size:15px;font-weight:700;align-self:flex-start;">👤 ${nombre.toUpperCase()}</div>
-    </div>
-  </div>
-  ${itemsHtml}
-  <div style="text-align:center;font-size:11px;color:#aaa;margin-top:12px;">Club Náutico Águilas · ${items.length} tarea(s) · ${nombre}</div>
-  </body></html>`;
-
-  const blob = new Blob([html],{type:'text/html;charset=utf-8'});
+  const blob = new Blob([htmlConFirma],{type:'text/html;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href=url; a.download=`tareas_${mar||'todos'}_${new Date().toISOString().slice(0,10)}.html`;
@@ -1841,6 +1799,9 @@ window.descargarTareasMarinero = function() {
   setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000);
   showToast('PDF de tareas descargado ✓');
 };
+
+
+
 
 function _descargarHtml(html, nombre){
   const blob = new Blob([html],{type:'text/html;charset=utf-8'});
