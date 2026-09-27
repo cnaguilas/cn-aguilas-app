@@ -22,18 +22,18 @@
   --red:#e8002a;--green:#1e9e5a;--orange:#e07820;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;font-size:15px;}
+html,body{height:100%;overflow:hidden;font-size:16px;}
 body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;display:flex;flex-direction:column;
   background-image:radial-gradient(ellipse at 20% 0%,rgba(204,0,24,0.06) 0%,transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(204,0,24,0.04) 0%,transparent 55%);}
 
 /* TOP BAR */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 8px;border-bottom:2px solid #cc0018;flex-shrink:0;background:#ffffff;}
 .topbar h1{font-family:"Bebas Neue",sans-serif;font-size:1.3rem;letter-spacing:0.12em;color:#cc0018;}
-.user-pill{background:#cc0018;border:1px solid #cc0018;border-radius:20px;padding:4px 12px;font-size:0.62rem;color:#ffffff;cursor:pointer;letter-spacing:0.06em;}
+.user-pill{background:#cc0018;border:1px solid #cc0018;border-radius:20px;padding:4px 12px;font-size:0.79rem;color:#ffffff;cursor:pointer;letter-spacing:0.06em;}
 
 /* TABS */
 .tabs{display:flex;border-bottom:2px solid #e0e0e0;flex-shrink:0;background:#ffffff;}
-.tab{flex:1;padding:9px 2px;text-align:center;font-family:"Bebas Neue",sans-serif;font-size:0.72rem;letter-spacing:0.04em;color:#999999;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;}
+.tab{flex:1;padding:12px 2px;text-align:center;font-family:"Bebas Neue",sans-serif;font-size:1rem;letter-spacing:0.04em;color:#999999;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;}
 .tab.active{color:#cc0018;border-bottom-color:#cc0018;}
 
 /* PAGES */
@@ -41,49 +41,49 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .page.active{display:block;}
 
 /* ── TURNOS ── */
-.legend{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:0.62rem;}
-.leg{width:10px;height:10px;border-radius:2px;}
+.legend{display:flex;justify-content:center;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:0.82rem;}
+.leg{width:15px;height:15px;border-radius:3px;}
 .leg-m{background:var(--morn);}.leg-t{background:var(--eve);}.leg-n{background:var(--night);}.leg-l{background:#1a1a2a;border:1px dashed #555;}
 .selector-wrap{display:flex;justify-content:center;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
-.mar-btn{font-family:"Bebas Neue",sans-serif;font-size:0.85rem;letter-spacing:0.08em;padding:5px 12px;border-radius:5px;border:2px solid #e0e0e0;cursor:pointer;background:#f5f5f5;color:#555555;transition:all 0.18s;}
+.mar-btn{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.08em;padding:8px 16px;border-radius:6px;border:2px solid #e0e0e0;cursor:pointer;background:#f5f5f5;color:#555555;transition:all 0.18s;}
 .mar-btn.active-tomas{background:rgba(200,66,10,0.25);border-color:var(--morn);color:#ff9c72;}
 .mar-btn.active-joseluis{background:rgba(27,122,74,0.25);border-color:var(--eve);color:#6be8a8;}
 .mar-btn.active-javi{background:rgba(74,14,143,0.25);border-color:var(--night);color:#c09aff;}
 .mar-btn.active-juan{background:rgba(100,100,100,0.25);border-color:#777;color:#ccc;}
 .year-nav{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:14px;}
-.ynav-btn{background:#ffffff;border:1px solid #cc0018;color:#cc0018;font-family:"IBM Plex Mono",monospace;font-size:0.72rem;padding:5px 14px;cursor:pointer;border-radius:3px;}
-#year-label{font-family:"Bebas Neue",sans-serif;font-size:1.5rem;letter-spacing:0.12em;color:#1a1a1a;}
-.months-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:10px;}
+.ynav-btn{background:#ffffff;border:1px solid #cc0018;color:#cc0018;font-family:"IBM Plex Mono",monospace;font-size:1rem;padding:8px 18px;cursor:pointer;border-radius:4px;}
+#year-label{font-family:"Bebas Neue",sans-serif;font-size:2rem;letter-spacing:0.12em;color:#1a1a1a;}
+.months-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;}
 .month-card{background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-.month-title{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.1em;color:#ffffff;padding:6px 10px;background:#cc0018;border-bottom:none;}
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:5px;gap:2px;}
-.dow-hdr{font-size:0.5rem;color:#aaaaaa;text-align:center;padding:2px 0 3px;}
-.day-btn{aspect-ratio:1;border:none;border-radius:3px;background:transparent;color:#333333;font-family:"IBM Plex Mono",monospace;font-size:0.6rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.12s;}
+.month-title{font-family:"Bebas Neue",sans-serif;font-size:1.3rem;letter-spacing:0.1em;color:#ffffff;padding:8px 12px;background:#cc0018;border-bottom:none;}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:8px;gap:4px;}
+.dow-hdr{font-size:0.85rem;font-weight:600;color:#888888;text-align:center;padding:4px 0 6px;}
+.day-btn{aspect-ratio:1;border:none;border-radius:6px;background:transparent;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;font-size:1.05rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.12s;}
 .day-btn:active:not(.empty){transform:scale(0.88);}
 .day-btn.empty{cursor:default;pointer-events:none;}
-.day-btn.today{outline:2px solid #cc0018;outline-offset:1px;font-weight:700;color:#cc0018;}
+.day-btn.today{outline:3px solid #cc0018;outline-offset:1px;font-weight:700;color:#cc0018;}
 .day-btn.selected{outline:2px solid white;outline-offset:1px;}
 .day-btn.sel-m{background:rgba(200,66,10,0.28);}
 .day-btn.sel-t{background:rgba(27,122,74,0.28);}
 .day-btn.sel-n{background:rgba(74,14,143,0.28);}
 .day-btn.sel-l{background:rgba(20,20,30,0.3);color:#555;}
 .day-btn{position:relative;}
-.inc-dot-wrap{position:absolute;bottom:1px;left:50%;transform:translateX(-50%);display:flex;gap:1px;}
-.inc-dot{width:4px;height:4px;border-radius:50%;}
+.inc-dot-wrap{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);display:flex;gap:2px;}
+.inc-dot{width:6px;height:6px;border-radius:50%;}
 .inc-dot-open{background:#e07820;}
 .inc-dot-res{background:#1e9e5a;}
 
 /* ── INCIDENCIAS ── */
 .inc-toolbar{display:flex;gap:7px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
 .res-nav-wrap{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-.res-nav-label{font-size:0.6rem;color:#888;letter-spacing:0.06em;}
-.res-period-btn{font-size:0.58rem;padding:4px 9px;border-radius:4px;border:1px solid #ddd;background:transparent;color:#888;cursor:pointer;font-family:"IBM Plex Mono",monospace;transition:all 0.15s;}
+.res-nav-label{font-size:0.78rem;color:#888;letter-spacing:0.06em;}
+.res-period-btn{font-size:0.77rem;padding:4px 9px;border-radius:4px;border:1px solid #ddd;background:transparent;color:#888;cursor:pointer;font-family:"IBM Plex Mono",monospace;transition:all 0.15s;}
 .res-period-btn.active{background:#1e9e5a;color:#fff;border-color:#1e9e5a;}
-.res-section-header{font-family:"Bebas Neue",sans-serif;font-size:0.85rem;letter-spacing:0.1em;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:6px;}
-.btn-primary{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:none;cursor:pointer;background:#cc0018;color:#fff;transition:background 0.18s;}
+.res-section-header{font-family:"Bebas Neue",sans-serif;font-size:0.92rem;letter-spacing:0.1em;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:6px;}
+.btn-primary{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.08em;padding:11px 18px;border-radius:5px;border:none;cursor:pointer;background:#cc0018;color:#fff;transition:background 0.18s;}
 .btn-primary:active{background:#aa0014;}
-.filter-btn{font-size:0.6rem;padding:5px 10px;border-radius:4px;border:1px solid #ddd;background:transparent;color:#888888;cursor:pointer;font-family:"IBM Plex Mono",monospace;transition:all 0.15s;}
+.filter-btn{font-size:0.78rem;padding:8px 11px;border-radius:4px;border:1px solid #ddd;background:transparent;color:#888888;cursor:pointer;font-family:"IBM Plex Mono",monospace;transition:all 0.15s;}
 .filter-btn.active{background:#cc0018;color:#ffffff;border-color:#cc0018;}
 .inc-list{display:flex;flex-direction:column;gap:9px;}
 .inc-card{background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;padding:11px 13px;cursor:pointer;transition:all 0.15s;border-left:4px solid transparent;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
@@ -92,13 +92,13 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .inc-card.prog{border-left-color:var(--gold);}
 .inc-card.res{border-left-color:var(--green);opacity:0.6;}
 .inc-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
-.inc-titulo{font-family:"Bebas Neue",sans-serif;font-size:0.95rem;letter-spacing:0.06em;display:flex;align-items:center;gap:6px;color:#1a1a1a;}
-.inc-estado{font-size:0.55rem;padding:2px 7px;border-radius:10px;letter-spacing:0.06em;white-space:nowrap;margin-left:6px;flex-shrink:0;}
+.inc-titulo{font-family:"Bebas Neue",sans-serif;font-size:0.97rem;letter-spacing:0.06em;display:flex;align-items:center;gap:6px;color:#1a1a1a;}
+.inc-estado{font-size:0.75rem;padding:2px 7px;border-radius:10px;letter-spacing:0.06em;white-space:nowrap;margin-left:6px;flex-shrink:0;}
 .estado-pend{background:rgba(224,120,32,0.2);color:var(--orange);border:1px solid rgba(224,120,32,0.4);}
 .estado-prog{background:rgba(240,165,0,0.2);color:var(--gold);border:1px solid rgba(240,165,0,0.4);}
 .estado-res{background:rgba(30,158,90,0.2);color:var(--green);border:1px solid rgba(30,158,90,0.4);}
-.inc-meta{font-size:0.6rem;color:#888888;display:flex;gap:8px;flex-wrap:wrap;}
-.empty-state{text-align:center;padding:36px 20px;color:#aaaaaa;font-size:0.72rem;letter-spacing:0.06em;}
+.inc-meta{font-size:0.78rem;color:#888888;display:flex;gap:8px;flex-wrap:wrap;}
+.empty-state{text-align:center;padding:36px 20px;color:#aaaaaa;font-size:0.85rem;letter-spacing:0.06em;}
 .empty-state div{font-size:2rem;margin-bottom:8px;}
 
 /* ── HERRAMIENTAS ── */
@@ -110,19 +110,19 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .herr-card.prestada{border-left-color:var(--orange);}
 .herr-card.vencida{border-left-color:var(--red);}
 .herr-nombre{font-family:"Bebas Neue",sans-serif;font-size:1rem;letter-spacing:0.06em;display:flex;align-items:center;gap:7px;margin-bottom:4px;color:#1a1a1a;}
-.herr-badge{font-size:0.55rem;padding:2px 7px;border-radius:10px;letter-spacing:0.05em;}
+.herr-badge{font-size:0.75rem;padding:2px 7px;border-radius:10px;letter-spacing:0.05em;}
 .badge-disp{background:rgba(30,158,90,0.2);color:var(--green);border:1px solid rgba(30,158,90,0.4);}
 .badge-prest{background:rgba(224,120,32,0.2);color:var(--orange);border:1px solid rgba(224,120,32,0.4);}
 .badge-venc{background:rgba(220,50,50,0.2);color:var(--red);border:1px solid rgba(220,50,50,0.4);}
-.herr-meta{font-size:0.6rem;color:#888888;display:flex;gap:10px;flex-wrap:wrap;}
+.herr-meta{font-size:0.78rem;color:#888888;display:flex;gap:10px;flex-wrap:wrap;}
 
 /* ── PARTES ── */
 .partes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
 .partes-mes-nav{display:flex;align-items:center;gap:10px;}
 .partes-mes-label{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.1em;color:#1a1a1a;}
 .partes-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px;}
-.pcal-dow{font-size:0.5rem;color:#aaa;text-align:center;padding-bottom:3px;}
-.pcal-day{aspect-ratio:1;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.62rem;cursor:pointer;border:1px solid transparent;transition:all 0.15s;background:#f5f5f5;color:#333;position:relative;}
+.pcal-dow{font-size:0.72rem;color:#aaa;text-align:center;padding-bottom:3px;}
+.pcal-day{aspect-ratio:1;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.79rem;cursor:pointer;border:1px solid transparent;transition:all 0.15s;background:#f5f5f5;color:#333;position:relative;}
 .pcal-day:active{transform:scale(0.9);}
 .pcal-day.empty{background:transparent;border:none;pointer-events:none;}
 .pcal-day.today{outline:2px solid #cc0018;outline-offset:1px;font-weight:700;color:#cc0018;}
@@ -134,72 +134,72 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 #login-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#1a0008 0%,#2a0010 40%,#0a0a1a 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;}
 .login-logo{font-size:3rem;margin-bottom:8px;}
 .login-titulo{font-family:"Bebas Neue",sans-serif;font-size:2rem;letter-spacing:0.15em;color:#cc0018;margin-bottom:4px;}
-.login-sub{font-size:0.6rem;color:#888;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:36px;}
+.login-sub{font-size:0.78rem;color:#888;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:36px;}
 .login-card{background:rgba(255,255,255,0.04);border:1px solid rgba(204,0,24,0.25);border-radius:14px;padding:28px 24px;width:100%;max-width:340px;backdrop-filter:blur(10px);}
-.login-label{font-size:0.58rem;color:#aaa;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;display:block;}
-.login-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:11px 14px;font-family:"IBM Plex Mono",monospace;font-size:0.85rem;color:#fff;margin-bottom:16px;outline:none;transition:border 0.2s;}
+.login-label{font-size:0.77rem;color:#aaa;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.login-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:7px;padding:11px 14px;font-family:"IBM Plex Mono",monospace;font-size:0.92rem;color:#fff;margin-bottom:16px;outline:none;transition:border 0.2s;}
 .login-input:focus{border-color:#cc0018;}
 .login-btn{width:100%;background:#cc0018;color:#fff;border:none;border-radius:7px;padding:13px;font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.12em;cursor:pointer;margin-top:4px;transition:background 0.2s;}
 .login-btn:hover{background:#e8002a;}
 .login-btn:disabled{background:#555;cursor:not-allowed;}
-.login-error{background:rgba(204,0,24,0.15);border:1px solid rgba(204,0,24,0.4);border-radius:6px;padding:9px 12px;font-size:0.65rem;color:#ff8080;margin-bottom:14px;display:none;letter-spacing:0.03em;}
-.login-spinner{display:none;text-align:center;padding:8px;font-size:0.65rem;color:#888;}
+.login-error{background:rgba(204,0,24,0.15);border:1px solid rgba(204,0,24,0.4);border-radius:6px;padding:9px 12px;font-size:0.81rem;color:#ff8080;margin-bottom:14px;display:none;letter-spacing:0.03em;}
+.login-spinner{display:none;text-align:center;padding:8px;font-size:0.81rem;color:#888;}
 /* Botón cerrar sesión en topbar */
-.logout-btn{background:transparent;border:1px solid rgba(204,0,24,0.4);border-radius:20px;padding:4px 10px;font-size:0.55rem;color:#cc0018;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:6px;}
-.cambiar-pass-btn{background:transparent;border:1px solid rgba(100,100,200,0.4);border-radius:20px;padding:4px 10px;font-size:0.55rem;color:#8888ff;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:4px;}
+.logout-btn{background:transparent;border:1px solid rgba(204,0,24,0.4);border-radius:20px;padding:4px 10px;font-size:0.75rem;color:#cc0018;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:6px;}
+.cambiar-pass-btn{background:transparent;border:1px solid rgba(100,100,200,0.4);border-radius:20px;padding:4px 10px;font-size:0.75rem;color:#8888ff;cursor:pointer;font-family:"IBM Plex Mono",monospace;letter-spacing:0.04em;margin-left:4px;}
 /* Consumos internos */
 .consumo-fila{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;margin-bottom:6px;}
-.consumo-fila input[type="text"]{flex:1;font-size:0.72rem;}
+.consumo-fila input[type="text"]{flex:1;font-size:0.85rem;}
 .consumo-fila input[type="number"]{width:80px;text-align:right;}
 .consumo-del-btn{background:none;border:none;color:#cc0018;font-size:1rem;cursor:pointer;padding:0 4px;line-height:1;}
-.consumos-total{font-size:0.65rem;color:#cc0018;font-weight:700;text-align:right;margin-top:4px;padding-top:4px;border-top:1px solid rgba(204,0,24,0.2);}
+.consumos-total{font-size:0.81rem;color:#cc0018;font-weight:700;text-align:right;margin-top:4px;padding-top:4px;border-top:1px solid rgba(204,0,24,0.2);}
 
 .tanques-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .tanque-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);position:relative;overflow:hidden;}
 .tanque-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;}
 .tanque-gasoil::before{background:linear-gradient(90deg,#cc0018,#ff4444);}
 .tanque-sp95::before{background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
-.tanque-label{font-size:0.55rem;letter-spacing:0.1em;color:#999;text-transform:uppercase;margin-bottom:4px;}
+.tanque-label{font-size:0.75rem;letter-spacing:0.1em;color:#999;text-transform:uppercase;margin-bottom:4px;}
 .tanque-litros{font-family:"Bebas Neue",sans-serif;font-size:1.6rem;letter-spacing:0.06em;line-height:1;color:#1a1a1a;}
-.tanque-litros span{font-size:0.7rem;color:#999;font-family:"IBM Plex Mono",monospace;margin-left:2px;}
+.tanque-litros span{font-size:0.83rem;color:#999;font-family:"IBM Plex Mono",monospace;margin-left:2px;}
 .tanque-barra-wrap{height:6px;background:#f0f0f0;border-radius:3px;margin:8px 0 4px;overflow:hidden;}
 .tanque-barra{height:100%;border-radius:3px;transition:width 0.5s ease;}
 .tanque-gasoil .tanque-barra{background:linear-gradient(90deg,#cc0018,#ff6644);}
 .tanque-sp95 .tanque-barra{background:linear-gradient(90deg,#1b7a4a,#2ecc71);}
-.tanque-pct{font-size:0.55rem;color:#aaa;display:flex;justify-content:space-between;}
-.tanque-alerta{font-size:0.58rem;color:#cc0018;font-weight:600;margin-top:3px;}
+.tanque-pct{font-size:0.75rem;color:#aaa;display:flex;justify-content:space-between;}
+.tanque-alerta{font-size:0.77rem;color:#cc0018;font-weight:600;margin-top:3px;}
 .tanque-utiles{margin-top:5px;padding:5px 8px;border-radius:6px;border:1px dashed rgba(0,0,0,0.15);background:rgba(0,0,0,0.03);}
-.tanque-utiles-label{font-size:0.45rem;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1px;}
+.tanque-utiles-label{font-size:0.7rem;color:#aaa;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1px;}
 .tanque-utiles-valor{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;line-height:1;}
-.tanque-utiles-sub{font-size:0.42rem;color:#bbb;margin-top:1px;}
+.tanque-utiles-sub{font-size:0.68rem;color:#bbb;margin-top:1px;}
 .tanque-gasoil .tanque-utiles{border-color:rgba(204,0,24,0.2);background:rgba(204,0,24,0.04);}
 .tanque-gasoil .tanque-utiles-valor{color:#cc0018;}
 .tanque-sp95 .tanque-utiles{border-color:rgba(27,122,74,0.2);background:rgba(27,122,74,0.04);}
 .tanque-sp95 .tanque-utiles-valor{color:#1b7a4a;}
-.tanque-cisterna{font-size:0.55rem;color:#1b7a4a;margin-top:2px;}
+.tanque-cisterna{font-size:0.75rem;color:#1b7a4a;margin-top:2px;}
 /* Contadores del último parte */
 .contadores-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .contador-card{background:#fff;border:1px solid #e8e8e8;border-radius:7px;padding:7px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
-.contador-label{font-size:0.48rem;letter-spacing:0.1em;color:#bbb;text-transform:uppercase;margin-bottom:2px;}
+.contador-label{font-size:0.71rem;letter-spacing:0.1em;color:#bbb;text-transform:uppercase;margin-bottom:2px;}
 .contador-valor{font-family:"Bebas Neue",sans-serif;font-size:1.5rem;letter-spacing:0.06em;line-height:1.1;font-weight:700;}
 .contador-gasoil .contador-valor{color:#111;}
 .contador-sp95 .contador-valor{color:#1b7a4a;}
-.contador-sub{font-size:0.46rem;color:#ccc;letter-spacing:0.05em;margin-top:1px;}
+.contador-sub{font-size:0.7rem;color:#ccc;letter-spacing:0.05em;margin-top:1px;}
 /* cisterna en el formulario */
 .cisterna-toggle{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:6px;margin-bottom:8px;cursor:pointer;}
 .cisterna-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#1b7a4a;cursor:pointer;}
-.cisterna-toggle label{font-size:0.65rem;color:#1b7a4a;letter-spacing:0.06em;cursor:pointer;font-weight:600;}
+.cisterna-toggle label{font-size:0.81rem;color:#1b7a4a;letter-spacing:0.06em;cursor:pointer;font-weight:600;}
 .cisterna-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:6px;margin-bottom:8px;}
 .comb-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
 .comb-recaudacion-box{grid-column:1/-1;background:linear-gradient(135deg,rgba(204,0,24,0.08),rgba(204,0,24,0.04));border:1.5px solid rgba(204,0,24,0.35);border-radius:7px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
-.comb-recaudacion-label{font-size:0.6rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;}
+.comb-recaudacion-label{font-size:0.78rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;}
 .comb-recaudacion-valor{font-family:"Bebas Neue",sans-serif;font-size:1.4rem;color:#cc0018;letter-spacing:0.06em;}
-.comb-recaudacion-detalle{font-size:0.55rem;color:#aaa;margin-top:2px;}
-.comb-ref-box{grid-column:1/-1;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.6rem;color:#1b7a4a;letter-spacing:0.04em;}
+.comb-recaudacion-detalle{font-size:0.75rem;color:#aaa;margin-top:2px;}
+.comb-ref-box{grid-column:1/-1;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.78rem;color:#1b7a4a;letter-spacing:0.04em;}
 .precio-combustible-bar{display:flex;align-items:center;gap:10px;background:#fff8e1;border:1px solid #f0c030;border-radius:6px;padding:7px 12px;margin-bottom:10px;flex-wrap:wrap;}
-.precio-combustible-bar span{font-size:0.6rem;color:#888;letter-spacing:0.06em;}
-.precio-combustible-bar strong{font-size:0.75rem;color:#333;}
-.precio-edit-btn{font-size:0.58rem;padding:3px 8px;border-radius:4px;border:1px solid #f0c030;background:transparent;color:#b8860b;cursor:pointer;font-family:"IBM Plex Mono",monospace;margin-left:auto;}
+.precio-combustible-bar span{font-size:0.78rem;color:#888;letter-spacing:0.06em;}
+.precio-combustible-bar strong{font-size:0.86rem;color:#333;}
+.precio-edit-btn{font-size:0.77rem;padding:3px 8px;border-radius:4px;border:1px solid #f0c030;background:transparent;color:#b8860b;cursor:pointer;font-family:"IBM Plex Mono",monospace;margin-left:auto;}
 /* precios modal */
 .precios-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 0;}
 .turno-selector-list{display:flex;flex-direction:column;gap:10px;padding:8px 0;}
@@ -208,60 +208,60 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .turno-selector-btn.ts-mañana{border-left-color:var(--morn);}
 .turno-selector-btn.ts-tarde{border-left-color:var(--eve);}
 .turno-selector-btn.ts-noche{border-left-color:var(--night);}
-.turno-selector-title{font-family:"Bebas Neue",sans-serif;font-size:0.95rem;letter-spacing:0.06em;color:#1a1a1a;}
-.turno-selector-sub{font-size:0.6rem;color:#888;margin-top:2px;}
+.turno-selector-title{font-family:"Bebas Neue",sans-serif;font-size:0.97rem;letter-spacing:0.06em;color:#1a1a1a;}
+.turno-selector-sub{font-size:0.78rem;color:#888;margin-top:2px;}
 .parte-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
 .parte-card-fecha{font-family:"Bebas Neue",sans-serif;font-size:1rem;letter-spacing:0.08em;color:#cc0018;margin-bottom:8px;}
 .parte-fotos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.parte-foto-slot{border:2px dashed #ddd;border-radius:6px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:0.6rem;color:#aaa;letter-spacing:0.05em;overflow:hidden;position:relative;background:#fafafa;transition:border-color 0.2s;}
+.parte-foto-slot{border:2px dashed #ddd;border-radius:6px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:0.78rem;color:#aaa;letter-spacing:0.05em;overflow:hidden;position:relative;background:#fafafa;transition:border-color 0.2s;}
 .parte-foto-slot.tiene-foto{border-style:solid;border-color:#1e9e5a;}
 .parte-foto-slot img{width:100%;height:100%;object-fit:cover;}
-.parte-foto-slot .slot-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:0.55rem;text-align:center;padding:3px;letter-spacing:0.05em;}
-.parte-marinero-row{display:flex;align-items:center;gap:8px;font-size:0.65rem;color:#666;}
-.parte-drive-link{font-size:0.6rem;color:#1e9e5a;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.parte-foto-slot .slot-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.45);color:#fff;font-size:0.75rem;text-align:center;padding:3px;letter-spacing:0.05em;}
+.parte-marinero-row{display:flex;align-items:center;gap:8px;font-size:0.81rem;color:#666;}
+.parte-drive-link{font-size:0.78rem;color:#1e9e5a;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
 .partes-lista{display:flex;flex-direction:column;gap:10px;}
-.no-partes{text-align:center;padding:32px 16px;color:#aaa;font-size:0.72rem;letter-spacing:0.06em;}
+.no-partes{text-align:center;padding:32px 16px;color:#aaa;font-size:0.85rem;letter-spacing:0.06em;}
 .no-partes div{font-size:2rem;margin-bottom:8px;}
 /* Parte digital — formulario */
-.parte-seccion-hdr{font-family:"Bebas Neue",sans-serif;font-size:0.82rem;letter-spacing:0.1em;color:#fff;background:#0a1628;padding:5px 10px;border-radius:4px;margin-bottom:4px;}
+.parte-seccion-hdr{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.1em;color:#fff;background:#0a1628;padding:5px 10px;border-radius:4px;margin-bottom:4px;}
 .parte-tabla{border:1px solid #e0e0e0;border-radius:5px;overflow:hidden;margin-bottom:4px;}
-.parte-tabla-hdr{display:grid;grid-template-columns:2fr 0.5fr 0.5fr 2fr;background:#f0f4f8;padding:5px 8px;font-size:0.55rem;font-weight:700;letter-spacing:0.07em;color:#555;border-bottom:1px solid #e0e0e0;}
+.parte-tabla-hdr{display:grid;grid-template-columns:2fr 0.5fr 0.5fr 2fr;background:#f0f4f8;padding:5px 8px;font-size:0.75rem;font-weight:700;letter-spacing:0.07em;color:#555;border-bottom:1px solid #e0e0e0;}
 .parte-tabla-hdr span{text-align:center;}
 .parte-tabla-hdr span:first-child{text-align:left;}
 .parte-fila{display:grid;grid-template-columns:2fr 0.5fr 0.5fr 2fr;padding:5px 8px;border-bottom:1px solid #f0f0f0;align-items:center;gap:4px;}
 .parte-fila:last-child{border-bottom:none;}
-.parte-fila-label{font-size:0.65rem;color:#333;letter-spacing:0.03em;}
+.parte-fila-label{font-size:0.81rem;color:#333;letter-spacing:0.03em;}
 .parte-fila input[type="checkbox"]{width:18px;height:18px;accent-color:#cc0018;cursor:pointer;margin:auto;display:block;}
-.parte-fila input[type="text"]{width:100%;border:1px solid #e0e0e0;border-radius:4px;padding:3px 6px;font-size:0.62rem;font-family:"IBM Plex Mono",monospace;background:#fafafa;}
-.parte-ronda-hdr{display:grid;grid-template-columns:2fr 0.5fr 0.5fr;background:#f0f4f8;padding:5px 8px;font-size:0.55rem;font-weight:700;letter-spacing:0.07em;color:#555;border-bottom:1px solid #e0e0e0;}
+.parte-fila input[type="text"]{width:100%;border:1px solid #e0e0e0;border-radius:4px;padding:3px 6px;font-size:0.79rem;font-family:"IBM Plex Mono",monospace;background:#fafafa;}
+.parte-ronda-hdr{display:grid;grid-template-columns:2fr 0.5fr 0.5fr;background:#f0f4f8;padding:5px 8px;font-size:0.75rem;font-weight:700;letter-spacing:0.07em;color:#555;border-bottom:1px solid #e0e0e0;}
 .parte-ronda-hdr span{text-align:center;}
 .parte-ronda-hdr span:first-child{text-align:left;}
 .parte-ronda-fila{display:grid;grid-template-columns:2fr 0.5fr 0.5fr;padding:4px 8px;border-bottom:1px solid #f0f0f0;align-items:center;}
 .parte-ronda-fila:last-child{border-bottom:none;}
-.parte-ronda-fila span{font-size:0.65rem;color:#333;}
+.parte-ronda-fila span{font-size:0.81rem;color:#333;}
 .parte-campo{display:flex;flex-direction:column;gap:3px;}
-.parte-campo label{font-size:0.55rem;letter-spacing:0.07em;color:#888;font-weight:700;}
-.parte-campo input{border:1px solid #e0e0e0;border-radius:4px;padding:5px 8px;font-size:0.75rem;font-family:"IBM Plex Mono",monospace;background:#fafafa;width:100%;}
+.parte-campo label{font-size:0.75rem;letter-spacing:0.07em;color:#888;font-weight:700;}
+.parte-campo input{border:1px solid #e0e0e0;border-radius:4px;padding:5px 8px;font-size:0.86rem;font-family:"IBM Plex Mono",monospace;background:#fafafa;width:100%;}
 /* Parte digital — vista */
 .vp-seccion{margin-bottom:10px;}
-.vp-seccion-hdr{font-family:"Bebas Neue",sans-serif;font-size:0.78rem;letter-spacing:0.1em;color:#fff;background:#0a1628;padding:4px 10px;border-radius:4px;margin-bottom:4px;}
+.vp-seccion-hdr{font-family:"Bebas Neue",sans-serif;font-size:0.88rem;letter-spacing:0.1em;color:#fff;background:#0a1628;padding:4px 10px;border-radius:4px;margin-bottom:4px;}
 .vp-tabla{border:1px solid #e0e0e0;border-radius:5px;overflow:hidden;}
-.vp-fila{display:grid;grid-template-columns:2fr 0.5fr 2fr;padding:5px 8px;border-bottom:1px solid #f5f5f5;align-items:center;font-size:0.65rem;}
+.vp-fila{display:grid;grid-template-columns:2fr 0.5fr 2fr;padding:5px 8px;border-bottom:1px solid #f5f5f5;align-items:center;font-size:0.81rem;}
 .vp-fila:last-child{border-bottom:none;}
 .vp-fila-label{color:#444;}
-.vp-fila-val{text-align:center;font-weight:700;font-size:0.7rem;}
+.vp-fila-val{text-align:center;font-weight:700;font-size:0.83rem;}
 .vp-fila-val.si{color:#1e9e5a;}
 .vp-fila-val.no{color:#cc0018;}
-.vp-fila-obs{color:#666;font-size:0.6rem;font-style:italic;}
-.vp-ronda-fila{display:grid;grid-template-columns:2fr 0.5fr;padding:4px 8px;border-bottom:1px solid #f5f5f5;font-size:0.65rem;align-items:center;}
+.vp-fila-obs{color:#666;font-size:0.78rem;font-style:italic;}
+.vp-ronda-fila{display:grid;grid-template-columns:2fr 0.5fr;padding:4px 8px;border-bottom:1px solid #f5f5f5;font-size:0.81rem;align-items:center;}
 .vp-ronda-fila:last-child{border-bottom:none;}
 .vp-ronda-fila span:last-child{text-align:center;font-weight:700;}
 .vp-datos{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px;}
 .vp-dato{background:#f8f8f8;border-radius:4px;padding:5px 8px;}
-.vp-dato label{display:block;font-size:0.52rem;color:#999;letter-spacing:0.06em;font-weight:700;}
-.vp-dato span{font-size:0.72rem;font-weight:600;color:#1a1a1a;}
-.vp-obs{background:#fffbe6;border:1px solid #f0e68c;border-radius:5px;padding:8px 10px;font-size:0.68rem;color:#555;line-height:1.5;margin-top:4px;white-space:pre-wrap;}
-.upload-progress{display:none;background:rgba(0,0,0,0.6);position:fixed;inset:0;z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#fff;font-size:0.8rem;letter-spacing:0.06em;}
+.vp-dato label{display:block;font-size:0.74rem;color:#999;letter-spacing:0.06em;font-weight:700;}
+.vp-dato span{font-size:0.85rem;font-weight:600;color:#1a1a1a;}
+.vp-obs{background:#fffbe6;border:1px solid #f0e68c;border-radius:5px;padding:8px 10px;font-size:0.82rem;color:#555;line-height:1.5;margin-top:4px;white-space:pre-wrap;}
+.upload-progress{display:none;background:rgba(0,0,0,0.6);position:fixed;inset:0;z-index:400;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:#fff;font-size:0.89rem;letter-spacing:0.06em;}
 .upload-progress.visible{display:flex;}
 .upload-progress .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -277,8 +277,8 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .tipo-opt:active{transform:scale(0.95);}
 .tipo-opt.selected{border-color:#cc0018;background:rgba(204,0,24,0.1);}
 .tipo-opt .tipo-icon{font-size:1.4rem;}
-.tipo-opt .tipo-label{font-size:0.52rem;color:#777777;margin-top:3px;letter-spacing:0.02em;}
-.mapa-instruccion{text-align:center;font-size:0.65rem;color:#666666;padding:8px;letter-spacing:0.06em;background:#f0f0f0;border-radius:4px;margin-bottom:8px;border:1px solid #ddd;}
+.tipo-opt .tipo-label{font-size:0.74rem;color:#777777;margin-top:3px;letter-spacing:0.02em;}
+.mapa-instruccion{text-align:center;font-size:0.81rem;color:#666666;padding:8px;letter-spacing:0.06em;background:#f0f0f0;border-radius:4px;margin-bottom:8px;border:1px solid #ddd;}
 
 /* ── MODALS ── */
 .overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px);align-items:flex-end;justify-content:center;padding:0;}
@@ -292,31 +292,31 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .close-btn{background:#f5f5f5;border:1px solid #ddd;color:#666;font-size:1rem;width:28px;height:28px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .close-btn:active{background:rgba(220,50,50,0.4);}
 .form-group{margin-bottom:12px;}
-.form-group label{display:block;font-size:0.62rem;color:#888888;letter-spacing:0.08em;margin-bottom:4px;}
-.form-group input,.form-group textarea,.form-group select{width:100%;background:#fafafa;border:1px solid #ddd;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;font-size:0.78rem;padding:8px 11px;border-radius:5px;outline:none;transition:border-color 0.2s;}
+.form-group label{display:block;font-size:0.79rem;color:#888888;letter-spacing:0.08em;margin-bottom:4px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:#fafafa;border:1px solid #ddd;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;font-size:1rem;padding:11px 12px;border-radius:5px;outline:none;transition:border-color 0.2s;}
 .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:#cc0018;}
 .form-group textarea{resize:vertical;min-height:60px;}
 .form-group select option{background:#ffffff;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .btn-row{display:flex;gap:8px;margin-top:16px;}
 .btn-row .btn-primary{flex:1;}
-.btn-secondary{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid #cc0018;cursor:pointer;background:transparent;color:#cc0018;}
-.btn-danger{font-family:"Bebas Neue",sans-serif;font-size:0.9rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid rgba(220,50,50,0.4);cursor:pointer;background:rgba(220,50,50,0.15);color:#f08080;}
-.semana-badge{display:inline-block;font-size:0.58rem;color:#cc0018;background:rgba(204,0,24,0.08);border:1px solid rgba(204,0,24,0.3);border-radius:3px;padding:2px 8px;margin-bottom:12px;letter-spacing:0.08em;}
+.btn-secondary{font-family:"Bebas Neue",sans-serif;font-size:1.1rem;letter-spacing:0.08em;padding:11px 18px;border-radius:5px;border:1px solid #cc0018;cursor:pointer;background:transparent;color:#cc0018;}
+.btn-danger{font-family:"Bebas Neue",sans-serif;font-size:0.95rem;letter-spacing:0.08em;padding:8px 16px;border-radius:5px;border:1px solid rgba(220,50,50,0.4);cursor:pointer;background:rgba(220,50,50,0.15);color:#f08080;}
+.semana-badge{display:inline-block;font-size:0.77rem;color:#cc0018;background:rgba(204,0,24,0.08);border:1px solid rgba(204,0,24,0.3);border-radius:3px;padding:2px 8px;margin-bottom:12px;letter-spacing:0.08em;}
 .marinero-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
 .mar-card{border-radius:6px;padding:11px;text-align:center;}
 .mar-card.highlighted{box-shadow:0 0 14px rgba(255,255,255,0.1);transform:scale(1.03);}
-.mar-card .mc-num{font-size:0.54rem;color:rgba(255,255,255,0.35);margin-bottom:2px;}
-.mar-card .mc-name{font-family:"Bebas Neue",sans-serif;font-size:0.95rem;letter-spacing:0.08em;margin-bottom:4px;}
-.mar-card .mc-turno{font-size:0.76rem;font-weight:600;}
-.mar-card .mc-horas{font-size:0.58rem;color:rgba(255,255,255,0.42);margin-top:2px;}
+.mar-card .mc-num{font-size:0.75rem;color:rgba(255,255,255,0.35);margin-bottom:2px;}
+.mar-card .mc-name{font-family:"Bebas Neue",sans-serif;font-size:0.97rem;letter-spacing:0.08em;margin-bottom:4px;}
+.mar-card .mc-turno{font-size:0.87rem;font-weight:600;}
+.mar-card .mc-horas{font-size:0.77rem;color:rgba(255,255,255,0.42);margin-top:2px;}
 .mar-card.m{background:rgba(200,66,10,0.22);border:1px solid rgba(200,66,10,0.5);}
 .mar-card.t{background:rgba(27,122,74,0.22);border:1px solid rgba(27,122,74,0.5);}
 .mar-card.n{background:rgba(74,14,143,0.22);border:1px solid rgba(74,14,143,0.5);}
 .mar-card.lb{background:rgba(20,20,30,0.5);border:1px dashed #3a3a4a;}
 .mar-card.lb .mc-name{color:#555;}.mar-card.lb .mc-turno{color:#555;}
 .inc-detail-estado{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
-.estado-opt{flex:1;min-width:75px;padding:7px;border-radius:5px;text-align:center;font-family:"Bebas Neue",sans-serif;font-size:0.75rem;letter-spacing:0.06em;cursor:pointer;border:2px solid transparent;transition:all 0.15s;opacity:0.6;}
+.estado-opt{flex:1;min-width:75px;padding:7px;border-radius:5px;text-align:center;font-family:"Bebas Neue",sans-serif;font-size:0.86rem;letter-spacing:0.06em;cursor:pointer;border:2px solid transparent;transition:all 0.15s;opacity:0.6;}
 .estado-opt.selected{opacity:1;}
 .estado-opt.opt-pend{border-color:var(--orange);color:var(--orange);background:rgba(224,120,32,0.1);}
 .estado-opt.opt-prog{border-color:var(--gold);color:var(--gold);background:rgba(240,165,0,0.1);}
@@ -325,13 +325,13 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .opt-prog.selected{background:rgba(240,165,0,0.25);}
 .opt-res.selected{background:rgba(30,158,90,0.25);}
 .user-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px;}
-.user-opt{padding:13px;border-radius:8px;text-align:center;cursor:pointer;font-family:"Bebas Neue",sans-serif;font-size:0.95rem;letter-spacing:0.08em;border:2px solid #e0e0e0;background:#f5f5f5;color:#444444;transition:all 0.18s;}
+.user-opt{padding:13px;border-radius:8px;text-align:center;cursor:pointer;font-family:"Bebas Neue",sans-serif;font-size:0.97rem;letter-spacing:0.08em;border:2px solid #e0e0e0;background:#f5f5f5;color:#444444;transition:all 0.18s;}
 .user-opt:active{transform:scale(0.96);}
 .user-opt.sel-u{border-color:#cc0018;color:#ffffff;background:#cc0018;}
-.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);background:#cc0018;color:#fff;padding:9px 18px;border-radius:20px;font-size:0.7rem;letter-spacing:0.06em;opacity:0;transition:all 0.3s;z-index:999;white-space:nowrap;}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);background:#cc0018;color:#fff;padding:9px 18px;border-radius:20px;font-size:0.83rem;letter-spacing:0.06em;opacity:0;transition:all 0.3s;z-index:999;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-.loading{text-align:center;padding:28px;color:#aaaaaa;font-size:0.72rem;letter-spacing:0.08em;}
-.ubicacion-preview{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(204,0,24,0.08);border:1px solid rgba(204,0,24,0.3);border-radius:5px;font-size:0.65rem;color:#cc0018;margin-bottom:10px;cursor:pointer;}
+.loading{text-align:center;padding:28px;color:#aaaaaa;font-size:0.85rem;letter-spacing:0.08em;}
+.ubicacion-preview{display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(204,0,24,0.08);border:1px solid rgba(204,0,24,0.3);border-radius:5px;font-size:0.81rem;color:#cc0018;margin-bottom:10px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -377,7 +377,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div class="legend-item"><div class="leg leg-l"></div> LIBRE</div>
   </div>
   <div class="selector-wrap">
-    <span style="font-size:0.62rem;color:var(--dim);letter-spacing:0.06em;">VER:</span>
+    <span style="font-size:0.79rem;color:var(--dim);letter-spacing:0.06em;">VER:</span>
     <button class="mar-btn" id="btn-tomas" onclick="setMarinero('tomas')">Tomas</button>
     <button class="mar-btn" id="btn-joseluis" onclick="setMarinero('joseluis')">Jose Luis</button>
     <button class="mar-btn active-javi" id="btn-javi" onclick="setMarinero('javi')">Javi</button>
@@ -424,15 +424,15 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3>♻️ INFORME RECICLAJE</h3>
       <button class="close-btn" onclick="closeOv('ov-reciclaje')">x</button>
     </div>
-    <p style="font-size:0.65rem;color:#888;margin-bottom:12px;">Descarga el informe de contenedores de reciclaje por mes.</p>
+    <p style="font-size:0.81rem;color:#888;margin-bottom:12px;">Descarga el informe de contenedores de reciclaje por mes.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
       <div>
-        <label style="font-size:0.62rem;color:#888;display:block;margin-bottom:4px;">AÑO</label>
-        <input type="number" id="rec-year" value="2026" min="2024" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;">
+        <label style="font-size:0.79rem;color:#888;display:block;margin-bottom:4px;">AÑO</label>
+        <input type="number" id="rec-year" value="2026" min="2024" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.92rem;">
       </div>
       <div>
-        <label style="font-size:0.62rem;color:#888;display:block;margin-bottom:4px;">MES</label>
-        <select id="rec-mes" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;">
+        <label style="font-size:0.79rem;color:#888;display:block;margin-bottom:4px;">MES</label>
+        <select id="rec-mes" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;">
           <option value="0">Año completo</option>
           <option value="1">Enero</option>
           <option value="2">Febrero</option>
@@ -460,28 +460,28 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3>📅 DÍAS TRABAJADOS</h3>
       <button class="close-btn" onclick="closeOv('ov-dias-trabajados')">x</button>
     </div>
-    <p style="font-size:0.65rem;color:#888;margin-bottom:14px;">Selecciona el trimestre para descargar el informe de días trabajados por marinero.</p>
+    <p style="font-size:0.81rem;color:#888;margin-bottom:14px;">Selecciona el trimestre para descargar el informe de días trabajados por marinero.</p>
     <div style="display:grid;gap:8px;">
       <button class="btn-secondary" onclick="descargarDiasTrabajados(1,3,'Enero — Marzo')" style="text-align:left;padding:10px 14px;">
-        <div style="font-size:0.75rem;font-weight:700;">1er Trimestre</div>
-        <div style="font-size:0.6rem;color:#aaa;">Enero — Marzo</div>
+        <div style="font-size:0.86rem;font-weight:700;">1er Trimestre</div>
+        <div style="font-size:0.78rem;color:#aaa;">Enero — Marzo</div>
       </button>
       <button class="btn-secondary" onclick="descargarDiasTrabajados(4,6,'Abril — Junio')" style="text-align:left;padding:10px 14px;">
-        <div style="font-size:0.75rem;font-weight:700;">2º Trimestre</div>
-        <div style="font-size:0.6rem;color:#aaa;">Abril — Junio</div>
+        <div style="font-size:0.86rem;font-weight:700;">2º Trimestre</div>
+        <div style="font-size:0.78rem;color:#aaa;">Abril — Junio</div>
       </button>
       <button class="btn-secondary" onclick="descargarDiasTrabajados(7,9,'Julio — Septiembre')" style="text-align:left;padding:10px 14px;">
-        <div style="font-size:0.75rem;font-weight:700;">3er Trimestre</div>
-        <div style="font-size:0.6rem;color:#aaa;">Julio — Septiembre</div>
+        <div style="font-size:0.86rem;font-weight:700;">3er Trimestre</div>
+        <div style="font-size:0.78rem;color:#aaa;">Julio — Septiembre</div>
       </button>
       <button class="btn-secondary" onclick="descargarDiasTrabajados(10,12,'Octubre — Diciembre')" style="text-align:left;padding:10px 14px;">
-        <div style="font-size:0.75rem;font-weight:700;">4º Trimestre</div>
-        <div style="font-size:0.6rem;color:#aaa;">Octubre — Diciembre</div>
+        <div style="font-size:0.86rem;font-weight:700;">4º Trimestre</div>
+        <div style="font-size:0.78rem;color:#aaa;">Octubre — Diciembre</div>
       </button>
     </div>
     <div style="margin-top:12px;">
-      <label style="font-size:0.62rem;color:#888;display:block;margin-bottom:4px;">AÑO</label>
-      <input type="number" id="dias-year" value="2026" min="2024" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;">
+      <label style="font-size:0.79rem;color:#888;display:block;margin-bottom:4px;">AÑO</label>
+      <input type="number" id="dias-year" value="2026" min="2024" max="2030" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.92rem;">
     </div>
   </div>
 </div>
@@ -549,14 +549,14 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="partes-mes-label" id="partes-mes-label">Abril 2026</div>
       <button class="ynav-btn" onclick="partesChangeMes(1)">&#9654;</button>
     </div>
-    <button class="btn-primary" style="font-size:0.75rem;padding:6px 12px;" onclick="openNuevoParte(null)">+ NUEVO PARTE</button>
+    <button class="btn-primary" style="font-size:0.86rem;padding:6px 12px;" onclick="openNuevoParte(null)">+ NUEVO PARTE</button>
   </div>
   <div style="text-align:right;margin-bottom:8px;">
-    <button class="btn-secondary" onclick="openDiasTrabajados()" style="font-size:0.65rem;padding:6px 12px;">📅 DÍAS TRABAJADOS</button>
-    <button class="btn-secondary" onclick="openReciclajeModal()" style="font-size:0.65rem;padding:6px 12px;margin-left:6px;">♻️ RECICLAJE</button>
+    <button class="btn-secondary" onclick="openDiasTrabajados()" style="font-size:0.81rem;padding:6px 12px;">📅 DÍAS TRABAJADOS</button>
+    <button class="btn-secondary" onclick="openReciclajeModal()" style="font-size:0.81rem;padding:6px 12px;margin-left:6px;">♻️ RECICLAJE</button>
   </div>
   <div class="partes-cal" id="partes-cal"></div>
-  <div style="text-align:center;padding:18px 0 8px;font-size:0.62rem;color:#bbb;letter-spacing:0.06em;">Toca un día del calendario para ver el parte</div>
+  <div style="text-align:center;padding:18px 0 8px;font-size:0.79rem;color:#bbb;letter-spacing:0.06em;">Toca un día del calendario para ver el parte</div>
 </div>
 
 <!-- MODAL TURNOS -->
@@ -615,7 +615,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <label>FOTO (OPCIONAL)</label>
       <div id="ni-foto-preview" style="display:none;margin-bottom:6px;position:relative;">
         <img id="ni-foto-img" style="width:100%;border-radius:6px;max-height:180px;object-fit:cover;cursor:pointer;" onclick="abrirLightbox(this.src)" />
-        <button onclick="quitarFotoNueva()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:4px;padding:3px 7px;font-size:0.7rem;cursor:pointer;">✕</button>
+        <button onclick="quitarFotoNueva()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:4px;padding:3px 7px;font-size:0.83rem;cursor:pointer;">✕</button>
       </div>
       <button type="button" class="btn-secondary" style="width:100%;" onclick="document.getElementById('ni-foto-input').click()">&#128247; AÑADIR FOTO</button>
       <input type="file" id="ni-foto-input" accept="image/*" capture="environment" style="display:none" onchange="previewFotoNueva(event)">
@@ -678,10 +678,10 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 <div class="overlay" id="ov-detalle-inc" onclick="handleOv(event,'ov-detalle-inc')">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="d-titulo" style="font-size:0.9rem;">-</h3>
+      <h3 id="d-titulo" style="font-size:0.95rem;">-</h3>
       <button class="close-btn" onclick="closeOv('ov-detalle-inc')">x</button>
     </div>
-    <div id="d-plazo-badge" style="display:none;background:#fff3e0;border:1px solid #e07820;border-radius:6px;padding:5px 10px;font-size:0.7rem;color:#e07820;margin-bottom:8px;"></div>
+    <div id="d-plazo-badge" style="display:none;background:#fff3e0;border:1px solid #e07820;border-radius:6px;padding:5px 10px;font-size:0.83rem;color:#e07820;margin-bottom:8px;"></div>
     <div class="form-group">
       <label>ESTADO</label>
       <div class="inc-detail-estado">
@@ -710,9 +710,9 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         </div>
       </div>
     </div>
-    <div id="d-info" style="font-size:0.68rem;color:var(--dim);line-height:2;margin-bottom:12px;"></div>
+    <div id="d-info" style="font-size:0.82rem;color:var(--dim);line-height:2;margin-bottom:12px;"></div>
     <div id="d-mapa-preview" style="display:none;margin-bottom:10px;">
-      <label style="font-size:0.62rem;color:var(--dim);letter-spacing:0.08em;display:block;margin-bottom:4px;">UBICACION</label>
+      <label style="font-size:0.79rem;color:var(--dim);letter-spacing:0.08em;display:block;margin-bottom:4px;">UBICACION</label>
       <button type="button" class="btn-secondary" style="width:100%;" onclick="openMapa('detalle')">&#128205; VER / CAMBIAR EN MAPA</button>
     </div>
     <div class="form-group">
@@ -774,7 +774,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3 id="p-titulo">-</h3>
       <button class="close-btn" onclick="closeOv('ov-prestamo')">x</button>
     </div>
-    <div id="p-estado-info" style="font-size:0.7rem;color:var(--dim);margin-bottom:14px;line-height:1.9;"></div>
+    <div id="p-estado-info" style="font-size:0.83rem;color:var(--dim);margin-bottom:14px;line-height:1.9;"></div>
     <div id="p-prestamo-form">
       <div class="form-row">
         <div class="form-group">
@@ -812,7 +812,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3>QUIEN ERES?</h3>
       <button class="close-btn" onclick="closeOv('ov-user')">x</button>
     </div>
-    <p style="font-size:0.68rem;color:var(--dim);margin-bottom:14px;letter-spacing:0.04em;">Selecciona tu nombre para que quede registrado en incidencias y herramientas.</p>
+    <p style="font-size:0.82rem;color:var(--dim);margin-bottom:14px;letter-spacing:0.04em;">Selecciona tu nombre para que quede registrado en incidencias y herramientas.</p>
     <div class="user-grid">
       <div class="user-opt" onclick="setUser('tomas')">Tomas</div>
       <div class="user-opt" onclick="setUser('joseluis')">Jose Luis</div>
@@ -837,7 +837,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3>⛽ PRECIOS COMBUSTIBLE</h3>
       <button class="close-btn" onclick="closeOv('ov-precios')">x</button>
     </div>
-    <p style="font-size:0.62rem;color:#888;margin-bottom:14px;letter-spacing:0.04em;">Actualiza el precio por litro. Se aplica a todos los cálculos de recaudación.</p>
+    <p style="font-size:0.79rem;color:#888;margin-bottom:14px;letter-spacing:0.04em;">Actualiza el precio por litro. Se aplica a todos los cálculos de recaudación.</p>
     <div class="precios-form">
       <div class="parte-campo">
         <label>GASÓIL (€/L)</label>
@@ -887,7 +887,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
       <div class="form-group" style="margin:0;">
         <label>FECHA</label>
-        <input type="date" id="np-fecha" style="width:100%;background:#fafafa;border:1px solid #ddd;border-radius:5px;padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.75rem;">
+        <input type="date" id="np-fecha" style="width:100%;background:#fafafa;border:1px solid #ddd;border-radius:5px;padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.86rem;">
       </div>
       <div class="form-group" style="margin:0;">
         <label>TURNO</label>
@@ -986,21 +986,21 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <!-- CONSUMOS INTERNOS -->
     <div class="parte-seccion-hdr" style="margin-top:4px;background:#7a1b1b;">⛽ CONSUMOS INTERNOS (se restan de recaudación)</div>
     <div id="np-consumos-lista" style="margin-bottom:4px;"></div>
-    <button type="button" onclick="addConsumoFila()" style="width:100%;background:rgba(204,0,24,0.08);border:1px dashed rgba(204,0,24,0.35);border-radius:6px;padding:7px;font-size:0.65rem;color:#cc0018;cursor:pointer;margin-bottom:8px;">+ AÑADIR CONSUMO INTERNO</button>
+    <button type="button" onclick="addConsumoFila()" style="width:100%;background:rgba(204,0,24,0.08);border:1px dashed rgba(204,0,24,0.35);border-radius:6px;padding:7px;font-size:0.81rem;color:#cc0018;cursor:pointer;margin-bottom:8px;">+ AÑADIR CONSUMO INTERNO</button>
     <div class="consumos-total" id="np-consumos-total" style="display:none;"></div>
 
     <!-- COBROS EXTRA -->
     <div class="parte-seccion-hdr" style="margin-top:4px;background:#1b4a7a;">💶 COBROS EXTRA (se suman a recaudación)</div>
     <div id="np-cobros-lista" style="margin-bottom:4px;"></div>
-    <button type="button" onclick="addCobroFila()" style="width:100%;background:rgba(27,74,122,0.08);border:1px dashed rgba(27,74,122,0.35);border-radius:6px;padding:7px;font-size:0.65rem;color:#1b4a7a;cursor:pointer;margin-bottom:8px;">+ AÑADIR COBRO EXTRA</button>
+    <button type="button" onclick="addCobroFila()" style="width:100%;background:rgba(27,74,122,0.08);border:1px dashed rgba(27,74,122,0.35);border-radius:6px;padding:7px;font-size:0.81rem;color:#1b4a7a;cursor:pointer;margin-bottom:8px;">+ AÑADIR COBRO EXTRA</button>
     <div class="consumos-total" id="np-cobros-total" style="display:none;color:#1b4a7a;border-top:1px solid rgba(27,74,122,0.2);"></div>
     </div><!-- fin np-seccion-combustible -->
 
     <div class="parte-seccion-hdr" style="margin-top:4px;">♻️ RECICLAJE</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;">
-      <div class="parte-campo"><label>📦 PAPEL</label><input type="number" id="np-papel" placeholder="0" min="0" step="1"><small style="font-size:0.5rem;color:#aaa;">contenedores</small></div>
-      <div class="parte-campo"><label>🍶 VIDRIO</label><input type="number" id="np-vidrio" placeholder="0" min="0" step="1"><small style="font-size:0.5rem;color:#aaa;">contenedores</small></div>
-      <div class="parte-campo"><label>♻️ PLÁSTICOS</label><input type="number" id="np-plastico" placeholder="0" min="0" step="1"><small style="font-size:0.5rem;color:#aaa;">contenedores</small></div>
+      <div class="parte-campo"><label>📦 PAPEL</label><input type="number" id="np-papel" placeholder="0" min="0" step="1"><small style="font-size:0.72rem;color:#aaa;">contenedores</small></div>
+      <div class="parte-campo"><label>🍶 VIDRIO</label><input type="number" id="np-vidrio" placeholder="0" min="0" step="1"><small style="font-size:0.72rem;color:#aaa;">contenedores</small></div>
+      <div class="parte-campo"><label>♻️ PLÁSTICOS</label><input type="number" id="np-plastico" placeholder="0" min="0" step="1"><small style="font-size:0.72rem;color:#aaa;">contenedores</small></div>
     </div>
 
     <!-- SECCIÓN: TRABAJOS E INCIDENCIAS -->
@@ -1019,7 +1019,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 
     <!-- SECCIÓN: OBSERVACIONES -->
     <div class="parte-seccion-hdr" style="margin-top:12px;">OBSERVACIONES DEL TURNO</div>
-    <textarea id="np-observaciones" rows="3" placeholder="Observaciones generales del turno..." style="width:100%;background:#fafafa;border:1px solid #ddd;border-radius:5px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.72rem;resize:vertical;margin-bottom:14px;"></textarea>
+    <textarea id="np-observaciones" rows="3" placeholder="Observaciones generales del turno..." style="width:100%;background:#fafafa;border:1px solid #ddd;border-radius:5px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:0.85rem;resize:vertical;margin-bottom:14px;"></textarea>
 
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nuevo-parte')">CANCELAR</button>
@@ -1042,7 +1042,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3 id="sel-turno-titulo">PARTES DEL DÍA</h3>
       <button class="close-btn" onclick="closeOv('ov-sel-turno')">x</button>
     </div>
-    <p style="font-size:0.62rem;color:#888;margin-bottom:10px;letter-spacing:0.04em;">Selecciona el turno que quieres ver:</p>
+    <p style="font-size:0.79rem;color:#888;margin-bottom:10px;letter-spacing:0.04em;">Selecciona el turno que quieres ver:</p>
     <div id="sel-turno-list" class="turno-selector-list"></div>
   </div>
 </div>
@@ -1054,7 +1054,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3 id="vp-titulo">PARTE DEL DÍA</h3>
       <button class="close-btn" onclick="closeOv('ov-ver-parte')">x</button>
     </div>
-    <div id="vp-marinero" style="font-size:0.65rem;color:#888;margin-bottom:12px;letter-spacing:0.04em;"></div>
+    <div id="vp-marinero" style="font-size:0.81rem;color:#888;margin-bottom:12px;letter-spacing:0.04em;"></div>
     <div id="vp-contenido"></div>
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap;gap:8px;">
       <button class="btn-danger" id="vp-btn-eliminar" onclick="eliminarParte()" style="display:none;">ELIMINAR</button>
@@ -1075,8 +1075,8 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <h3>🔑 CAMBIAR CONTRASEÑA</h3>
       <button class="close-btn" onclick="closeOv('ov-cambiar-pass')">x</button>
     </div>
-    <div id="cp-error" style="display:none;background:rgba(204,0,24,0.12);border:1px solid rgba(204,0,24,0.35);border-radius:6px;padding:8px 12px;font-size:0.62rem;color:#ff8080;margin-bottom:12px;"></div>
-    <div id="cp-ok" style="display:none;background:rgba(27,122,74,0.12);border:1px solid rgba(27,122,74,0.35);border-radius:6px;padding:8px 12px;font-size:0.62rem;color:#4caf50;margin-bottom:12px;"></div>
+    <div id="cp-error" style="display:none;background:rgba(204,0,24,0.12);border:1px solid rgba(204,0,24,0.35);border-radius:6px;padding:8px 12px;font-size:0.79rem;color:#ff8080;margin-bottom:12px;"></div>
+    <div id="cp-ok" style="display:none;background:rgba(27,122,74,0.12);border:1px solid rgba(27,122,74,0.35);border-radius:6px;padding:8px 12px;font-size:0.79rem;color:#4caf50;margin-bottom:12px;"></div>
     <label class="form-label">Contraseña actual</label>
     <input class="form-input" type="password" id="cp-actual" placeholder="••••••••" autocomplete="current-password">
     <label class="form-label">Nueva contraseña</label>
@@ -1121,7 +1121,7 @@ const EMAIL_TO_USER = {
 // ── ESTADO ──
 let currentUser = '';
 let activeMarinero = 'javi';
-let currentYear = 2026;
+let currentYear = new Date().getFullYear();
 let selectedDate = null;
 let filtroActivo = 'todas';
 let incidencias = {};
@@ -1244,6 +1244,11 @@ onAuthStateChanged(auth, user => {
     localStorage.setItem('cna_user', currentUser);
     actualizarPill();
     document.getElementById('login-screen').style.display = 'none';
+    // Calendario de turnos: mostrar el del marinero logeado y el año actual
+    currentYear = new Date().getFullYear();
+    if (MARINEROS.includes(currentUser)) setMarinero(currentUser);
+    else renderCal(currentYear);
+    irAMesActual();
     // Fijar filtro de tareas según rol
     if (PUEDE_ASIGNAR.includes(currentUser)) tareaMarineroFiltro = '';
     else tareaMarineroFiltro = currentUser;
@@ -1279,7 +1284,7 @@ const ROTATION={1:3,2:1,3:2,4:4};
 const INV_ROT={1:2,2:3,3:1,4:4};
 const MARINEROS=['tomas','joseluis','javi','juan'];
 const NAMES_KEY={tomas:'Tomas',joseluis:'Jose Luis',javi:'Javi',juan:'Juan ⚓'};
-const TODAY=new Date(2026,3,9);
+const TODAY=new Date();
 const MONTH_NAMES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const MONTH_GEN=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const DOW=['L','M','X','J','V','S','D'];
@@ -1317,6 +1322,14 @@ window.setMarinero=function(m){
   renderCal(currentYear);
 };
 window.changeYear=function(d){currentYear+=d;renderCal(currentYear);};
+// Desplaza el calendario hasta el mes actual
+function irAMesActual(){
+  requestAnimationFrame(()=>{
+    const cards=document.querySelectorAll('#months-grid .month-card');
+    const card=cards[new Date().getMonth()];
+    if(card) card.scrollIntoView({block:'start'});
+  });
+}
 
 function getIncDatesMap(){
   // Devuelve mapa: 'YYYY-MM-DD' -> {open:N, res:N}
@@ -1397,14 +1410,14 @@ function selectDay(date){
   const incSection=document.getElementById('t-inc-section');
   if(dayIncs.length>0){
     incSection.style.display='block';
-    incSection.innerHTML='<div style="font-size:0.62rem;color:#888;letter-spacing:0.06em;margin:12px 0 6px;">INCIDENCIAS DEL DÍA</div>'+
+    incSection.innerHTML='<div style="font-size:0.79rem;color:#888;letter-spacing:0.06em;margin:12px 0 6px;">INCIDENCIAS DEL DÍA</div>'+
       dayIncs.map(inc=>{
         const ESTADO_COLOR={pend:'#e07820',prog:'#f0a500',res:'#1e9e5a'};
         const ESTADO_LBL={pend:'PEND',prog:'CURSO',res:'✓ RESUELTA'};
         const esApertura=inc.createdAt&&(()=>{const dd=new Date(inc.createdAt);return dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d;})();
         const esResolucion=inc.estado==='res'&&inc.fechaResolucion&&(()=>{const dd=new Date(inc.fechaResolucion);return !isNaN(dd)&&dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d;})();
         const tag=esResolucion&&esApertura?'📋 Apertura y cierre':esResolucion?'✅ Resuelta':' 📋 Apertura';
-        return '<div style="background:#f8f8f8;border:1px solid #eee;border-left:3px solid '+ESTADO_COLOR[inc.estado||'pend']+';border-radius:5px;padding:7px 10px;margin-bottom:5px;font-size:0.65rem;">'
+        return '<div style="background:#f8f8f8;border:1px solid #eee;border-left:3px solid '+ESTADO_COLOR[inc.estado||'pend']+';border-radius:5px;padding:7px 10px;margin-bottom:5px;font-size:0.81rem;">'
           +'<div style="font-weight:600;color:#1a1a1a;">'+(TIPO_ICONS[inc.tipo]||'🔧')+' '+(inc.titulo||'Sin título')+'</div>'
           +'<div style="color:#888;margin-top:2px;">'+tag+' · <span style="color:'+ESTADO_COLOR[inc.estado||'pend']+'">'+ESTADO_LBL[inc.estado||'pend']+'</span></div>'
           +'</div>';
@@ -1447,15 +1460,15 @@ function renderTareasTabs() {
 
   if (puedeAsignar) {
     const marineros = ['tomas','joseluis','javi','juan','esteban','marinero'];
-    let html = `<button class="filter-btn${tareaMarineroFiltro===''?' active':''}" onclick="setTareaMarinero('')" style="font-size:0.6rem;">👥 TODOS</button>`;
+    let html = `<button class="filter-btn${tareaMarineroFiltro===''?' active':''}" onclick="setTareaMarinero('')" style="font-size:0.78rem;">👥 TODOS</button>`;
     marineros.forEach(m => {
       const tiene = Object.values(incidencias).some(i => i.asignadoA === m && i.estado !== 'res');
       const activo = tareaMarineroFiltro === m ? ' active' : '';
-      html += `<button class="filter-btn${activo}" onclick="setTareaMarinero('${m}')" style="font-size:0.6rem;">${tiene?'🔴 ':''}${NOMBRES[m]||m}</button>`;
+      html += `<button class="filter-btn${activo}" onclick="setTareaMarinero('${m}')" style="font-size:0.78rem;">${tiene?'🔴 ':''}${NOMBRES[m]||m}</button>`;
     });
     tabsEl.innerHTML = html;
   } else {
-    tabsEl.innerHTML = `<div style="font-size:0.65rem;color:#888;padding:4px 0;">📋 Mis tareas asignadas · <strong>${NOMBRES[currentUser]||currentUser}</strong></div>`;
+    tabsEl.innerHTML = `<div style="font-size:0.81rem;color:#888;padding:4px 0;">📋 Mis tareas asignadas · <strong>${NOMBRES[currentUser]||currentUser}</strong></div>`;
     tareaMarineroFiltro = currentUser;
   }
 }
@@ -1591,9 +1604,9 @@ function renderInc(){
     const resFecha=inc.estado==='res'&&inc.fechaResolucion
       ?'<span style="color:var(--green)">✓ '+new Date(inc.fechaResolucion+'T12:00:00').toLocaleDateString('es-ES')+'</span>':'';
     return `<div class="inc-card ${inc.estado||'pend'}" onclick="openDetalleInc('${inc.id}')">`
-      +`<div class="inc-card-top"><div class="inc-titulo" style="font-size:0.85rem;">${icon} ${inc.titulo||'Sin titulo'}</div>`
+      +`<div class="inc-card-top"><div class="inc-titulo" style="font-size:0.92rem;">${icon} ${inc.titulo||'Sin titulo'}</div>`
       +'<span class="inc-estado estado-'+(inc.estado||'pend')+'">'+ESTADO_LBL[inc.estado||'pend']+'</span></div>'
-      +'<div class="inc-meta" style="font-size:0.7rem;">'+(ubic?'<span>'+ubic+'</span>':'')+(asig?'<span>'+asig+'</span>':'')
+      +'<div class="inc-meta" style="font-size:0.83rem;">'+(ubic?'<span>'+ubic+'</span>':'')+(asig?'<span>'+asig+'</span>':'')
       +(plazo?'<span style="color:#e07820;">'+plazo+'</span>':'')
       +'<span>📅 '+fecha+'</span>'+(resFecha?'<span>'+resFecha+'</span>':'')
       +(prio!=='normal'?'<span style="color:'+PRIO_COL[prio]+'">⚠ '+prio.toUpperCase()+'</span>':'')
@@ -2635,8 +2648,8 @@ window.addConsumoFila = function(desc='', importe='') {
   div.className = 'consumo-fila';
   div.id = `consumo-fila-${id}`;
   div.innerHTML = `
-    <input type="text" class="form-input consumo-desc" placeholder="Descripción (ej: Neumática vela SP95)" value="${desc}" oninput="actualizarConsumosTotal()" style="font-size:0.7rem;">
-    <input type="number" class="form-input consumo-importe" placeholder="€" min="0" step="0.01" value="${importe}" oninput="actualizarConsumosTotal()" style="width:75px;text-align:right;font-size:0.7rem;">
+    <input type="text" class="form-input consumo-desc" placeholder="Descripción (ej: Neumática vela SP95)" value="${desc}" oninput="actualizarConsumosTotal()" style="font-size:0.83rem;">
+    <input type="number" class="form-input consumo-importe" placeholder="€" min="0" step="0.01" value="${importe}" oninput="actualizarConsumosTotal()" style="width:75px;text-align:right;font-size:0.83rem;">
     <button class="consumo-del-btn" onclick="document.getElementById('consumo-fila-${id}').remove();actualizarConsumosTotal()">✕</button>`;
   lista.appendChild(div);
   actualizarConsumosTotal();
@@ -2683,8 +2696,8 @@ window.addCobroFila = function(desc='', importe='') {
   div.className = 'cobro-fila consumo-fila';
   div.id = `cobro-fila-${id}`;
   div.innerHTML = `
-    <input type="text" class="form-input cobro-desc" placeholder="Descripción (ej: Amarre especial)" value="${desc}" oninput="actualizarCobrosTotal()" style="font-size:0.7rem;">
-    <input type="number" class="form-input cobro-importe" placeholder="€" min="0" step="0.01" value="${importe}" oninput="actualizarCobrosTotal()" style="width:75px;text-align:right;font-size:0.7rem;">
+    <input type="text" class="form-input cobro-desc" placeholder="Descripción (ej: Amarre especial)" value="${desc}" oninput="actualizarCobrosTotal()" style="font-size:0.83rem;">
+    <input type="number" class="form-input cobro-importe" placeholder="€" min="0" step="0.01" value="${importe}" oninput="actualizarCobrosTotal()" style="width:75px;text-align:right;font-size:0.83rem;">
     <button class="consumo-del-btn" style="color:#1b4a7a;" onclick="document.getElementById('cobro-fila-${id}').remove();actualizarCobrosTotal()">✕</button>`;
   lista.appendChild(div);
   actualizarCobrosTotal();
@@ -2920,7 +2933,7 @@ function renderPartesCalendario() {
     if (esHoy) cls += ' today';
     if (tieneParte) cls += ' tiene-parte tiene-parte-dot';
     if (esFuturo) cls += ' future';
-    const countBadge = tieneParte > 1 ? `<span style="font-size:0.45rem;background:#1e9e5a;color:#fff;border-radius:8px;padding:0 3px;position:absolute;top:2px;right:2px;line-height:1.4;">${tieneParte}</span>` : '';
+    const countBadge = tieneParte > 1 ? `<span style="font-size:0.7rem;background:#1e9e5a;color:#fff;border-radius:8px;padding:0 3px;position:absolute;top:2px;right:2px;line-height:1.4;">${tieneParte}</span>` : '';
     html += `<div class="${cls}" onclick="partesVerDia('${fechaStr}')">${d}${countBadge}</div>`;
   }
   cal.innerHTML = html;
@@ -3035,8 +3048,8 @@ function verParteConcreto(p, id) {
     if (cobTotal > 0) detalle += ` · Cobros extra +${cobTotal.toFixed(2)}€`;
     return `<div style="margin-top:8px;${border}border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-size:0.55rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;">${label}</div>
-        <div style="font-size:0.55rem;color:#aaa;margin-top:2px;">${detalle}</div>
+        <div style="font-size:0.75rem;color:#888;letter-spacing:0.08em;text-transform:uppercase;">${label}</div>
+        <div style="font-size:0.75rem;color:#aaa;margin-top:2px;">${detalle}</div>
       </div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:${color};letter-spacing:0.06em;">${total.toFixed(2)} €</div>
     </div>`;
@@ -3094,29 +3107,29 @@ function verParteConcreto(p, id) {
     </div>` : ''}
     ${p.consumosInternos && p.consumosInternos.length > 0 ? `
     <div style="margin-top:6px;background:#fff0f0;border:1px solid rgba(204,0,24,0.2);border-radius:5px;padding:7px 10px;">
-      <div style="font-size:0.55rem;color:#cc0018;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px;">⛽ Consumos internos</div>
-      ${p.consumosInternos.map(c => `<div style="display:flex;justify-content:space-between;font-size:0.65rem;color:#555;padding:2px 0;border-bottom:1px solid rgba(204,0,24,0.08);">
+      <div style="font-size:0.75rem;color:#cc0018;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px;">⛽ Consumos internos</div>
+      ${p.consumosInternos.map(c => `<div style="display:flex;justify-content:space-between;font-size:0.81rem;color:#555;padding:2px 0;border-bottom:1px solid rgba(204,0,24,0.08);">
         <span>${c.desc}</span><span style="color:#cc0018;font-weight:600;">-${parseFloat(c.importe||0).toFixed(2)} €</span>
       </div>`).join('')}
-      <div style="display:flex;justify-content:space-between;font-size:0.68rem;font-weight:700;color:#cc0018;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;color:#cc0018;margin-top:4px;">
         <span>TOTAL CONSUMOS</span>
         <span>-${p.consumosInternos.reduce((a,c)=>a+(parseFloat(c.importe)||0),0).toFixed(2)} €</span>
       </div>
     </div>` : ''}
     ${p.cobrosExtra && p.cobrosExtra.length > 0 ? `
     <div style="margin-top:6px;background:#f0f4ff;border:1px solid rgba(27,74,122,0.2);border-radius:5px;padding:7px 10px;">
-      <div style="font-size:0.55rem;color:#1b4a7a;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px;">💶 Cobros extra</div>
-      ${p.cobrosExtra.map(c => `<div style="display:flex;justify-content:space-between;font-size:0.65rem;color:#555;padding:2px 0;border-bottom:1px solid rgba(27,74,122,0.08);">
+      <div style="font-size:0.75rem;color:#1b4a7a;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;margin-bottom:4px;">💶 Cobros extra</div>
+      ${p.cobrosExtra.map(c => `<div style="display:flex;justify-content:space-between;font-size:0.81rem;color:#555;padding:2px 0;border-bottom:1px solid rgba(27,74,122,0.08);">
         <span>${c.desc}</span><span style="color:#1b4a7a;font-weight:600;">+${parseFloat(c.importe||0).toFixed(2)} €</span>
       </div>`).join('')}
-      <div style="display:flex;justify-content:space-between;font-size:0.68rem;font-weight:700;color:#1b4a7a;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:700;color:#1b4a7a;margin-top:4px;">
         <span>TOTAL COBROS EXTRA</span>
         <span>+${p.cobrosExtra.reduce((a,c)=>a+(parseFloat(c.importe)||0),0).toFixed(2)} €</span>
       </div>
     </div>` : ''}
     ${recHtml}
-    ${p.cisterna ? `<div style="margin-top:6px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.62rem;color:#1b7a4a;"><strong>🚛 Cisterna recibida:</strong> Gasóil +${p.cisterna.gasoil||0}L · S.P.95 +${p.cisterna.sp95||0}L</div>` : ''}
-    ${p.otros ? `<div style="font-size:0.65rem;color:#666;padding:4px 8px;margin-top:4px;">Otros: ${p.otros}</div>` : ''}
+    ${p.cisterna ? `<div style="margin-top:6px;background:#f0f8f4;border:1px solid #c3e6d0;border-radius:5px;padding:6px 10px;font-size:0.79rem;color:#1b7a4a;"><strong>🚛 Cisterna recibida:</strong> Gasóil +${p.cisterna.gasoil||0}L · S.P.95 +${p.cisterna.sp95||0}L</div>` : ''}
+    ${p.otros ? `<div style="font-size:0.81rem;color:#666;padding:4px 8px;margin-top:4px;">Otros: ${p.otros}</div>` : ''}
   </div>`;
   } // fin if turno !== fuera
 
@@ -3903,7 +3916,7 @@ window.actualizarRondasSegunTurno = function() {
   } else {
     // Fuera de turno: limpiar rondas y trabajos
     const elRondas = document.getElementById('np-rondas');
-    if (elRondas) elRondas.innerHTML = '<div style="font-size:0.65rem;color:#aaa;padding:8px;">No aplica en fuera de turno</div>';
+    if (elRondas) elRondas.innerHTML = '<div style="font-size:0.81rem;color:#aaa;padding:8px;">No aplica en fuera de turno</div>';
     const elTrab = document.getElementById('np-trabajos');
     if (elTrab) elTrab.innerHTML = '';
     const recBox = document.getElementById('np-recaudacion-box');
