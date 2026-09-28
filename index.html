@@ -645,6 +645,12 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <label>⏱ PLAZO (días para realizarla)</label>
         <input type="number" id="ni-plazo" placeholder="Ej: 3" min="1" step="1" style="font-size:1rem;">
       </div>
+      <div class="form-group" id="ni-fija-grp">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.92rem;color:#1a1a1a;letter-spacing:0;line-height:1.3;">
+          <input type="checkbox" id="ni-fija" style="width:24px;height:24px;padding:0;margin:0;flex-shrink:0;accent-color:#cc0018;">
+          <span>🔁 <b>TAREA FIJA</b><br><span style="font-size:0.8rem;color:#888;">Se repite: al resolverla queda registrada en el historial y vuelve a quedar pendiente</span></span>
+        </label>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nueva-inc')">CANCELAR</button>
@@ -682,6 +688,24 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <button class="close-btn" onclick="closeOv('ov-detalle-inc')">x</button>
     </div>
     <div id="d-plazo-badge" style="display:none;background:#fff3e0;border:1px solid #e07820;border-radius:6px;padding:5px 10px;font-size:0.83rem;color:#e07820;margin-bottom:8px;"></div>
+    <div id="d-edit-plazo" style="display:none;background:#f7f9fc;border:1px solid #dde4ee;border-radius:8px;padding:10px 12px 2px;margin-bottom:12px;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>⏱ PLAZO (DÍAS)</label>
+          <input type="number" id="d-plazo" min="1" step="1" placeholder="Sin plazo">
+        </div>
+        <div class="form-group">
+          <label>CONTAR DESDE</label>
+          <input type="date" id="d-inicio">
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.92rem;color:#1a1a1a;letter-spacing:0;line-height:1.3;">
+          <input type="checkbox" id="d-fija" style="width:24px;height:24px;padding:0;margin:0;flex-shrink:0;accent-color:#cc0018;" onchange="actualizarLblAsig()">
+          <span>🔁 <b>TAREA FIJA</b> <span style="font-size:0.8rem;color:#888;">(se repite, no se puede eliminar)</span></span>
+        </label>
+      </div>
+    </div>
     <div class="form-group">
       <label>ESTADO</label>
       <div class="inc-detail-estado">
@@ -711,6 +735,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       </div>
     </div>
     <div id="d-info" style="font-size:0.82rem;color:var(--dim);line-height:2;margin-bottom:12px;"></div>
+    <div id="d-fija-hist" style="display:none;margin-bottom:12px;"></div>
     <div id="d-mapa-preview" style="display:none;margin-bottom:10px;">
       <label style="font-size:0.79rem;color:var(--dim);letter-spacing:0.08em;display:block;margin-bottom:4px;">UBICACION</label>
       <button type="button" class="btn-secondary" style="width:100%;" onclick="openMapa('detalle')">&#128205; VER / CAMBIAR EN MAPA</button>
@@ -724,7 +749,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <input type="file" id="d-foto-input" accept="image/*" capture="environment" style="display:none" onchange="previewFotoDetalle(event)">
     </div>
     <div class="form-group">
-      <label>ASIGNADO A</label>
+      <label id="d-asig-lbl">ASIGNADO A</label>
       <select id="d-asig">
         <option value="">Sin asignar</option>
         <option value="tomas">Tomas</option>
@@ -732,6 +757,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <option value="javi">Javi</option>
         <option value="juan">Juan</option>
         <option value="esteban">Esteban</option>
+        <option value="marinero">Marinero</option>
       </select>
     </div>
     <div class="form-group">
@@ -739,7 +765,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <textarea id="d-notas" placeholder="Notas o actualizaciones..."></textarea>
     </div>
     <div class="btn-row">
-      <button class="btn-danger" onclick="eliminarInc()">ELIMINAR</button>
+      <button class="btn-danger" id="d-btn-eliminar" onclick="eliminarInc()">ELIMINAR</button>
       <button class="btn-primary" onclick="actualizarInc()">GUARDAR</button>
     </div>
   </div>
@@ -1334,9 +1360,9 @@ function irAMesActual(){
 function getIncDatesMap(){
   // Devuelve mapa: 'YYYY-MM-DD' -> {open:N, res:N}
   const map={};
-  Object.values(incidencias).forEach(inc=>{
+  incConResoluciones().forEach(inc=>{
     // Día de apertura
-    if(inc.createdAt){
+    if(inc.createdAt&&!inc._resFija){
       const d=new Date(inc.createdAt);
       const k=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
       if(!map[k]) map[k]={open:0,res:0};
@@ -1402,8 +1428,8 @@ function selectDay(date){
   });
   // Incidencias del día
   const y=date.getFullYear(),mo=date.getMonth(),d=date.getDate();
-  const dayIncs=Object.values(incidencias).filter(inc=>{
-    if(inc.createdAt){const dd=new Date(inc.createdAt);if(dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d)return true;}
+  const dayIncs=incConResoluciones().filter(inc=>{
+    if(inc.createdAt&&!inc._resFija){const dd=new Date(inc.createdAt);if(dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d)return true;}
     if(inc.estado==='res'&&inc.fechaResolucion){const dd=new Date(inc.fechaResolucion);if(!isNaN(dd)&&dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d)return true;}
     return false;
   });
@@ -1414,7 +1440,7 @@ function selectDay(date){
       dayIncs.map(inc=>{
         const ESTADO_COLOR={pend:'#e07820',prog:'#f0a500',res:'#1e9e5a'};
         const ESTADO_LBL={pend:'PEND',prog:'CURSO',res:'✓ RESUELTA'};
-        const esApertura=inc.createdAt&&(()=>{const dd=new Date(inc.createdAt);return dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d;})();
+        const esApertura=!inc._resFija&&inc.createdAt&&(()=>{const dd=new Date(inc.createdAt);return dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d;})();
         const esResolucion=inc.estado==='res'&&inc.fechaResolucion&&(()=>{const dd=new Date(inc.fechaResolucion);return !isNaN(dd)&&dd.getFullYear()===y&&dd.getMonth()===mo&&dd.getDate()===d;})();
         const tag=esResolucion&&esApertura?'📋 Apertura y cierre':esResolucion?'✅ Resuelta':' 📋 Apertura';
         return '<div style="background:#f8f8f8;border:1px solid #eee;border-left:3px solid '+ESTADO_COLOR[inc.estado||'pend']+';border-radius:5px;padding:7px 10px;margin-bottom:5px;font-size:0.81rem;">'
@@ -1498,7 +1524,7 @@ let resPeriodo = null;
 
 function renderResNav(){
   // Construir periodos disponibles a partir de incidencias resueltas
-  const resueltas=Object.values(incidencias).filter(i=>i.estado==='res');
+  const resueltas=incConResoluciones().filter(i=>i.estado==='res');
   if(!resueltas.length){document.getElementById('res-nav').innerHTML='';return;}
 
   // Años disponibles
@@ -1549,9 +1575,40 @@ window.selResPeriodo=function(tipo, año, mes){
 const PRIO_COL={normal:'var(--dim)',alta:'var(--gold)',urgente:'var(--red)'};
 const ESTADO_LBL={pend:'PENDIENTE',prog:'EN CURSO',res:'RESUELTA'};
 
+// ── TAREAS FIJAS ──
+function hoyStr(){const h=new Date();return h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0');}
+function tsADateStr(ts){const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// Incidencias + una entrada "resuelta" por cada vez que se completó una tarea fija
+function incConResoluciones(){
+  const out=[];
+  Object.entries(incidencias).forEach(([id,inc])=>{
+    out.push({...inc,id});
+    if(inc.fija&&inc.resoluciones){
+      Object.values(inc.resoluciones).forEach(r=>{
+        out.push({...inc,id,estado:'res',fechaResolucion:r.fecha,resueltaPor:r.por||'',asignadoA:r.asignadoA||'',notas:r.notas||'',foto:null,_resFija:true});
+      });
+    }
+  });
+  return out;
+}
+// Fecha de vencimiento: inicio del plazo (o creación) + días de plazo
+function vencimientoInc(inc){
+  if(!inc.plazo) return null;
+  const base=inc.inicioPlazo?new Date(inc.inicioPlazo+'T12:00:00'):(inc.createdAt?new Date(inc.createdAt):null);
+  if(!base||isNaN(base)) return null;
+  const v=new Date(base); v.setDate(v.getDate()+parseInt(inc.plazo)); return v;
+}
+function esVencida(inc){
+  if(inc.estado==='res') return false;
+  const v=vencimientoInc(inc); if(!v) return false;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const vv=new Date(v); vv.setHours(0,0,0,0);
+  return vv<hoy;
+}
+
 function renderInc(){
   const list=document.getElementById('inc-list');
-  let items=Object.entries(incidencias).map(([id,v])=>({id,...v}));
+  let items=filtroActivo==='res'?incConResoluciones():Object.entries(incidencias).map(([id,v])=>({id,...v}));
 
   // Filtrar por marinero tab
   if (tareaMarineroFiltro) {
@@ -1600,14 +1657,17 @@ function renderInc(){
     const icon=TIPO_ICONS[inc.tipo]||'🔧';
     const asig=inc.asignadoA?'👤 '+NOMBRES[inc.asignadoA]:'';
     const ubic=inc.ubicacion?'📍 Marcado en mapa':'';
-    const plazo=inc.plazo?`⏱ ${inc.plazo} día${inc.plazo>1?'s':''}`:'';
+    const venc=inc.estado!=='res'?vencimientoInc(inc):null;
+    const vencida=esVencida(inc);
+    const plazo=inc.plazo&&inc.estado!=='res'?(venc?'⏱ '+(vencida?'VENCIDA ':'vence ')+venc.toLocaleDateString('es-ES'):`⏱ ${inc.plazo} día${inc.plazo>1?'s':''}`):'';
+    const fijaTag=inc.fija?'<span style="color:#1565c0;font-weight:600;">🔁 FIJA</span>':'';
     const resFecha=inc.estado==='res'&&inc.fechaResolucion
       ?'<span style="color:var(--green)">✓ '+new Date(inc.fechaResolucion+'T12:00:00').toLocaleDateString('es-ES')+'</span>':'';
     return `<div class="inc-card ${inc.estado||'pend'}" onclick="openDetalleInc('${inc.id}')">`
       +`<div class="inc-card-top"><div class="inc-titulo" style="font-size:0.92rem;">${icon} ${inc.titulo||'Sin titulo'}</div>`
       +'<span class="inc-estado estado-'+(inc.estado||'pend')+'">'+ESTADO_LBL[inc.estado||'pend']+'</span></div>'
       +'<div class="inc-meta" style="font-size:0.83rem;">'+(ubic?'<span>'+ubic+'</span>':'')+(asig?'<span>'+asig+'</span>':'')
-      +(plazo?'<span style="color:#e07820;">'+plazo+'</span>':'')
+      +fijaTag+(plazo?'<span style="color:'+(vencida?'#cc0018;font-weight:700':'#e07820')+';">'+plazo+'</span>':'')
       +'<span>📅 '+fecha+'</span>'+(resFecha?'<span>'+resFecha+'</span>':'')
       +(prio!=='normal'?'<span style="color:'+PRIO_COL[prio]+'">⚠ '+prio.toUpperCase()+'</span>':'')
       +'</div></div>';
@@ -1628,6 +1688,8 @@ window.openNuevaInc=function(){
   ['ni-titulo','ni-desc'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ni-prio').value='normal';
   document.getElementById('ni-plazo').value='';
+  document.getElementById('ni-fija').checked=false;
+  document.getElementById('ni-fija-grp').style.display=PUEDE_ASIGNAR.includes(currentUser)?'':'none';
   // Si puede asignar: preseleccionar marinero del tab activo
   // Si no puede: auto-asignarse y ocultar el selector
   const puedeAsignar = PUEDE_ASIGNAR.includes(currentUser);
@@ -1659,6 +1721,8 @@ window.guardarInc=async function(){
     prioridad:document.getElementById('ni-prio').value,
     asignadoA:document.getElementById('ni-asig').value,
     plazo,
+    inicioPlazo:hoyStr(),
+    fija:document.getElementById('ni-fija').checked,
     estado:'pend',creadaPor:currentUser,createdAt:Date.now()
   });
   closeOv('ov-nueva-inc');showToast('Tarea guardada ✓');
@@ -1836,7 +1900,7 @@ window.descargarPendientes=function(){
 };
 
 window.descargarHistorial=function(){
-  const items=Object.values(incidencias).filter(i=>i.estado==='res');
+  const items=incConResoluciones().filter(i=>i.estado==='res');
   items.sort((a,b)=>(b.fechaResolucion||b.createdAt||0)-(a.fechaResolucion||a.createdAt||0));
   if(!items.length){showToast('No hay incidencias resueltas');return;}
   _descargarHtml(_buildInforme(items,'Historial de Incidencias Resueltas','Incidencias cerradas'),'incidencias_historial.html');
@@ -1851,18 +1915,37 @@ window.openDetalleInc=function(id){
   document.getElementById('d-titulo').textContent=(TIPO_ICONS[inc.tipo]||'🔧')+' '+(inc.titulo||'--');
   // Plazo badge
   const plazoBadge = document.getElementById('d-plazo-badge');
-  if (inc.plazo) {
-    const creado = inc.createdAt ? new Date(inc.createdAt) : null;
-    let venceStr = '';
-    if (creado) {
-      const vence = new Date(creado);
-      vence.setDate(vence.getDate() + parseInt(inc.plazo));
-      venceStr = ` — vence el ${vence.toLocaleDateString('es-ES')}`;
-    }
-    plazoBadge.textContent = `⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}${venceStr}`;
+  const vence = vencimientoInc(inc);
+  if (inc.plazo || inc.fija) {
+    let txt = inc.fija ? '🔁 Tarea fija' : '';
+    if (inc.plazo) txt += (txt?' · ':'') + `⏱ Plazo: ${inc.plazo} día${inc.plazo>1?'s':''}` + (vence ? ` — ${esVencida(inc)?'VENCIDA el':'vence el'} ${vence.toLocaleDateString('es-ES')}` : '');
+    plazoBadge.textContent = txt;
     plazoBadge.style.display = 'block';
   } else {
     plazoBadge.style.display = 'none';
+  }
+  // Edición de plazo / fija (solo quien puede asignar)
+  const puedeEditar = PUEDE_ASIGNAR.includes(currentUser);
+  document.getElementById('d-edit-plazo').style.display = puedeEditar ? 'block' : 'none';
+  document.getElementById('d-plazo').value = inc.plazo || '';
+  document.getElementById('d-inicio').value = inc.inicioPlazo || (inc.createdAt ? tsADateStr(inc.createdAt) : '');
+  document.getElementById('d-fija').checked = !!inc.fija;
+  document.getElementById('d-btn-eliminar').style.display = inc.fija ? 'none' : '';
+  // Historial de una tarea fija
+  const histEl = document.getElementById('d-fija-hist');
+  const res = inc.fija && inc.resoluciones ? Object.values(inc.resoluciones).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')) : [];
+  if (res.length) {
+    histEl.style.display = 'block';
+    histEl.innerHTML = '<label style="font-size:0.79rem;color:#888;letter-spacing:0.08em;display:block;margin-bottom:5px;">✅ VECES RESUELTA ('+res.length+')</label>'
+      + '<div style="max-height:160px;overflow-y:auto;border:1px solid #eee;border-radius:6px;">'
+      + res.map(r => '<div style="padding:6px 10px;border-bottom:1px solid #f0f0f0;font-size:0.85rem;">'
+          + '<b>' + new Date(r.fecha+'T12:00:00').toLocaleDateString('es-ES') + '</b>'
+          + (r.por ? ' · ' + (NOMBRES[r.por]||r.por) : '')
+          + (r.notas ? '<div style="color:#888;font-size:0.8rem;">' + r.notas + '</div>' : '')
+          + '</div>').join('')
+      + '</div>';
+  } else {
+    histEl.style.display = 'none';
   }
   document.getElementById('d-asig').value=inc.asignadoA||'';
   document.getElementById('d-notas').value=inc.notas||'';
@@ -1879,6 +1962,7 @@ window.openDetalleInc=function(id){
   document.querySelectorAll('.estado-opt').forEach(el=>el.classList.remove('selected'));
   document.querySelector('.opt-'+editingEstado)?.classList.add('selected');
   document.getElementById('d-res-fields').style.display=editingEstado==='res'?'block':'none';
+  actualizarLblAsig();
   openOv('ov-detalle-inc');
 };
 
@@ -1887,6 +1971,17 @@ window.selEstado=function(e){
   document.querySelectorAll('.estado-opt').forEach(el=>el.classList.remove('selected'));
   document.querySelector('.opt-'+e)?.classList.add('selected');
   document.getElementById('d-res-fields').style.display=e==='res'?'block':'none';
+  actualizarLblAsig();
+};
+
+function esFijaEdit(){
+  if(PUEDE_ASIGNAR.includes(currentUser)) return document.getElementById('d-fija').checked;
+  return !!(incidencias[editingIncId]||{}).fija;
+}
+// En tareas fijas, al marcar RESUELTA el selector sirve para elegir al siguiente compañero
+window.actualizarLblAsig=function(){
+  const fijaYRes=esFijaEdit()&&editingEstado==='res';
+  document.getElementById('d-asig-lbl').textContent=fijaYRes?'🔁 PRÓXIMA VEZ ASIGNAR A':'ASIGNADO A';
 };
 
 window.actualizarInc=async function(){
@@ -1894,6 +1989,34 @@ window.actualizarInc=async function(){
   const upd={estado:editingEstado,asignadoA:document.getElementById('d-asig').value,notas:document.getElementById('d-notas').value.trim(),actualizadoPor:currentUser,updatedAt:Date.now()};
   if(detUbicacion) upd.ubicacion=detUbicacion;
   if(detFotoEdit!==null) upd.foto=detFotoEdit;
+  const incActual=incidencias[editingIncId]||{};
+  if(PUEDE_ASIGNAR.includes(currentUser)){
+    upd.plazo=parseInt(document.getElementById('d-plazo').value)||null;
+    upd.inicioPlazo=document.getElementById('d-inicio').value||null;
+    upd.fija=document.getElementById('d-fija').checked;
+  }
+  const esFija=PUEDE_ASIGNAR.includes(currentUser)?upd.fija:!!incActual.fija;
+  if(editingEstado==='res'&&esFija){
+    // Tarea fija: se guarda la resolución en su historial y vuelve a quedar pendiente
+    const fec=document.getElementById('d-res-fecha').value||hoyStr();
+    await push(ref(db,'incidencias/'+editingIncId+'/resoluciones'),{
+      fecha:fec,
+      por:document.getElementById('d-res-quien').value||incActual.asignadoA||currentUser,
+      asignadoA:incActual.asignadoA||'',
+      notas:upd.notas||'',
+      registradoPor:currentUser,ts:Date.now()
+    });
+    upd.estado='pend';
+    upd.inicioPlazo=fec;
+    upd.notas='';
+    upd.resueltaPor=null;
+    upd.fechaResolucion=null;
+    await update(ref(db,'incidencias/'+editingIncId),upd);
+    closeOv('ov-detalle-inc');
+    showToast('Resuelta ✓ — vuelve a quedar pendiente');
+    if(filtroActivo==='res') renderResNav();
+    return;
+  }
   if(editingEstado==='res'){
     upd.resueltaPor=document.getElementById('d-res-quien').value;
     const fecStr=document.getElementById('d-res-fecha').value;
@@ -1920,6 +2043,7 @@ window.actualizarInc=async function(){
 
 window.eliminarInc=async function(){
   if(!editingIncId)return;
+  if((incidencias[editingIncId]||{}).fija){showToast('Las tareas fijas no se pueden eliminar. Desmárcala como fija primero.');return;}
   if(!confirm('Eliminar esta incidencia?'))return;
   await remove(ref(db,'incidencias/'+editingIncId));
   closeOv('ov-detalle-inc');showToast('Eliminada');
