@@ -104,6 +104,27 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 /* ── HERRAMIENTAS ── */
 .herr-toolbar{display:flex;gap:7px;margin-bottom:12px;}
 .herr-list{display:flex;flex-direction:column;gap:9px;}
+.herr-subtabs{display:flex;gap:8px;margin-bottom:12px;}
+.herr-subtab{flex:1;font-family:"Bebas Neue",sans-serif;font-size:1.05rem;letter-spacing:0.06em;padding:11px 8px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#888;cursor:pointer;}
+.herr-subtab.active{background:#cc0018;border-color:#cc0018;color:#fff;}
+.herr-cant{font-family:"IBM Plex Mono",monospace;font-size:0.85rem;background:#eef2f7;color:#1a2a3a;border-radius:10px;padding:1px 8px;}
+.est-ayuda{font-size:0.82rem;color:#666;background:#f7f9fc;border:1px solid #dde4ee;border-radius:8px;padding:8px 10px;margin:10px 0;line-height:1.5;}
+.est-progreso{font-size:0.9rem;margin-bottom:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.est-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.est-row{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:12px 14px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation;transition:all 0.12s;}
+.est-row:active{transform:scale(0.985);}
+.est-row-top{display:flex;align-items:center;gap:12px;}
+.est-icon{width:36px;height:36px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#fff;flex-shrink:0;}
+.est-nombre{flex:1;font-size:1rem;font-weight:600;color:#1a1a1a;}
+.est-row.est-ok{border-color:#1e9e5a;background:#e9f7ef;}
+.est-row.est-ok .est-icon{background:#1e9e5a;border-color:#1e9e5a;}
+.est-row.est-falta{border-color:#cc0018;background:#fdecee;}
+.est-row.est-falta .est-icon{background:#cc0018;border-color:#cc0018;}
+.est-extra{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.est-extra input{font-family:"IBM Plex Mono",monospace;font-size:1rem;padding:9px 10px;border:1px solid #e0a0a8;border-radius:6px;background:#fff;}
+.est-hist-item{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:0.88rem;}
+.est-hist-item .grow{flex:1;}
+.est-mini-btn{font-size:0.85rem;padding:7px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer;}
 .herr-card{background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;padding:11px 13px;cursor:pointer;border-left:4px solid transparent;transition:all 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
 .herr-card:active{transform:scale(0.98);}
 .herr-card.disponible{border-left-color:var(--green);}
@@ -404,6 +425,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <button class="filter-btn" onclick="descargarTareasMarinero()" style="margin-left:auto;" id="btn-desc-tareas" title="Descargar tareas del marinero seleccionado">⬇ PDF</button>
     <button class="filter-btn" onclick="descargarPendientes()" title="Descargar pendientes">&#128229; PEND</button>
     <button class="filter-btn" onclick="descargarHistorial()" title="Descargar historial resueltas">&#128229; HIST</button>
+    <button class="filter-btn" onclick="openSemanal()" title="Resueltas por marinero en una semana">&#128229; SEMANA</button>
   </div>
   <div id="res-nav" style="display:none;padding:8px 0 4px;"></div>
   <div class="inc-list" id="inc-list"><div class="loading">Cargando...</div></div>
@@ -411,10 +433,30 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 
 <!-- HERRAMIENTAS -->
 <div class="page" id="page-2">
-  <div class="herr-toolbar">
-    <button class="btn-primary" onclick="openNuevaHerr()">+ HERRAMIENTA</button>
+  <div class="herr-subtabs">
+    <button class="herr-subtab active" id="hst-inv" onclick="setHerrVista('inv')">🔨 INVENTARIO</button>
+    <button class="herr-subtab" id="hst-est" onclick="setHerrVista('est')">📋 ESTADILLO</button>
   </div>
-  <div class="herr-list" id="herr-list"><div class="loading">Cargando...</div></div>
+  <div id="herr-vista-inv">
+    <div class="herr-toolbar">
+      <button class="btn-primary" onclick="openNuevaHerr()">+ HERRAMIENTA</button>
+    </div>
+    <div class="herr-list" id="herr-list"><div class="loading">Cargando...</div></div>
+  </div>
+  <div id="herr-vista-est" style="display:none;">
+    <div class="form-group" style="margin-bottom:0;">
+      <label>FECHA DEL ESTADILLO</label>
+      <input type="date" id="est-fecha" onchange="cambiarFechaEstadillo()" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:1rem;padding:11px 12px;border:1px solid #ddd;border-radius:5px;background:#fafafa;">
+    </div>
+    <div class="est-ayuda">👆 <b>1 toque</b>: ✅ está &nbsp;·&nbsp; <b>2 toques</b>: ❌ no está (puedes poner nota) &nbsp;·&nbsp; <b>3 toques</b>: sin marcar</div>
+    <div class="est-progreso" id="est-progreso"></div>
+    <div class="est-list" id="est-list"></div>
+    <div class="btn-row" style="margin-bottom:18px;">
+      <button class="btn-primary" style="width:100%;" onclick="guardarEstadillo()">💾 GUARDAR ESTADILLO</button>
+    </div>
+    <div style="font-size:0.79rem;color:#888;letter-spacing:0.08em;margin-bottom:6px;">📚 ESTADILLOS ANTERIORES</div>
+    <div id="est-historial"></div>
+  </div>
 </div>
 
 <!-- MODAL RECICLAJE -->
@@ -659,6 +701,29 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   </div>
 </div>
 
+<!-- MODAL INFORME SEMANAL -->
+<div class="overlay" id="ov-semanal" onclick="handleOv(event,'ov-semanal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📥 RESUELTAS POR SEMANA</h3>
+      <button class="close-btn" onclick="closeOv('ov-semanal')">x</button>
+    </div>
+    <div class="form-group" id="sem-mar-grp">
+      <label>MARINERO</label>
+      <select id="sem-mar"></select>
+    </div>
+    <div class="form-group">
+      <label>SEMANA</label>
+      <select id="sem-semana"></select>
+    </div>
+    <div id="sem-resumen" style="font-size:0.85rem;color:#888;margin-bottom:12px;"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeOv('ov-semanal')">CANCELAR</button>
+      <button class="btn-primary" onclick="descargarSemanal()">DESCARGAR</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL MAPA -->
 <div class="overlay" id="ov-mapa" onclick="handleOv(event,'ov-mapa')">
   <div class="modal" style="max-height:95vh;border-radius:14px 14px 0 0;">
@@ -775,7 +840,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 <div class="overlay" id="ov-nueva-herr" onclick="handleOv(event,'ov-nueva-herr')">
   <div class="modal">
     <div class="modal-header">
-      <h3>HERRAMIENTA</h3>
+      <h3 id="nh-titulo">HERRAMIENTA</h3>
       <button class="close-btn" onclick="closeOv('ov-nueva-herr')">x</button>
     </div>
     <div class="form-group">
@@ -785,6 +850,29 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div class="form-group">
       <label>DESCRIPCION / CARACTERISTICAS</label>
       <input type="text" id="nh-desc" placeholder="Modelo, color, caracteristicas...">
+    </div>
+    <div class="form-group">
+      <label>CANTIDAD (UNIDADES)</label>
+      <input type="number" id="nh-cant" min="0" step="1" value="1">
+    </div>
+    <div id="nh-mov-grp" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>MOTIVO DEL CAMBIO</label>
+          <select id="nh-motivo">
+            <option value="">— (solo si cambia la cantidad)</option>
+            <option value="Compra">🛒 Compra</option>
+            <option value="Rotura">💥 Rotura</option>
+            <option value="Pérdida">❓ Pérdida</option>
+            <option value="Corrección de recuento">🔢 Corrección de recuento</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>NOTA</label>
+          <input type="text" id="nh-mov-nota" placeholder="Opcional...">
+        </div>
+      </div>
     </div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeOv('ov-nueva-herr')">CANCELAR</button>
@@ -826,6 +914,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div class="btn-row">
       <button class="btn-danger" id="btn-devolver" style="display:none" onclick="devolverHerr()">DEVUELTA</button>
       <button class="btn-danger" onclick="eliminarHerr()">ELIMINAR</button>
+      <button class="btn-secondary" onclick="editarHerr()">✏️ EDITAR</button>
       <button class="btn-primary" id="btn-prestar" onclick="prestarHerr()">PRESTAR</button>
     </div>
   </div>
@@ -1465,6 +1554,7 @@ let tareaMarineroFiltro = '';
 const incRef=ref(db,'incidencias');
 onValue(incRef,snap=>{
   incidencias=snap.val()||{};
+  renovarFijas();
   // Si currentUser ya está cargado, usarlo; si no, renderInc sin filtro
   if (!tareaMarineroFiltro && currentUser && !PUEDE_ASIGNAR.includes(currentUser)) {
     tareaMarineroFiltro = currentUser;
@@ -1582,7 +1672,7 @@ function tsADateStr(ts){const d=new Date(ts);return d.getFullYear()+'-'+String(d
 function incConResoluciones(){
   const out=[];
   Object.entries(incidencias).forEach(([id,inc])=>{
-    out.push({...inc,id});
+    if(!(inc.fija&&inc.estado==='res'&&inc.resoluciones)) out.push({...inc,id});
     if(inc.fija&&inc.resoluciones){
       Object.values(inc.resoluciones).forEach(r=>{
         out.push({...inc,id,estado:'res',fechaResolucion:r.fecha,resueltaPor:r.por||'',asignadoA:r.asignadoA||'',notas:r.notas||'',foto:null,_resFija:true});
@@ -1598,6 +1688,31 @@ function vencimientoInc(inc){
   if(!base||isNaN(base)) return null;
   const v=new Date(base); v.setDate(v.getDate()+parseInt(inc.plazo)); return v;
 }
+// Tareas fijas resueltas un día anterior a hoy → vuelven a PENDIENTE (con el próximo asignado)
+let _renovando=false;
+async function renovarFijas(){
+  if(_renovando||!currentUser) return;
+  const hoy=hoyStr();
+  const tareas=Object.entries(incidencias).filter(([id,i])=>i.fija&&i.estado==='res'&&i.fechaResolucion&&String(i.fechaResolucion).slice(0,10)<hoy);
+  if(!tareas.length) return;
+  _renovando=true;
+  try{
+    for(const [id,i] of tareas){
+      await update(ref(db,'incidencias/'+id),{
+        estado:'pend',
+        asignadoA:i.proximoAsignado||i.asignadoA||'',
+        proximoAsignado:null,
+        inicioPlazo:String(i.fechaResolucion).slice(0,10),
+        fechaResolucion:null,resueltaPor:null,notas:'',ultimaResKey:null,
+        renovadaEl:Date.now()
+      });
+    }
+  }catch(e){console.error('Renovar fijas:',e);}
+  _renovando=false;
+}
+setInterval(()=>{renovarFijas();if(typeof renderInc==='function')renderInc();},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renovarFijas();renderInc();}});
+
 function esVencida(inc){
   if(inc.estado==='res') return false;
   const v=vencimientoInc(inc); if(!v) return false;
@@ -1616,8 +1731,9 @@ function renderInc(){
   }
 
   if(filtroActivo==='todas'){
-    items=items.filter(i=>i.estado!=='res');
-    items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const hoyS=hoyStr();
+    items=items.filter(i=>i.estado!=='res'||(i.fija&&String(i.fechaResolucion||'').slice(0,10)===hoyS));
+    items.sort((a,b)=>((a.estado==='res')-(b.estado==='res'))||((b.createdAt||0)-(a.createdAt||0)));
   } else if(filtroActivo==='pend'){
     items=items.filter(i=>i.estado==='pend');
     items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -1660,7 +1776,7 @@ function renderInc(){
     const venc=inc.estado!=='res'?vencimientoInc(inc):null;
     const vencida=esVencida(inc);
     const plazo=inc.plazo&&inc.estado!=='res'?(venc?'⏱ '+(vencida?'VENCIDA ':'vence ')+venc.toLocaleDateString('es-ES'):`⏱ ${inc.plazo} día${inc.plazo>1?'s':''}`):'';
-    const fijaTag=inc.fija?'<span style="color:#1565c0;font-weight:600;">🔁 FIJA</span>':'';
+    const fijaTag=inc.fija?'<span style="color:#1565c0;font-weight:600;">🔁 FIJA'+(inc.estado==='res'&&!inc._resFija&&String(inc.fechaResolucion||'').slice(0,10)===hoyStr()?' · se renueva mañana':'')+'</span>':'';
     const resFecha=inc.estado==='res'&&inc.fechaResolucion
       ?'<span style="color:var(--green)">✓ '+new Date(inc.fechaResolucion+'T12:00:00').toLocaleDateString('es-ES')+'</span>':'';
     return `<div class="inc-card ${inc.estado||'pend'}" onclick="openDetalleInc('${inc.id}')">`
@@ -1880,6 +1996,89 @@ window.descargarTareasMarinero = function() {
 
 
 
+// ── INFORME SEMANAL DE RESUELTAS POR MARINERO ──
+const PERSONAL_TAREAS=['tomas','joseluis','javi','juan','esteban','marinero'];
+function _fechaResStr(inc){
+  const f=inc.fechaResolucion; if(!f) return '';
+  if(typeof f==='string'&&f.includes('-')) return f.slice(0,10);
+  const d=new Date(Number(f)); return isNaN(d)?'':tsADateStr(d.getTime());
+}
+function _lunesDe(d){const x=new Date(d);x.setHours(12,0,0,0);const dia=(x.getDay()+6)%7;x.setDate(x.getDate()-dia);return x;}
+function _resueltasSemana(mar,lunesStr){
+  const lun=new Date(lunesStr+'T12:00:00'); const dom=new Date(lun); dom.setDate(dom.getDate()+6);
+  const ini=lunesStr, fin=tsADateStr(dom.getTime());
+  return incConResoluciones().filter(i=>{
+    if(i.estado!=='res') return false;
+    const f=_fechaResStr(i); if(!f||f<ini||f>fin) return false;
+    const quien=i.resueltaPor||i.asignadoA;
+    return !mar||quien===mar;
+  }).sort((a,b)=>_fechaResStr(a).localeCompare(_fechaResStr(b)));
+}
+window.openSemanal=function(){
+  const puede=PUEDE_ASIGNAR.includes(currentUser);
+  const selM=document.getElementById('sem-mar');
+  selM.innerHTML=(puede?'<option value="">Todos (uno por sección)</option>':'')
+    +PERSONAL_TAREAS.filter(m=>puede||m===currentUser).map(m=>'<option value="'+m+'">'+(NOMBRES[m]||m)+'</option>').join('');
+  selM.value=puede?(tareaMarineroFiltro||''):currentUser;
+  document.getElementById('sem-mar-grp').style.display=puede?'':'none';
+  const selS=document.getElementById('sem-semana');
+  const lun=_lunesDe(new Date()); let opts='';
+  for(let k=0;k<12;k++){
+    const l=new Date(lun); l.setDate(l.getDate()-7*k);
+    const d=new Date(l); d.setDate(d.getDate()+6);
+    const f=x=>x.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
+    opts+='<option value="'+tsADateStr(l.getTime())+'">'+(k===0?'Esta semana':k===1?'Semana pasada':'Semana')+' · '+f(l)+' al '+f(d)+'/'+d.getFullYear()+'</option>';
+  }
+  selS.innerHTML=opts;
+  selM.onchange=selS.onchange=_resumenSemanal;
+  _resumenSemanal();
+  openOv('ov-semanal');
+};
+function _resumenSemanal(){
+  const n=_resueltasSemana(document.getElementById('sem-mar').value,document.getElementById('sem-semana').value).length;
+  document.getElementById('sem-resumen').textContent=n?('✅ '+n+' tarea'+(n>1?'s':'')+' resuelta'+(n>1?'s':'')+' en esa semana'):'No hay tareas resueltas en esa semana';
+}
+window.descargarSemanal=function(){
+  const mar=document.getElementById('sem-mar').value;
+  const lunesStr=document.getElementById('sem-semana').value;
+  const lun=new Date(lunesStr+'T12:00:00'); const dom=new Date(lun); dom.setDate(dom.getDate()+6);
+  const rango=lun.toLocaleDateString('es-ES')+' al '+dom.toLocaleDateString('es-ES');
+  const marineros=mar?[mar]:PERSONAL_TAREAS;
+  const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  let total=0;
+  const secciones=marineros.map(m=>{
+    const items=_resueltasSemana(m,lunesStr);
+    if(!items.length) return mar?'<p style="color:#888;">Sin tareas resueltas esta semana.</p>':'';
+    total+=items.length;
+    const filas=items.map(i=>{
+      const d=new Date(_fechaResStr(i)+'T12:00:00');
+      return '<tr><td>'+DIAS[d.getDay()]+' '+d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})+'</td>'
+        +'<td><b>'+((TIPO_ICONS[i.tipo]||'🔧')+' '+(i.titulo||'Sin título'))+'</b>'+(i.fija?' <span class="fija">🔁 FIJA</span>':'')+'</td>'
+        +'<td>'+(i.notas||'')+'</td></tr>';
+    }).join('');
+    return '<h2>👤 '+(NOMBRES[m]||m)+' <span>'+items.length+' resuelta'+(items.length>1?'s':'')+'</span></h2>'
+      +'<table><thead><tr><th style="width:90px">Día</th><th>Tarea</th><th>Notas</th></tr></thead><tbody>'+filas+'</tbody></table>';
+  }).join('');
+  if(!total){showToast('No hay tareas resueltas en esa semana');return;}
+  const titulo='Tareas resueltas — '+(mar?(NOMBRES[mar]||mar):'Todos');
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;background:#f0f4f8;margin:0;padding:20px;color:#1a2a3a}
+.page{max-width:800px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.hdr{background:#0a1628;color:#f0a500;padding:22px 26px}.hdr h1{margin:0;font-size:1.35rem;letter-spacing:.06em}
+.hdr p{margin:5px 0 0;font-size:.85rem;color:#7a9fc0}.body{padding:18px 24px}
+h2{font-size:1.05rem;margin:18px 0 8px;border-bottom:2px solid #cc0018;padding-bottom:4px}h2 span{font-size:.8rem;color:#888;font-weight:normal;margin-left:6px}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin-bottom:8px}th{background:#f0f4f8;text-align:left;padding:7px 8px;font-size:.78rem;color:#5a6a7a}
+td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}.fija{color:#1565c0;font-size:.75rem}
+.firma{margin-top:26px;display:flex;gap:30px;font-size:.8rem;color:#888}.firma div{flex:1;border-top:1px solid #bbb;padding-top:4px}
+.footer{text-align:center;padding:12px;font-size:.75rem;color:#9aa;border-top:1px solid #eee}
+@media print{body{background:#fff;padding:0}.page{box-shadow:none}.hdr,h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head>
+<body><div class="page"><div class="hdr"><h1>⚓ CN Águilas — ${titulo}</h1><p>Semana del ${rango} · Generado: ${new Date().toLocaleString('es-ES')}</p></div>
+<div class="body">${secciones}<div class="firma"><div>Firma marinero</div><div>Firma contramaestre</div></div></div>
+<div class="footer">Total: ${total} tarea(s) resuelta(s) · Club Náutico Águilas</div></div></body></html>`;
+  _descargarHtml(html,'resueltas_'+(mar||'todos')+'_semana_'+lunesStr+'.html');
+  closeOv('ov-semanal');
+};
+
 function _descargarHtml(html, nombre){
   const blob = new Blob([html],{type:'text/html;charset=utf-8'});
   const a = document.createElement('a');
@@ -1947,7 +2146,7 @@ window.openDetalleInc=function(id){
   } else {
     histEl.style.display = 'none';
   }
-  document.getElementById('d-asig').value=inc.asignadoA||'';
+  document.getElementById('d-asig').value=(inc.fija&&inc.estado==='res'&&inc.proximoAsignado)?inc.proximoAsignado:(inc.asignadoA||'');
   document.getElementById('d-notas').value=inc.notas||'';
   document.getElementById('d-res-quien').value=inc.resueltaPor||'';
   document.getElementById('d-res-fecha').value=inc.fechaResolucion||'';
@@ -1996,25 +2195,36 @@ window.actualizarInc=async function(){
     upd.fija=document.getElementById('d-fija').checked;
   }
   const esFija=PUEDE_ASIGNAR.includes(currentUser)?upd.fija:!!incActual.fija;
-  if(editingEstado==='res'&&esFija){
-    // Tarea fija: se guarda la resolución en su historial y vuelve a quedar pendiente
+  if(esFija&&editingEstado==='res'){
+    // Tarea fija: queda RESUELTA hoy (visible en el espacio del marinero) y se renueva al día siguiente
     const fec=document.getElementById('d-res-fecha').value||hoyStr();
-    await push(ref(db,'incidencias/'+editingIncId+'/resoluciones'),{
-      fecha:fec,
-      por:document.getElementById('d-res-quien').value||incActual.asignadoA||currentUser,
-      asignadoA:incActual.asignadoA||'',
-      notas:upd.notas||'',
-      registradoPor:currentUser,ts:Date.now()
-    });
-    upd.estado='pend';
-    upd.inicioPlazo=fec;
-    upd.notas='';
-    upd.resueltaPor=null;
-    upd.fechaResolucion=null;
+    const por=document.getElementById('d-res-quien').value||incActual.asignadoA||currentUser;
+    const registro={fecha:fec,por,asignadoA:incActual.asignadoA||'',notas:upd.notas||'',registradoPor:currentUser,ts:Date.now()};
+    if(incActual.estado==='res'&&incActual.ultimaResKey){
+      // Ya estaba resuelta: solo se corrige el registro existente
+      await update(ref(db,'incidencias/'+editingIncId+'/resoluciones/'+incActual.ultimaResKey),registro);
+      upd.ultimaResKey=incActual.ultimaResKey;
+    } else {
+      const nuevo=await push(ref(db,'incidencias/'+editingIncId+'/resoluciones'),registro);
+      upd.ultimaResKey=nuevo.key;
+    }
+    const siguiente=document.getElementById('d-asig').value;
+    upd.asignadoA=incActual.asignadoA||'';           // sigue en el espacio de quien la tenía hoy
+    upd.proximoAsignado=siguiente||incActual.asignadoA||'';
+    upd.resueltaPor=por;
+    upd.fechaResolucion=fec;
     await update(ref(db,'incidencias/'+editingIncId),upd);
     closeOv('ov-detalle-inc');
-    showToast('Resuelta ✓ — vuelve a quedar pendiente');
+    showToast('Resuelta ✓ — mañana se renueva como pendiente');
     if(filtroActivo==='res') renderResNav();
+    return;
+  }
+  if(esFija&&incActual.estado==='res'&&editingEstado!=='res'){
+    // Se deshace la resolución de hoy de una tarea fija
+    if(incActual.ultimaResKey) await remove(ref(db,'incidencias/'+editingIncId+'/resoluciones/'+incActual.ultimaResKey));
+    upd.ultimaResKey=null;upd.fechaResolucion=null;upd.resueltaPor=null;upd.proximoAsignado=null;
+    await update(ref(db,'incidencias/'+editingIncId),upd);
+    closeOv('ov-detalle-inc');showToast('Actualizado ✓');
     return;
   }
   if(editingEstado==='res'){
@@ -2224,7 +2434,7 @@ window.confirmarUbicacion=function(){
 // HERRAMIENTAS
 // ═══════════════════════════════
 const herrRef=ref(db,'herramientas');
-onValue(herrRef,snap=>{herramientas=snap.val()||{};renderHerr();});
+onValue(herrRef,snap=>{herramientas=snap.val()||{};renderHerr();if(typeof renderEstadillo==='function'&&estFecha)renderEstadillo();});
 
 function renderHerr(){
   const list=document.getElementById('herr-list');
@@ -2244,8 +2454,9 @@ function renderHerr(){
       if(h.fechaDevolucion) meta+='<span>📅 Dev: '+new Date(h.fechaDevolucion).toLocaleDateString('es-ES')+'</span>';
     }
     if(h.descripcion) meta+='<span>'+h.descripcion+'</span>';
+    const cant=h.cantidad!=null?h.cantidad:1;
     return `<div class="herr-card ${cls}" onclick="openPrestamo('${h.id}')">`
-      +`<div class="herr-nombre">🔨 ${h.nombre||'Sin nombre'}<span class="herr-badge ${badgeCls}">${badgeTxt}</span></div>`
+      +`<div class="herr-nombre">🔨 ${h.nombre||'Sin nombre'}<span class="herr-cant">×${cant}</span><span class="herr-badge ${badgeCls}">${badgeTxt}</span></div>`
       +'<div class="herr-meta">'+meta+'</div></div>';
   }).join('');
 }
@@ -2254,13 +2465,47 @@ window.openNuevaHerr=function(){
   editingHorrId=null;
   document.getElementById('nh-nombre').value='';
   document.getElementById('nh-desc').value='';
+  document.getElementById('nh-cant').value=1;
+  document.getElementById('nh-mov-grp').style.display='none';
+  document.getElementById('nh-titulo').textContent='NUEVA HERRAMIENTA';
+  openOv('ov-nueva-herr');
+};
+
+window.editarHerr=function(){
+  if(!editingHorrId)return;
+  const h=herramientas[editingHorrId]||{};
+  closeOv('ov-prestamo');
+  document.getElementById('nh-titulo').textContent='EDITAR HERRAMIENTA';
+  document.getElementById('nh-nombre').value=h.nombre||'';
+  document.getElementById('nh-desc').value=h.descripcion||'';
+  document.getElementById('nh-cant').value=h.cantidad!=null?h.cantidad:1;
+  document.getElementById('nh-motivo').value='';
+  document.getElementById('nh-mov-nota').value='';
+  document.getElementById('nh-mov-grp').style.display='block';
   openOv('ov-nueva-herr');
 };
 
 window.guardarHerr=async function(){
   const nombre=document.getElementById('nh-nombre').value.trim();
   if(!nombre){showToast('El nombre es obligatorio');return;}
-  await push(herrRef,{nombre,descripcion:document.getElementById('nh-desc').value.trim(),estado:'disponible',creadaPor:currentUser,createdAt:Date.now()});
+  const descripcion=document.getElementById('nh-desc').value.trim();
+  let cantidad=parseInt(document.getElementById('nh-cant').value);
+  if(isNaN(cantidad)||cantidad<0) cantidad=1;
+  if(editingHorrId){
+    const h=herramientas[editingHorrId]||{};
+    const antes=h.cantidad!=null?h.cantidad:1;
+    await update(ref(db,'herramientas/'+editingHorrId),{nombre,descripcion,cantidad,editadaPor:currentUser,updatedAt:Date.now()});
+    if(cantidad!==antes){
+      const motivo=document.getElementById('nh-motivo').value||(cantidad>antes?'Compra':'Corrección de recuento');
+      await push(ref(db,'herramientas/'+editingHorrId+'/movimientos'),{
+        fecha:Date.now(),antes,despues:cantidad,motivo,
+        nota:document.getElementById('nh-mov-nota').value.trim(),por:currentUser
+      });
+    }
+    closeOv('ov-nueva-herr');showToast('Herramienta actualizada ✓');
+    return;
+  }
+  await push(herrRef,{nombre,descripcion,cantidad,estado:'disponible',creadaPor:currentUser,createdAt:Date.now()});
   closeOv('ov-nueva-herr');showToast('Herramienta guardada ✓');
 };
 
@@ -2281,6 +2526,12 @@ window.openPrestamo=function(id){
   } else {
     info='Estado: <b style="color:var(--green)">DISPONIBLE</b>';
     if(h.descripcion) info+='<br>'+h.descripcion;
+  }
+  info+='<br>Cantidad: <b>'+(h.cantidad!=null?h.cantidad:1)+'</b> ud'+((h.cantidad!=null?h.cantidad:1)===1?'':'s');
+  const movs=h.movimientos?Object.values(h.movimientos).sort((a,b)=>(b.fecha||0)-(a.fecha||0)).slice(0,6):[];
+  if(movs.length){
+    info+='<div style="margin-top:8px;font-size:0.8rem;color:#888;letter-spacing:0.06em;">CAMBIOS DE CANTIDAD</div>'
+      +movs.map(m=>'<div style="font-size:0.82rem;line-height:1.5;">'+new Date(m.fecha).toLocaleDateString('es-ES')+' · '+m.antes+' → <b>'+m.despues+'</b> · '+(m.motivo||'')+(m.nota?' ('+m.nota+')':'')+(m.por?' · '+(NOMBRES[m.por]||m.por):'')+'</div>').join('');
   }
   document.getElementById('p-estado-info').innerHTML=info;
   document.getElementById('p-prestamo-form').style.display=prestada?'none':'block';
@@ -2305,6 +2556,161 @@ window.devolverHerr=async function(){
   if(!editingHorrId)return;
   await update(ref(db,'herramientas/'+editingHorrId),{estado:'disponible',prestadaA:null,fechaDevolucion:null,notasPrestamo:null,devueltaPor:currentUser,fechaDevolucion2:Date.now()});
   closeOv('ov-prestamo');showToast('Devolucion registrada ✓');
+};
+
+// ═══════════ ESTADILLO DE HERRAMIENTAS ═══════════
+var estadillos={};
+var estFecha='';
+var estDraft={};      // { idHerr: {estado:'ok'|'falta', nota, encontradas} }
+var estEditKey=null;  // clave si ya existe un estadillo guardado para esa fecha
+const estRef=ref(db,'estadillosHerr');
+onValue(estRef,snap=>{estadillos=snap.val()||{};renderEstHistorial();});
+
+window.setHerrVista=function(v){
+  document.getElementById('herr-vista-inv').style.display=v==='inv'?'':'none';
+  document.getElementById('herr-vista-est').style.display=v==='est'?'':'none';
+  document.getElementById('hst-inv').classList.toggle('active',v==='inv');
+  document.getElementById('hst-est').classList.toggle('active',v==='est');
+  if(v==='est'){
+    const f=document.getElementById('est-fecha');
+    if(!f.value) f.value=hoyStr();
+    cambiarFechaEstadillo();
+  }
+};
+function _guardarBorradorEst(){
+  try{ if(!estEditKey) localStorage.setItem('estDraft_'+estFecha,JSON.stringify(estDraft)); }catch(e){}
+}
+window.cambiarFechaEstadillo=function(){
+  estFecha=document.getElementById('est-fecha').value||hoyStr();
+  const existente=Object.entries(estadillos).find(([k,e])=>e.fecha===estFecha);
+  estDraft={};estEditKey=null;
+  if(existente){
+    estEditKey=existente[0];
+    Object.entries(existente[1].items||{}).forEach(([id,it])=>{
+      if(it.estado==='ok'||it.estado==='falta') estDraft[id]={estado:it.estado,nota:it.nota||'',encontradas:it.encontradas};
+    });
+  } else {
+    try{ const b=localStorage.getItem('estDraft_'+estFecha); if(b) estDraft=JSON.parse(b)||{}; }catch(e){}
+  }
+  renderEstadillo();
+};
+window.toggleEst=function(id){
+  const cur=estDraft[id]?.estado;
+  if(!cur) estDraft[id]={estado:'ok',nota:''};
+  else if(cur==='ok') estDraft[id]={...estDraft[id],estado:'falta'};
+  else delete estDraft[id];
+  _guardarBorradorEst();
+  renderEstadillo();
+  if(estDraft[id]?.estado==='falta') setTimeout(()=>document.getElementById('est-nota-'+id)?.focus(),50);
+};
+window.setNotaEst=function(id,v){ if(estDraft[id]){estDraft[id].nota=v;_guardarBorradorEst();} };
+window.setEncEst=function(id,v){ if(estDraft[id]){const n=parseInt(v);estDraft[id].encontradas=isNaN(n)?null:n;_guardarBorradorEst();} };
+
+function _herrOrdenadas(){
+  return Object.entries(herramientas).map(([id,v])=>({id,...v})).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+}
+function renderEstadillo(){
+  const list=document.getElementById('est-list'); if(!list) return;
+  const herrs=_herrOrdenadas();
+  if(!herrs.length){list.innerHTML='<div class="empty-state"><div>🔨</div>No hay herramientas registradas</div>';document.getElementById('est-progreso').innerHTML='';return;}
+  let ok=0,falta=0;
+  list.innerHTML=herrs.map(h=>{
+    const d=estDraft[h.id]; const st=d?.estado||'';
+    if(st==='ok') ok++; if(st==='falta') falta++;
+    const cant=h.cantidad!=null?h.cantidad:1;
+    const esc=v=>String(v??'').replace(/"/g,'&quot;');
+    const extra=st==='falta'
+      ?'<div class="est-extra" onclick="event.stopPropagation()">'
+        +(cant>1?'<span style="font-size:0.85rem;">Hay</span><input type="number" min="0" max="'+cant+'" style="width:70px;" value="'+esc(d.encontradas)+'" placeholder="0" oninput="setEncEst(\''+h.id+'\',this.value)"><span style="font-size:0.85rem;">de '+cant+'</span>':'')
+        +'<input type="text" id="est-nota-'+h.id+'" style="flex:1;min-width:160px;" placeholder="Nota de la incidencia..." value="'+esc(d.nota)+'" oninput="setNotaEst(\''+h.id+'\',this.value)">'
+        +'</div>':'';
+    return '<div class="est-row '+(st?'est-'+st:'')+'" onclick="toggleEst(\''+h.id+'\')">'
+      +'<div class="est-row-top"><div class="est-icon">'+(st==='ok'?'✓':st==='falta'?'✗':'')+'</div>'
+      +'<div class="est-nombre">'+(h.nombre||'Sin nombre')+(h.descripcion?'<div style="font-size:0.78rem;color:#888;font-weight:normal;">'+h.descripcion+'</div>':'')+'</div>'
+      +'<span class="herr-cant">×'+cant+'</span></div>'+extra+'</div>';
+  }).join('');
+  const sin=herrs.length-ok-falta;
+  document.getElementById('est-progreso').innerHTML='<b>'+(ok+falta)+' de '+herrs.length+'</b> revisadas'
+    +'<span style="color:#1e9e5a;">✅ '+ok+'</span><span style="color:#cc0018;">❌ '+falta+'</span>'
+    +(sin?'<span style="color:#888;">○ '+sin+' sin marcar</span>':'')
+    +(estEditKey?'<span style="color:#1565c0;">✏️ editando estadillo guardado</span>':'');
+}
+window.guardarEstadillo=async function(){
+  const herrs=_herrOrdenadas();
+  if(!herrs.length){showToast('No hay herramientas');return;}
+  const sin=herrs.filter(h=>!estDraft[h.id]).length;
+  if(sin&&!confirm('Quedan '+sin+' herramienta(s) sin marcar. ¿Guardar igualmente?'))return;
+  const items={};let ok=0,falta=0;
+  herrs.forEach(h=>{
+    const d=estDraft[h.id]; const st=d?.estado||'sin';
+    if(st==='ok')ok++; if(st==='falta')falta++;
+    items[h.id]={nombre:h.nombre||'',cantidad:h.cantidad!=null?h.cantidad:1,estado:st,nota:d?.nota||'',encontradas:(d&&d.encontradas!=null)?d.encontradas:null};
+  });
+  const data={fecha:estFecha,por:currentUser,items,ok,falta,sin,total:herrs.length,updatedAt:Date.now()};
+  if(estEditKey){
+    await update(ref(db,'estadillosHerr/'+estEditKey),data);
+  } else {
+    data.createdAt=Date.now();
+    const r=await push(estRef,data); estEditKey=r.key;
+  }
+  try{localStorage.removeItem('estDraft_'+estFecha);}catch(e){}
+  showToast('Estadillo guardado ✓'+(falta?' — '+falta+' falta(n)':''));
+  renderEstadillo();
+};
+function renderEstHistorial(){
+  const el=document.getElementById('est-historial'); if(!el) return;
+  const arr=Object.entries(estadillos).sort((a,b)=>(b[1].fecha||'').localeCompare(a[1].fecha||''));
+  if(!arr.length){el.innerHTML='<div style="font-size:0.85rem;color:#aaa;">Todavía no hay estadillos guardados</div>';return;}
+  const puedeBorrar=PUEDE_ASIGNAR.includes(currentUser);
+  el.innerHTML=arr.map(([k,e])=>'<div class="est-hist-item">'
+    +'<div class="grow"><b>'+new Date(e.fecha+'T12:00:00').toLocaleDateString('es-ES')+'</b>'
+    +(e.por?' · '+(NOMBRES[e.por]||e.por):'')
+    +'<div style="font-size:0.82rem;"><span style="color:#1e9e5a;">✅ '+(e.ok||0)+'</span> &nbsp;<span style="color:#cc0018;">❌ '+(e.falta||0)+'</span>'+(e.sin?' &nbsp;<span style="color:#888;">○ '+e.sin+'</span>':'')+'</div></div>'
+    +'<button class="est-mini-btn" onclick="verEstadillo(\''+k+'\')">✏️ Ver</button>'
+    +'<button class="est-mini-btn" onclick="descargarEstadillo(\''+k+'\')">📥</button>'
+    +(puedeBorrar?'<button class="est-mini-btn" onclick="borrarEstadillo(\''+k+'\')">🗑</button>':'')
+    +'</div>').join('');
+  if(document.getElementById('herr-vista-est')?.style.display!=='none'&&estFecha) {
+    // refrescar si alguien guardó el mismo día
+    const ex=Object.entries(estadillos).find(([k,e])=>e.fecha===estFecha);
+    if(ex&&!estEditKey){cambiarFechaEstadillo();}
+  }
+}
+window.verEstadillo=function(k){
+  const e=estadillos[k]; if(!e) return;
+  document.getElementById('est-fecha').value=e.fecha;
+  cambiarFechaEstadillo();
+  window.scrollTo({top:0});document.getElementById('page-2')?.scrollTo?.({top:0,behavior:'smooth'});
+};
+window.borrarEstadillo=async function(k){
+  if(!confirm('¿Eliminar este estadillo?'))return;
+  await remove(ref(db,'estadillosHerr/'+k));
+  if(estEditKey===k){estEditKey=null;cambiarFechaEstadillo();}
+  showToast('Estadillo eliminado');
+};
+window.descargarEstadillo=function(k){
+  const e=estadillos[k]; if(!e) return;
+  const orden={falta:0,sin:1,ok:2};
+  const items=Object.values(e.items||{}).sort((a,b)=>(orden[a.estado]-orden[b.estado])||(a.nombre||'').localeCompare(b.nombre||''));
+  const ESTL={ok:'<span style="color:#1e9e5a;font-weight:700;">✅ ESTÁ</span>',falta:'<span style="color:#cc0018;font-weight:700;">❌ NO ESTÁ</span>',sin:'<span style="color:#999;">○ Sin revisar</span>'};
+  const filas=items.map(it=>'<tr'+(it.estado==='falta'?' style="background:#fdecee;"':'')+'><td><b>'+it.nombre+'</b></td><td style="text-align:center;">'
+    +(it.estado==='falta'&&it.cantidad>1&&it.encontradas!=null?it.encontradas+' de '+it.cantidad:it.cantidad)+'</td><td>'+ESTL[it.estado]+'</td><td>'+(it.nota||'')+'</td></tr>').join('');
+  const fecha=new Date(e.fecha+'T12:00:00').toLocaleDateString('es-ES');
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Estadillo herramientas ${fecha}</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;background:#f0f4f8;margin:0;padding:20px;color:#1a2a3a}
+.page{max-width:800px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.hdr{background:#0a1628;color:#f0a500;padding:22px 26px}.hdr h1{margin:0;font-size:1.35rem;letter-spacing:.06em}.hdr p{margin:5px 0 0;font-size:.85rem;color:#7a9fc0}
+.body{padding:18px 24px}.res{display:flex;gap:18px;margin-bottom:14px;font-size:.95rem}
+table{width:100%;border-collapse:collapse;font-size:.88rem}th{background:#f0f4f8;text-align:left;padding:7px 8px;font-size:.78rem;color:#5a6a7a}td{padding:7px 8px;border-bottom:1px solid #eee;vertical-align:top}
+.firma{margin-top:26px;display:flex;gap:30px;font-size:.8rem;color:#888}.firma div{flex:1;border-top:1px solid #bbb;padding-top:4px}
+.footer{text-align:center;padding:12px;font-size:.75rem;color:#9aa;border-top:1px solid #eee}
+@media print{body{background:#fff;padding:0}.page{box-shadow:none}.hdr,tr{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head>
+<body><div class="page"><div class="hdr"><h1>⚓ CN Águilas — Estadillo de herramientas</h1><p>Fecha: ${fecha}${e.por?' · Realizado por: '+(NOMBRES[e.por]||e.por):''}</p></div>
+<div class="body"><div class="res"><span style="color:#1e9e5a;">✅ Están: <b>${e.ok||0}</b></span><span style="color:#cc0018;">❌ No están: <b>${e.falta||0}</b></span><span style="color:#888;">○ Sin revisar: <b>${e.sin||0}</b></span></div>
+<table><thead><tr><th>Herramienta</th><th style="width:80px;text-align:center;">Cant.</th><th style="width:110px;">Estado</th><th>Nota</th></tr></thead><tbody>${filas}</tbody></table>
+<div class="firma"><div>Firma</div><div>Revisado por</div></div></div>
+<div class="footer">Total: ${e.total||items.length} herramienta(s) · Club Náutico Águilas</div></div></body></html>`;
+  _descargarHtml(html,'estadillo_herramientas_'+e.fecha+'.html');
 };
 
 window.eliminarHerr=async function(){
