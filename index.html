@@ -1771,7 +1771,12 @@ function renderInc(){
     const fecha=inc.createdAt?new Date(inc.createdAt).toLocaleDateString('es-ES'):'--';
     const prio=inc.prioridad||'normal';
     const icon=TIPO_ICONS[inc.tipo]||'🔧';
-    const asig=inc.asignadoA?'👤 '+NOMBRES[inc.asignadoA]:'';
+    // Si está resuelta mostrar quién la resolvió, si no quién la tiene asignada
+    const asigPersona = inc.estado==='res' && inc.resueltaPor
+      ? inc.resueltaPor
+      : inc.asignadoA;
+    const asigLabel = inc.estado==='res' && inc.resueltaPor ? '✓ ' : '👤 ';
+    const asig = asigPersona ? asigLabel+(NOMBRES[asigPersona]||asigPersona) : '';
     const ubic=inc.ubicacion?'📍 Marcado en mapa':'';
     const venc=inc.estado!=='res'?vencimientoInc(inc):null;
     const vencida=esVencida(inc);
