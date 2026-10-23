@@ -91,12 +91,17 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
 .inc-card.pend{border-left-color:var(--orange);}
 .inc-card.prog{border-left-color:var(--gold);}
 .inc-card.res{border-left-color:var(--green);opacity:0.6;}
+.inc-card.nores{border-left-color:var(--red);opacity:0.9;}
+.res-chip{display:inline-flex;align-items:center;padding:9px 14px;border:1.5px solid #ccd3dc;border-radius:20px;font-size:0.92rem;cursor:pointer;background:#fff;color:#444;letter-spacing:0;user-select:none;}
+.res-chip.on{background:#e6f6ec;border-color:#1e9e5a;color:#1e7a46;font-weight:700;}
+.res-chip.on::before{content:'✓ ';}
 .inc-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
 .inc-titulo{font-family:"Bebas Neue",sans-serif;font-size:0.97rem;letter-spacing:0.06em;display:flex;align-items:center;gap:6px;color:#1a1a1a;}
 .inc-estado{font-size:0.75rem;padding:2px 7px;border-radius:10px;letter-spacing:0.06em;white-space:nowrap;margin-left:6px;flex-shrink:0;}
 .estado-pend{background:rgba(224,120,32,0.2);color:var(--orange);border:1px solid rgba(224,120,32,0.4);}
 .estado-prog{background:rgba(240,165,0,0.2);color:var(--gold);border:1px solid rgba(240,165,0,0.4);}
 .estado-res{background:rgba(30,158,90,0.2);color:var(--green);border:1px solid rgba(30,158,90,0.4);}
+.estado-nores{background:rgba(204,0,24,0.12);color:var(--red);border:1px solid rgba(204,0,24,0.45);}
 .inc-meta{font-size:0.78rem;color:#888888;display:flex;gap:8px;flex-wrap:wrap;}
 .empty-state{text-align:center;padding:36px 20px;color:#aaaaaa;font-size:0.85rem;letter-spacing:0.06em;}
 .empty-state div{font-size:2rem;margin-bottom:8px;}
@@ -767,7 +772,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="form-group">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.92rem;color:#1a1a1a;letter-spacing:0;line-height:1.3;">
           <input type="checkbox" id="d-fija" style="width:24px;height:24px;padding:0;margin:0;flex-shrink:0;accent-color:#cc0018;" onchange="actualizarLblAsig()">
-          <span>🔁 <b>TAREA FIJA</b> <span style="font-size:0.8rem;color:#888;">(se repite, no se puede eliminar)</span></span>
+          <span>🔁 <b>TAREA FIJA</b> <span style="font-size:0.8rem;color:#888;">(se repite, no se puede eliminar; si no se resuelve en la semana lun–dom se marca NO RESUELTA sola)</span></span>
         </label>
       </div>
     </div>
@@ -779,24 +784,15 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
         <div class="estado-opt opt-res" onclick="selEstado('res')">RESUELTA</div>
       </div>
     </div>
+    <div id="d-bloq-res" style="display:none;background:#fff3e0;border:1px solid #e07820;border-radius:6px;padding:7px 10px;margin:-6px 0 10px;font-size:0.83rem;color:#9a5300;">🔒 Tarea fija ya resuelta: no se puede volver a marcar como no resuelta.</div>
     <div id="d-res-fields" style="display:none">
-      <div class="form-row">
-        <div class="form-group">
-          <label>RESUELTA POR</label>
-          <select id="d-res-quien">
-            <option value="">-</option>
-            <option value="tomas">Tomas</option>
-            <option value="joseluis">Jose Luis</option>
-            <option value="javi">Javi</option>
-            <option value="juan">Juan</option>
-            <option value="esteban">Esteban</option>
-            <option value="marinero">Marinero</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>FECHA RESOLUCION</label>
-          <input type="date" id="d-res-fecha">
-        </div>
+      <div class="form-group">
+        <label>RESUELTA POR <span style="font-size:0.75rem;color:#888;letter-spacing:0;">(toca para marcar uno o varios)</span></label>
+        <div id="d-res-quien-box" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+      <div class="form-group">
+        <label>FECHA RESOLUCION</label>
+        <input type="date" id="d-res-fecha">
       </div>
     </div>
     <div id="d-info" style="font-size:0.82rem;color:var(--dim);line-height:2;margin-bottom:12px;"></div>
@@ -1369,6 +1365,8 @@ onAuthStateChanged(auth, user => {
     else tareaMarineroFiltro = currentUser;
     renderTareasTabs();
     renderInc();
+    renovarFijas();
+    cerrarSemanasFijas();
   } else {
     // No autenticado — mostrar login
     currentUser = '';
@@ -1555,6 +1553,7 @@ const incRef=ref(db,'incidencias');
 onValue(incRef,snap=>{
   incidencias=snap.val()||{};
   renovarFijas();
+  cerrarSemanasFijas();
   // Si currentUser ya está cargado, usarlo; si no, renderInc sin filtro
   if (!tareaMarineroFiltro && currentUser && !PUEDE_ASIGNAR.includes(currentUser)) {
     tareaMarineroFiltro = currentUser;
@@ -1614,7 +1613,7 @@ let resPeriodo = null;
 
 function renderResNav(){
   // Construir periodos disponibles a partir de incidencias resueltas
-  const resueltas=incConResoluciones().filter(i=>i.estado==='res');
+  const resueltas=incConResoluciones().filter(i=>i.estado==='res'||i.estado==='nores');
   if(!resueltas.length){document.getElementById('res-nav').innerHTML='';return;}
 
   // Años disponibles
@@ -1663,7 +1662,7 @@ window.selResPeriodo=function(tipo, año, mes){
 };
 
 const PRIO_COL={normal:'var(--dim)',alta:'var(--gold)',urgente:'var(--red)'};
-const ESTADO_LBL={pend:'PENDIENTE',prog:'EN CURSO',res:'RESUELTA'};
+const ESTADO_LBL={pend:'PENDIENTE',prog:'EN CURSO',res:'RESUELTA',nores:'NO RESUELTA'};
 
 // ── TAREAS FIJAS ──
 function hoyStr(){const h=new Date();return h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0');}
@@ -1675,11 +1674,68 @@ function incConResoluciones(){
     if(!(inc.fija&&inc.estado==='res'&&inc.resoluciones)) out.push({...inc,id});
     if(inc.fija&&inc.resoluciones){
       Object.values(inc.resoluciones).forEach(r=>{
-        out.push({...inc,id,estado:'res',fechaResolucion:r.fecha,resueltaPor:r.por||'',asignadoA:r.asignadoA||'',notas:r.notas||'',foto:null,_resFija:true});
+        out.push({...inc,id,estado:'res',fechaResolucion:r.fecha,resueltaPor:r.por||'',resueltaPorLista:r.porLista||null,asignadoA:r.asignadoA||'',notas:r.notas||'',foto:null,_resFija:true});
+      });
+    }
+    // Semanas (lun–dom) en las que la tarea fija no se resolvió: las anota el sistema solo
+    if(inc.fija&&inc.noResueltas){
+      Object.values(inc.noResueltas).forEach(nr=>{
+        out.push({...inc,id,estado:'nores',fechaResolucion:nr.hasta,resueltaPor:null,resueltaPorLista:null,asignadoA:nr.asignadoA||'',notas:'',foto:null,_resFija:true,_semana:nr.semana,_semanaHasta:nr.hasta});
       });
     }
   });
   return out;
+}
+// Quién(es) resolvieron una tarea: lista (varios) o el campo antiguo (uno solo)
+function quienesResolvieron(x){
+  let l=x.resueltaPorLista;
+  if(l&&!Array.isArray(l)) l=Object.values(l);
+  if(Array.isArray(l)&&l.length) return l.filter(Boolean);
+  return x.resueltaPor?[x.resueltaPor]:[];
+}
+function nombresResolvieron(x){return quienesResolvieron(x).map(p=>NOMBRES[p]||p).join(', ');}
+function sumaDias(str,dias){const d=new Date(str+'T12:00:00');d.setDate(d.getDate()+dias);return tsADateStr(d.getTime());}
+
+// ── TAREAS FIJAS: cierre semanal automático (lunes a domingo) ──
+// Si una tarea fija asignada llega al domingo sin ninguna resolución en esa semana, se anota "NO RESUELTA".
+// No hay ningún botón para marcarla o desmarcarla a mano: solo lo hace este proceso.
+let _cerrandoSemanas=false;
+async function cerrarSemanasFijas(){
+  if(_cerrandoSemanas||!currentUser) return;
+  const tareas=Object.entries(incidencias).filter(([id,i])=>i.fija);
+  if(!tareas.length) return;
+  const lunActual=tsADateStr(_lunesDe(new Date()).getTime());
+  const ultimaCerrable=sumaDias(lunActual,-7);          // lunes de la última semana ya terminada
+  _cerrandoSemanas=true;
+  try{
+    for(const [id,i] of tareas){
+      const upd={};
+      if(!i.semanaCerrada){
+        // Primera vez que se ve la tarea: se empieza a contar desde la próxima semana que termine (sin castigar el pasado)
+        upd.semanaCerrada=ultimaCerrable;
+      } else if(i.semanaCerrada<ultimaCerrable){
+        let w=sumaDias(i.semanaCerrada,7), fallo=false;
+        while(w<=ultimaCerrable){
+          const dom=sumaDias(w,6);
+          const creadaA=i.createdAt?tsADateStr(i.createdAt):'';
+          const existia=!creadaA||creadaA<=dom;
+          const resuelta=Object.values(i.resoluciones||{}).some(r=>r.fecha&&r.fecha>=w&&r.fecha<=dom)
+            ||(i.estado==='res'&&i.fechaResolucion&&String(i.fechaResolucion).slice(0,10)>=w&&String(i.fechaResolucion).slice(0,10)<=dom);
+          const yaAnotada=i.noResueltas&&i.noResueltas[w];
+          if(existia&&!resuelta&&!yaAnotada&&i.asignadoA){
+            // clave = lunes de la semana → si dos móviles lo hacen a la vez, no se duplica
+            await update(ref(db,'incidencias/'+id+'/noResueltas/'+w),{semana:w,hasta:dom,asignadoA:i.asignadoA,ts:Date.now()});
+            fallo=true;
+          }
+          w=sumaDias(w,7);
+        }
+        upd.semanaCerrada=ultimaCerrable;
+        if(fallo) upd.inicioPlazo=lunActual;              // nueva semana → el plazo vuelve a contar desde el lunes
+      }
+      if(Object.keys(upd).length) await update(ref(db,'incidencias/'+id),upd);
+    }
+  }catch(e){console.error('Cierre semanal fijas:',e);}
+  _cerrandoSemanas=false;
 }
 // Fecha de vencimiento: inicio del plazo (o creación) + días de plazo
 function vencimientoInc(inc){
@@ -1710,11 +1766,11 @@ async function renovarFijas(){
   }catch(e){console.error('Renovar fijas:',e);}
   _renovando=false;
 }
-setInterval(()=>{renovarFijas();if(typeof renderInc==='function')renderInc();},5*60*1000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){renovarFijas();renderInc();}});
+setInterval(()=>{renovarFijas();cerrarSemanasFijas();if(typeof renderInc==='function')renderInc();},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){renovarFijas();cerrarSemanasFijas();renderInc();}});
 
 function esVencida(inc){
-  if(inc.estado==='res') return false;
+  if(inc.estado==='res'||inc.estado==='nores') return false;
   const v=vencimientoInc(inc); if(!v) return false;
   const hoy=new Date(); hoy.setHours(0,0,0,0);
   const vv=new Date(v); vv.setHours(0,0,0,0);
@@ -1741,7 +1797,7 @@ function renderInc(){
     items=items.filter(i=>i.estado==='prog');
     items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   } else if(filtroActivo==='res'){
-    items=items.filter(i=>i.estado==='res');
+    items=items.filter(i=>i.estado==='res'||i.estado==='nores');
     if(resPeriodo){
       items=items.filter(inc=>{
         const ts=inc.fechaResolucion||inc.createdAt;
@@ -1772,18 +1828,21 @@ function renderInc(){
     const prio=inc.prioridad||'normal';
     const icon=TIPO_ICONS[inc.tipo]||'🔧';
     // Si está resuelta mostrar quién la resolvió, si no quién la tiene asignada
-    const asigPersona = inc.estado==='res' && inc.resueltaPor
-      ? inc.resueltaPor
-      : inc.asignadoA;
-    const asigLabel = inc.estado==='res' && inc.resueltaPor ? '✓ ' : '👤 ';
-    const asig = asigPersona ? asigLabel+(NOMBRES[asigPersona]||asigPersona) : '';
+    const resolutores = inc.estado==='res' ? nombresResolvieron(inc) : '';
+    const asig = resolutores
+      ? '✓ '+resolutores
+      : (inc.asignadoA ? '👤 '+(NOMBRES[inc.asignadoA]||inc.asignadoA) : '');
     const ubic=inc.ubicacion?'📍 Marcado en mapa':'';
-    const venc=inc.estado!=='res'?vencimientoInc(inc):null;
+    const cerrada=inc.estado==='res'||inc.estado==='nores';
+    const venc=!cerrada?vencimientoInc(inc):null;
     const vencida=esVencida(inc);
-    const plazo=inc.plazo&&inc.estado!=='res'?(venc?'⏱ '+(vencida?'VENCIDA ':'vence ')+venc.toLocaleDateString('es-ES'):`⏱ ${inc.plazo} día${inc.plazo>1?'s':''}`):'';
+    const plazo=inc.plazo&&!cerrada?(venc?'⏱ '+(vencida?'VENCIDA ':'vence ')+venc.toLocaleDateString('es-ES'):`⏱ ${inc.plazo} día${inc.plazo>1?'s':''}`):'';
     const fijaTag=inc.fija?'<span style="color:#1565c0;font-weight:600;">🔁 FIJA'+(inc.estado==='res'&&!inc._resFija&&String(inc.fechaResolucion||'').slice(0,10)===hoyStr()?' · se renueva mañana':'')+'</span>':'';
+    const fmtD=x=>new Date(x+'T12:00:00').toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'});
     const resFecha=inc.estado==='res'&&inc.fechaResolucion
-      ?'<span style="color:var(--green)">✓ '+new Date(inc.fechaResolucion+'T12:00:00').toLocaleDateString('es-ES')+'</span>':'';
+      ?'<span style="color:var(--green)">✓ '+new Date(inc.fechaResolucion+'T12:00:00').toLocaleDateString('es-ES')+'</span>'
+      :(inc.estado==='nores'&&inc._semana
+        ?'<span style="color:var(--red);font-weight:700;">✕ Semana '+fmtD(inc._semana)+' al '+fmtD(inc._semanaHasta)+'</span>':'');
     return `<div class="inc-card ${inc.estado||'pend'}" onclick="openDetalleInc('${inc.id}')">`
       +`<div class="inc-card-top"><div class="inc-titulo" style="font-size:0.92rem;">${icon} ${inc.titulo||'Sin titulo'}</div>`
       +'<span class="inc-estado estado-'+(inc.estado||'pend')+'">'+ESTADO_LBL[inc.estado||'pend']+'</span></div>'
@@ -1888,8 +1947,8 @@ window.abrirLightbox=function(src){
 function fmtFecha(ts){if(!ts)return'--';return new Date(ts).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 
 const _TC={averia:'#e03040',cabo:'#5a8a3a',grifo:'#2b8fd4',luz:'#f0a500',pintar:'#1b7a4a',limpieza:'#2b8fd4',ordenar:'#7a5af8',reparacion:'#c8420a',rotura:'#e03040',montaje:'#7a9fc0',corrosion:'#666',otro:'#888'};
-const _EC={pend:'#e07820',prog:'#f0a500',res:'#1e9e5a'};
-const _EL={pend:'PENDIENTE',prog:'EN CURSO',res:'RESUELTA'};
+const _EC={pend:'#e07820',prog:'#f0a500',res:'#1e9e5a',nores:'#cc0018'};
+const _EL={pend:'PENDIENTE',prog:'EN CURSO',res:'RESUELTA',nores:'NO RESUELTA'};
 const _PC={normal:'#7a9fc0',alta:'#f0a500',urgente:'#e03040'};
 
 function _buildInforme(items, titulo, subtitulo){
@@ -1903,7 +1962,7 @@ function _buildInforme(items, titulo, subtitulo){
     const tipoLabel = inc.tipo ? inc.tipo.charAt(0).toUpperCase()+inc.tipo.slice(1) : '--';
     const creador = inc.creadaPor ? (NOMBRES[inc.creadaPor]||inc.creadaPor) : '';
     const asig = inc.asignadoA ? (NOMBRES[inc.asignadoA]||inc.asignadoA) : '';
-    const resBy = inc.resueltaPor ? (NOMBRES[inc.resueltaPor]||inc.resueltaPor) : '';
+    const resBy = nombresResolvieron(inc);
     const desc = inc.descripcion ? `<div style="font-size:.85rem;color:#3a4a5a;margin-bottom:8px;padding:8px;background:#f5f7fa;border-radius:4px;line-height:1.4;">${inc.descripcion}</div>` : '';
     const notas = inc.notas ? `<div style="margin-top:8px;font-size:.78rem;color:#5a6a7a;border-top:1px solid #eee;padding-top:6px;"><b style="color:#1a2a3a;">Notas:</b> ${inc.notas}</div>` : '';
     const detalles = [
@@ -1911,6 +1970,7 @@ function _buildInforme(items, titulo, subtitulo){
       `<div><b style="color:#1a2a3a;">Apertura:</b> ${fmtFecha(inc.createdAt)}${creador?' ('+creador+')':''}</div>`,
       creador ? `<div><b style="color:#1a2a3a;">Creada por:</b> ${creador}</div>` : '',
       asig    ? `<div><b style="color:#1a2a3a;">Asignado a:</b> ${asig}</div>` : '',
+      inc.estado==='nores'&&inc._semana ? `<div><b style="color:#cc0018;">Sin resolver:</b> semana del ${new Date(inc._semana+'T12:00:00').toLocaleDateString('es-ES')} al ${new Date(inc._semanaHasta+'T12:00:00').toLocaleDateString('es-ES')}</div>` : '',
       inc.estado==='res'&&inc.fechaResolucion ? `<div><b style="color:#1a2a3a;">Resuelta:</b> ${fmtFecha(inc.fechaResolucion)}${resBy?' ('+resBy+')':''}</div>` : '',
       inc.ubicacion ? `<div><b style="color:#1a2a3a;">Ubicación:</b> 📍 Marcada en mapa</div>` : '',
     ].filter(Boolean).join('');
@@ -2015,8 +2075,9 @@ function _resueltasSemana(mar,lunesStr){
   return incConResoluciones().filter(i=>{
     if(i.estado!=='res') return false;
     const f=_fechaResStr(i); if(!f||f<ini||f>fin) return false;
-    const quien=i.resueltaPor||i.asignadoA;
-    return !mar||quien===mar;
+    const quienes=quienesResolvieron(i);
+    if(!quienes.length&&i.asignadoA) quienes.push(i.asignadoA);
+    return !mar||quienes.includes(mar);
   }).sort((a,b)=>_fechaResStr(a).localeCompare(_fechaResStr(b)));
 }
 window.openSemanal=function(){
@@ -2104,7 +2165,7 @@ window.descargarPendientes=function(){
 };
 
 window.descargarHistorial=function(){
-  const items=incConResoluciones().filter(i=>i.estado==='res');
+  const items=incConResoluciones().filter(i=>i.estado==='res'||i.estado==='nores');
   items.sort((a,b)=>(b.fechaResolucion||b.createdAt||0)-(a.fechaResolucion||a.createdAt||0));
   if(!items.length){showToast('No hay incidencias resueltas');return;}
   _descargarHtml(_buildInforme(items,'Historial de Incidencias Resueltas','Incidencias cerradas'),'incidencias_historial.html');
@@ -2138,22 +2199,39 @@ window.openDetalleInc=function(id){
   // Historial de una tarea fija
   const histEl = document.getElementById('d-fija-hist');
   const res = inc.fija && inc.resoluciones ? Object.values(inc.resoluciones).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')) : [];
-  if (res.length) {
+  const noRes = inc.fija && inc.noResueltas ? Object.values(inc.noResueltas).sort((a,b)=>(b.semana||'').localeCompare(a.semana||'')) : [];
+  if (res.length || noRes.length) {
+    const fd = x => new Date(x+'T12:00:00').toLocaleDateString('es-ES');
+    let h = '';
+    if (res.length) {
+      h += '<label style="font-size:0.79rem;color:#888;letter-spacing:0.08em;display:block;margin-bottom:5px;">✅ VECES RESUELTA ('+res.length+')</label>'
+        + '<div style="max-height:160px;overflow-y:auto;border:1px solid #eee;border-radius:6px;margin-bottom:10px;">'
+        + res.map(r => {
+            const quienes = nombresResolvieron({resueltaPorLista:r.porLista, resueltaPor:r.por});
+            return '<div style="padding:6px 10px;border-bottom:1px solid #f0f0f0;font-size:0.85rem;">'
+              + '<b>' + fd(r.fecha) + '</b>' + (quienes ? ' · ' + quienes : '')
+              + (r.notas ? '<div style="color:#888;font-size:0.8rem;">' + r.notas + '</div>' : '')
+              + '</div>';
+          }).join('')
+        + '</div>';
+    }
+    if (noRes.length) {
+      h += '<label style="font-size:0.79rem;color:#cc0018;letter-spacing:0.08em;display:block;margin-bottom:5px;">✕ SEMANAS NO RESUELTAS ('+noRes.length+')</label>'
+        + '<div style="max-height:160px;overflow-y:auto;border:1px solid #f3c9c9;border-radius:6px;background:#fff7f7;">'
+        + noRes.map(r => '<div style="padding:6px 10px;border-bottom:1px solid #f6dede;font-size:0.85rem;">'
+            + '<b>' + fd(r.semana) + ' al ' + fd(r.hasta) + '</b>'
+            + (r.asignadoA ? ' · asignada a ' + (NOMBRES[r.asignadoA]||r.asignadoA) : '')
+            + '</div>').join('')
+        + '</div>';
+    }
     histEl.style.display = 'block';
-    histEl.innerHTML = '<label style="font-size:0.79rem;color:#888;letter-spacing:0.08em;display:block;margin-bottom:5px;">✅ VECES RESUELTA ('+res.length+')</label>'
-      + '<div style="max-height:160px;overflow-y:auto;border:1px solid #eee;border-radius:6px;">'
-      + res.map(r => '<div style="padding:6px 10px;border-bottom:1px solid #f0f0f0;font-size:0.85rem;">'
-          + '<b>' + new Date(r.fecha+'T12:00:00').toLocaleDateString('es-ES') + '</b>'
-          + (r.por ? ' · ' + (NOMBRES[r.por]||r.por) : '')
-          + (r.notas ? '<div style="color:#888;font-size:0.8rem;">' + r.notas + '</div>' : '')
-          + '</div>').join('')
-      + '</div>';
+    histEl.innerHTML = h;
   } else {
     histEl.style.display = 'none';
   }
   document.getElementById('d-asig').value=(inc.fija&&inc.estado==='res'&&inc.proximoAsignado)?inc.proximoAsignado:(inc.asignadoA||'');
   document.getElementById('d-notas').value=inc.notas||'';
-  document.getElementById('d-res-quien').value=inc.resueltaPor||'';
+  renderResChips(quienesResolvieron(inc));
   document.getElementById('d-res-fecha').value=inc.fechaResolucion||'';
   const fecha=inc.createdAt?new Date(inc.createdAt).toLocaleDateString('es-ES'):'--';
   document.getElementById('d-info').innerHTML='📅 '+fecha+(inc.creadaPor?'<br>👤 Por: '+NOMBRES[inc.creadaPor]:'')+(inc.descripcion?'<br>📝 '+inc.descripcion:'');
@@ -2166,11 +2244,24 @@ window.openDetalleInc=function(id){
   document.querySelectorAll('.estado-opt').forEach(el=>el.classList.remove('selected'));
   document.querySelector('.opt-'+editingEstado)?.classList.add('selected');
   document.getElementById('d-res-fields').style.display=editingEstado==='res'?'block':'none';
+  // Tarea fija ya resuelta: no se puede volver a marcar como no resuelta
+  const bloq = !!(inc.fija && inc.estado==='res');
+  document.getElementById('d-bloq-res').style.display = bloq ? 'block' : 'none';
+  ['pend','prog'].forEach(e => { const el=document.querySelector('.opt-'+e); if(el) el.style.opacity = bloq ? '0.35' : ''; });
   actualizarLblAsig();
   openOv('ov-detalle-inc');
 };
 
+function renderResChips(sel){
+  const box=document.getElementById('d-res-quien-box'); if(!box) return;
+  box.innerHTML=PERSONAL_TAREAS.map(m=>'<span class="res-chip'+(sel.includes(m)?' on':'')+'" data-v="'+m+'" onclick="toggleResChip(this)">'+(NOMBRES[m]||m)+'</span>').join('');
+}
+window.toggleResChip=function(el){el.classList.toggle('on');};
+function getResQuien(){return [...document.querySelectorAll('#d-res-quien-box .res-chip.on')].map(e=>e.dataset.v);}
+const MSG_FIJA_BLOQ='Una tarea fija ya resuelta no se puede marcar como no resuelta';
 window.selEstado=function(e){
+  const act=incidencias[editingIncId]||{};
+  if(act.fija&&act.estado==='res'&&e!=='res'){showToast('🔒 '+MSG_FIJA_BLOQ);return;}
   editingEstado=e;
   document.querySelectorAll('.estado-opt').forEach(el=>el.classList.remove('selected'));
   document.querySelector('.opt-'+e)?.classList.add('selected');
@@ -2194,6 +2285,9 @@ window.actualizarInc=async function(){
   if(detUbicacion) upd.ubicacion=detUbicacion;
   if(detFotoEdit!==null) upd.foto=detFotoEdit;
   const incActual=incidencias[editingIncId]||{};
+  // Una tarea fija ya resuelta no puede volver a "no resuelta" (ni desmarcando 'fija' para saltarse la norma)
+  if(incActual.fija&&incActual.estado==='res'&&editingEstado!=='res'){showToast('🔒 '+MSG_FIJA_BLOQ);return;}
+  const listaRes=getResQuien();
   if(PUEDE_ASIGNAR.includes(currentUser)){
     upd.plazo=parseInt(document.getElementById('d-plazo').value)||null;
     upd.inicioPlazo=document.getElementById('d-inicio').value||null;
@@ -2203,8 +2297,9 @@ window.actualizarInc=async function(){
   if(esFija&&editingEstado==='res'){
     // Tarea fija: queda RESUELTA hoy (visible en el espacio del marinero) y se renueva al día siguiente
     const fec=document.getElementById('d-res-fecha').value||hoyStr();
-    const por=document.getElementById('d-res-quien').value||incActual.asignadoA||currentUser;
-    const registro={fecha:fec,por,asignadoA:incActual.asignadoA||'',notas:upd.notas||'',registradoPor:currentUser,ts:Date.now()};
+    const por=listaRes[0]||incActual.asignadoA||currentUser;
+    const porLista=listaRes.length?listaRes:[por];
+    const registro={fecha:fec,por,porLista,asignadoA:incActual.asignadoA||'',notas:upd.notas||'',registradoPor:currentUser,ts:Date.now()};
     if(incActual.estado==='res'&&incActual.ultimaResKey){
       // Ya estaba resuelta: solo se corrige el registro existente
       await update(ref(db,'incidencias/'+editingIncId+'/resoluciones/'+incActual.ultimaResKey),registro);
@@ -2217,6 +2312,7 @@ window.actualizarInc=async function(){
     upd.asignadoA=incActual.asignadoA||'';           // sigue en el espacio de quien la tenía hoy
     upd.proximoAsignado=siguiente||incActual.asignadoA||'';
     upd.resueltaPor=por;
+    upd.resueltaPorLista=porLista;
     upd.fechaResolucion=fec;
     await update(ref(db,'incidencias/'+editingIncId),upd);
     closeOv('ov-detalle-inc');
@@ -2224,16 +2320,9 @@ window.actualizarInc=async function(){
     if(filtroActivo==='res') renderResNav();
     return;
   }
-  if(esFija&&incActual.estado==='res'&&editingEstado!=='res'){
-    // Se deshace la resolución de hoy de una tarea fija
-    if(incActual.ultimaResKey) await remove(ref(db,'incidencias/'+editingIncId+'/resoluciones/'+incActual.ultimaResKey));
-    upd.ultimaResKey=null;upd.fechaResolucion=null;upd.resueltaPor=null;upd.proximoAsignado=null;
-    await update(ref(db,'incidencias/'+editingIncId),upd);
-    closeOv('ov-detalle-inc');showToast('Actualizado ✓');
-    return;
-  }
   if(editingEstado==='res'){
-    upd.resueltaPor=document.getElementById('d-res-quien').value;
+    upd.resueltaPor=listaRes[0]||'';
+    upd.resueltaPorLista=listaRes.length?listaRes:null;
     const fecStr=document.getElementById('d-res-fecha').value;
     upd.fechaResolucion=fecStr;
     // Si no hay fecha de resolución, poner hoy
