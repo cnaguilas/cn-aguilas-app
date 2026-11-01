@@ -1,6 +1,6 @@
 // Service Worker — CN Águilas PWA
 // ⚠️ Cambia el número de versión cada vez que subas una actualización a GitHub
-const CACHE = 'cn-aguilas-v2';
+const CACHE = 'cn-aguilas-v3';
 
 self.addEventListener('install', e => {
   e.waitUntil(

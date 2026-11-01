@@ -533,6 +533,52 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   </div>
 </div>
 
+<!-- MODAL MEDICIÓN REAL DE TANQUES -->
+<div class="overlay" id="ov-medicion" onclick="handleOv(event,'ov-medicion')">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3>📏 MEDICIÓN REAL DE TANQUES</h3>
+      <button class="close-btn" onclick="closeOv('ov-medicion')">x</button>
+    </div>
+    <p style="font-size:0.81rem;color:#888;margin-bottom:12px;line-height:1.4;">Mide los tanques al <b>cerrar el turno</b>, justo después de leer los contadores del parte. La medición pasa a ser el nuevo punto de partida del nivel de los tanques. Deja vacío el tanque que no hayas medido.</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>FECHA</label>
+        <input type="date" id="med-fecha" onchange="medPreview()">
+      </div>
+      <div class="form-group">
+        <label>AL CIERRE DEL TURNO</label>
+        <select id="med-turno" onchange="medPreview()">
+          <option value="mañana">Mañana</option>
+          <option value="tarde">Tarde</option>
+          <option value="noche">Noche</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>⛽ GASÓIL (L)</label>
+        <input type="number" id="med-gasoil" step="0.01" min="0" oninput="medPreview()">
+      </div>
+      <div class="form-group">
+        <label>🟢 S.P.95 (L)</label>
+        <input type="number" id="med-sp95" step="0.01" min="0" oninput="medPreview()">
+      </div>
+    </div>
+    <div id="med-preview" style="font-size:0.82rem;color:#555;background:#f7f9fc;border:1px solid #dde4ee;border-radius:6px;padding:8px 10px;margin-bottom:12px;line-height:1.6;"></div>
+    <div class="form-group">
+      <label>NOTA</label>
+      <input type="text" id="med-nota" placeholder="Opcional...">
+    </div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeOv('ov-medicion')">CANCELAR</button>
+      <button class="btn-primary" onclick="guardarMedicion()">💾 GUARDAR MEDICIÓN</button>
+    </div>
+    <div style="font-size:0.79rem;color:#888;letter-spacing:0.08em;margin:16px 0 6px;">📚 MEDICIONES ANTERIORES</div>
+    <div id="med-historial"></div>
+  </div>
+</div>
+
 <!-- PARTES -->
 <div class="page" id="page-3">
   <!-- Panel nivel de tanques -->
@@ -544,6 +590,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="tanque-pct"><span id="tq-gasoil-pct">—%</span><span id="tq-gasoil-cap"></span></div>
       <div class="tanque-alerta" id="tq-gasoil-alerta" style="display:none;">⚠️ Nivel bajo</div>
       <div class="tanque-cisterna" id="tq-gasoil-cisterna"></div>
+      <div id="tq-gasoil-ref" style="font-size:0.72rem;color:#888;margin-top:2px;"></div>
       <div class="tanque-utiles">
         <div class="tanque-utiles-label">Litros útiles (excl. fondo reserva ~1500L)</div>
         <div class="tanque-utiles-valor" id="tq-gasoil-utiles">—</div>
@@ -557,6 +604,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
       <div class="tanque-pct"><span id="tq-sp95-pct">—%</span><span id="tq-sp95-cap"></span></div>
       <div class="tanque-alerta" id="tq-sp95-alerta" style="display:none;">⚠️ Nivel bajo</div>
       <div class="tanque-cisterna" id="tq-sp95-cisterna"></div>
+      <div id="tq-sp95-ref" style="font-size:0.72rem;color:#888;margin-top:2px;"></div>
       <div class="tanque-utiles">
         <div class="tanque-utiles-label">Litros útiles (excl. fondo reserva ~3550L)</div>
         <div class="tanque-utiles-valor" id="tq-sp95-utiles">—</div>
@@ -601,6 +649,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
   <div style="text-align:right;margin-bottom:8px;">
     <button class="btn-secondary" onclick="openDiasTrabajados()" style="font-size:0.81rem;padding:6px 12px;">📅 DÍAS TRABAJADOS</button>
     <button class="btn-secondary" onclick="openReciclajeModal()" style="font-size:0.81rem;padding:6px 12px;margin-left:6px;">♻️ RECICLAJE</button>
+    <button class="btn-secondary" onclick="openMedicion()" style="font-size:0.81rem;padding:6px 12px;margin-left:6px;">📏 MEDICIÓN TANQUES</button>
   </div>
   <div class="partes-cal" id="partes-cal"></div>
   <div style="text-align:center;padding:18px 0 8px;font-size:0.79rem;color:#bbb;letter-spacing:0.06em;">Toca un día del calendario para ver el parte</div>
@@ -1023,7 +1072,7 @@ body{background:#f8f8f8;color:#1a1a1a;font-family:"IBM Plex Mono",monospace;disp
     <div class="parte-seccion-hdr" style="margin-top:12px;">COMBUSTIBLE · AGUA · VENTAS</div>
     <!-- Barra de precios actuales -->
     <div class="precio-combustible-bar">
-      <span>PRECIOS ACTUALES:</span>
+      <span>PRECIOS APLICADOS:</span>
       <span>GASÓIL <strong id="np-precio-gasoil-lbl">—</strong> €/L</span>
       <span>S.P.95 <strong id="np-precio-sp95-lbl">—</strong> €/L</span>
       <span>ACEITE 2T <strong id="np-precio-aceite-lbl">—</strong> €/L</span>
@@ -1367,6 +1416,7 @@ onAuthStateChanged(auth, user => {
     renderInc();
     renovarFijas();
     cerrarSemanasFijas();
+    comprimirFotosExistentes();
   } else {
     // No autenticado — mostrar login
     currentUser = '';
@@ -1552,6 +1602,8 @@ let tareaMarineroFiltro = '';
 const incRef=ref(db,'incidencias');
 onValue(incRef,snap=>{
   incidencias=snap.val()||{};
+  _incCargadas=true;
+  comprimirFotosExistentes();
   renovarFijas();
   cerrarSemanasFijas();
   // Si currentUser ya está cargado, usarlo; si no, renderInc sin filtro
@@ -1908,16 +1960,54 @@ window.guardarInc=async function(){
   closeOv('ov-nueva-inc');showToast('Tarea guardada ✓');
 };
 
+// ── COMPRESIÓN DE FOTOS ──
+// Las fotos del móvil (2–5 MB) se reducen a 1280 px de lado mayor en JPEG al 70 % (~150–300 KB).
+// Así cada móvil descarga mucho menos cada vez que cambia una tarea.
+const FOTO_MAX_LADO=1280, FOTO_CALIDAD=0.7, FOTO_UMBRAL_GRANDE=400000;
+function comprimirImagen(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.naturalWidth,h=img.naturalHeight;
+      const k=Math.min(1,FOTO_MAX_LADO/Math.max(w,h));
+      w=Math.round(w*k);h=Math.round(h*k);
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      const ctx=c.getContext('2d');
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',FOTO_CALIDAD));
+    };
+    img.onerror=()=>reject(new Error('No se pudo leer la imagen'));
+    img.src=src;
+  });
+}
+async function comprimirArchivoFoto(file){
+  const url=URL.createObjectURL(file);
+  try{ return await comprimirImagen(url); } finally{ URL.revokeObjectURL(url); }
+}
+// Fotos guardadas antes de este cambio: se comprimen una vez, solas, en segundo plano
+let _fotosRevisadas=false, _incCargadas=false;
+async function comprimirFotosExistentes(){
+  if(_fotosRevisadas||!currentUser||!_incCargadas) return;
+  _fotosRevisadas=true;
+  const grandes=Object.entries(incidencias).filter(([id,i])=>typeof i.foto==='string'&&i.foto.startsWith('data:image')&&i.foto.length>FOTO_UMBRAL_GRANDE&&!i.fotoComprimida);
+  for(const [id,i] of grandes){
+    try{
+      const nueva=await comprimirImagen(i.foto);
+      const upd={fotoComprimida:true};
+      if(nueva.length<i.foto.length) upd.foto=nueva;
+      await update(ref(db,'incidencias/'+id),upd);
+    }catch(e){console.error('Comprimir foto',id,e);}
+  }
+}
+
 // ── FOTO NUEVA ──
-window.previewFotoNueva=function(e){
+window.previewFotoNueva=async function(e){
   const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    incFotoNueva=ev.target.result;
-    document.getElementById('ni-foto-img').src=incFotoNueva;
-    document.getElementById('ni-foto-preview').style.display='block';
-  };
-  reader.readAsDataURL(file);
+  try{ incFotoNueva=await comprimirArchivoFoto(file); }
+  catch(err){ showToast('No se pudo procesar la foto'); return; }
+  document.getElementById('ni-foto-img').src=incFotoNueva;
+  document.getElementById('ni-foto-preview').style.display='block';
 };
 window.quitarFotoNueva=function(){
   incFotoNueva=null;
@@ -1926,15 +2016,12 @@ window.quitarFotoNueva=function(){
 };
 
 // ── FOTO DETALLE ──
-window.previewFotoDetalle=function(e){
+window.previewFotoDetalle=async function(e){
   const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    detFotoEdit=ev.target.result;
-    document.getElementById('d-foto-img').src=detFotoEdit;
-    document.getElementById('d-foto-preview').style.display='block';
-  };
-  reader.readAsDataURL(file);
+  try{ detFotoEdit=await comprimirArchivoFoto(file); }
+  catch(err){ showToast('No se pudo procesar la foto'); return; }
+  document.getElementById('d-foto-img').src=detFotoEdit;
+  document.getElementById('d-foto-preview').style.display='block';
 };
 
 // ── LIGHTBOX ──
@@ -2349,7 +2436,7 @@ window.actualizarInc=async function(){
   if(!editingIncId)return;
   const upd={estado:editingEstado,asignadoA:document.getElementById('d-asig').value,notas:document.getElementById('d-notas').value.trim(),actualizadoPor:currentUser,updatedAt:Date.now()};
   if(detUbicacion) upd.ubicacion=detUbicacion;
-  if(detFotoEdit!==null) upd.foto=detFotoEdit;
+  if(detFotoEdit!==null&&detFotoEdit!==(incidencias[editingIncId]||{}).foto) upd.foto=detFotoEdit; // solo si ha cambiado
   const incActual=incidencias[editingIncId]||{};
   // Una tarea fija ya resuelta no puede volver a "no resuelta" (ni desmarcando 'fija' para saltarse la norma)
   if(incActual.fija&&incActual.estado==='res'&&editingEstado!=='res'){showToast('🔒 '+MSG_FIJA_BLOQ);return;}
@@ -3238,10 +3325,44 @@ window.guardarPrecios = async function() {
   const rs  = parseFloat(document.getElementById('precio-rs-input').value);
   const rd  = parseFloat(document.getElementById('precio-rd-input').value);
   if (isNaN(g)||isNaN(s)||isNaN(a)||g<=0||s<=0||a<=0) { showToast('Precio no válido'); return; }
-  await set(preciosRef, { gasoil:g, sp95:s, aceite:a, t10:t10||25, t12:t12||30, rs:rs||15, rd:rd||25 });
+  const nuevos = { gasoil:g, sp95:s, aceite:a, t10:t10||25, t12:t12||30, rs:rs||15, rd:rd||25 };
+  if (!Object.keys(historialPrecios).length) {
+    // Primer cambio que se registra: se guardan también los precios que había hasta ahora
+    await push(ref(db,'config/historialPrecios'), {...preciosActuales(), desde:'2000-01-01', ts:Date.now()-1, por:'sistema'});
+  }
+  await set(preciosRef, nuevos);
+  await push(ref(db,'config/historialPrecios'), {...nuevos, desde:hoyStr(), ts:Date.now(), por:currentUser});
   closeOv('ov-precios');
-  showToast('Precios actualizados ✓');
+  showToast('Precios actualizados ✓ (se aplican desde hoy)');
 };
+
+// ── HISTORIAL DE PRECIOS ──
+// Cada cambio de precios queda guardado con la fecha desde la que se aplica.
+// Así un parte de otro día (al editarlo o al añadirlo tarde) se calcula con el precio de SU día, no con el de hoy.
+let historialPrecios = {};
+onValue(ref(db,'config/historialPrecios'), snap => { historialPrecios = snap.val() || {}; calcularRecaudacion(); });
+
+function preciosActuales(){
+  return {gasoil:precioGasoil, sp95:precioSp95, aceite:precioAceite, t10:precioT10, t12:precioT12, rs:precioRS, rd:precioRD};
+}
+function preciosParaFecha(fechaStr){
+  let mejor=null;
+  Object.values(historialPrecios).forEach(h=>{
+    if(!h||!h.desde||!fechaStr||h.desde>fechaStr) return;
+    if(!mejor||h.desde>mejor.desde||(h.desde===mejor.desde&&(h.ts||0)>(mejor.ts||0))) mejor=h;
+  });
+  const a=preciosActuales();
+  if(!mejor) return a;
+  return {gasoil:mejor.gasoil??a.gasoil, sp95:mejor.sp95??a.sp95, aceite:mejor.aceite??a.aceite,
+          t10:mejor.t10??a.t10, t12:mejor.t12??a.t12, rs:mejor.rs??a.rs, rd:mejor.rd??a.rd};
+}
+// Precios con los que se guardó un parte (si faltan, los de su fecha)
+function preciosDeRecaudacion(r, fechaStr){
+  const b=preciosParaFecha(fechaStr);
+  if(!r) return b;
+  return {gasoil:r.precioGasoil||b.gasoil, sp95:r.precioSp95||b.sp95, aceite:r.precioAceite||b.aceite,
+          t10:r.precioT10||b.t10, t12:r.precioT12||b.t12, rs:r.precioRS||b.rs, rd:r.precioRD||b.rd};
+}
 
 // ── TANQUES DE COMBUSTIBLE ──
 const STOCK_REF_FECHA = '2026-04-22'; // fecha de referencia del stock inicial
@@ -3253,43 +3374,70 @@ const ALERTA_PCT = 20;               // % mínimo antes de alertar
 const RESERVA_GASOIL = 1500;         // litros de fondo de reserva gasóil (no utilizables)
 const RESERVA_SP95 = 3550;           // litros de fondo de reserva S.P.95 (no utilizables)
 
-function calcularNivelTanques() {
-  const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
-  let entradasG = 0, entradasS = 0;
-  let salidasG = 0, salidasS = 0;
+// Mediciones reales de los tanques (varilla). Cada medición es un nuevo punto de partida del nivel.
+let medicionesTanques = {};
+onValue(ref(db,'config/medicionesTanques'), snap => {
+  medicionesTanques = snap.val() || {};
+  calcularNivelTanques();
+  renderMediciones();
+});
 
-  Object.values(partes).forEach(p => {
-    const fechaParte = new Date(p.fecha + 'T12:00:00');
-    if (fechaParte <= refDate) return; // solo partes posteriores al cierre del 22
-
-    // Entradas cisterna
-    if (p.cisterna) {
-      entradasG += parseFloat(p.cisterna.gasoil) || 0;
-      entradasS += parseFloat(p.cisterna.sp95) || 0;
-    }
-
-    // Salidas: litros vendidos calculados desde la recaudación guardada
-    if (p.recaudacion) {
-      salidasG += parseFloat(p.recaudacion.litrosGasoil) || 0;
-      salidasS += parseFloat(p.recaudacion.litrosSp95) || 0;
-    } else {
-      // Recalcular si no está guardada
-      const ant = getParteAnterior(p.fecha, p.turno);
-      if (ant) {
-        const iniG = parseFloat(ant.gasoil)||0, finG = parseFloat(p.gasoil)||0;
-        const iniS = parseFloat(ant.sp95)||0, finS = parseFloat(p.sp95)||0;
-        if (finG > 0) salidasG += iniG > finG ? finG+10000-iniG : finG-iniG;
-        if (finS > 0) salidasS += iniS > finS ? finS+10000-iniS : finS-iniS;
-      }
-    }
+// Punto de partida (stock inicial o última medición) para un combustible, hasta una posición dada
+function _refTanque(comb, hastaPos) {
+  let mejor = { pos: STOCK_REF_FECHA + '|9', litros: comb === 'gasoil' ? STOCK_REF_GASOIL : STOCK_REF_SP95, base: true, fecha: STOCK_REF_FECHA, ts: 0 };
+  Object.values(medicionesTanques).forEach(m => {
+    const v = parseFloat(m[comb]);
+    if (isNaN(v) || !m.fecha) return;
+    const pos = posParte(m.fecha, m.turno);
+    if (pos > hastaPos) return;
+    if (pos > mejor.pos || (pos === mejor.pos && (m.ts || 0) > (mejor.ts || 0)))
+      mejor = { pos, litros: v, fecha: m.fecha, turno: m.turno, ts: m.ts || 0, por: m.por };
   });
-
-  const nivelG = Math.max(0, STOCK_REF_GASOIL + entradasG - salidasG);
-  const nivelS = Math.max(0, STOCK_REF_SP95 + entradasS - salidasS);
-  renderTanques(nivelG, nivelS, entradasG, entradasS);
+  return mejor;
 }
 
-function renderTanques(nivelG, nivelS, entradasG, entradasS) {
+// Litros vendidos en un parte: los guardados o, si no hay, calculados con el parte anterior
+function _litrosParte(id, p) {
+  if (p.recaudacion) return { g: parseFloat(p.recaudacion.litrosGasoil) || 0, s: parseFloat(p.recaudacion.litrosSp95) || 0 };
+  const r = calcularRecaudacionParte(p, getParteAnteriorInfo(p.fecha, p.turno, id), preciosParaFecha(p.fecha));
+  return r ? { g: r.litrosGasoil, s: r.litrosSp95 } : { g: 0, s: 0 };
+}
+
+// Estado de los tanques al cierre de una posición (fecha|turno). Si se da diaStr, también lo vendido y recibido ese día.
+function estadoTanques(hastaPos, diaStr) {
+  const refG = _refTanque('gasoil', hastaPos), refS = _refTanque('sp95', hastaPos);
+  let nivelG = refG.litros, nivelS = refS.litros, entG = 0, entS = 0;
+  let vendDiaG = 0, vendDiaS = 0, cisDiaG = 0, cisDiaS = 0;
+  Object.entries(partes).forEach(([id, p]) => {
+    if (!p.fecha) return;
+    const pos = posParte(p.fecha, p.turno);
+    if (pos > hastaPos) return;
+    const cuentaG = pos > refG.pos, cuentaS = pos > refS.pos, delDia = diaStr && p.fecha === diaStr;
+    if (!cuentaG && !cuentaS && !delDia) return;
+    const cG = p.cisterna ? (parseFloat(p.cisterna.gasoil) || 0) : 0;
+    const cS = p.cisterna ? (parseFloat(p.cisterna.sp95) || 0) : 0;
+    const l = _litrosParte(id, p);
+    if (cuentaG) { nivelG += cG - l.g; entG += cG; }
+    if (cuentaS) { nivelS += cS - l.s; entS += cS; }
+    if (delDia) { vendDiaG += l.g; vendDiaS += l.s; cisDiaG += cG; cisDiaS += cS; }
+  });
+  return { nivelG: Math.max(0, nivelG), nivelS: Math.max(0, nivelS), entG, entS, refG, refS, vendDiaG, vendDiaS, cisDiaG, cisDiaS };
+}
+
+function calcularNivelTanques() {
+  const e = estadoTanques('9999-12-31|9');
+  renderTanques(e.nivelG, e.nivelS, e.entG, e.entS, e.refG, e.refS);
+}
+
+function _txtRefTanque(r) {
+  if (!r) return '';
+  const f = new Date(r.fecha + 'T12:00:00').toLocaleDateString('es-ES');
+  if (r.base) return 'Ref.: stock inicial ' + f;
+  const t = r.turno === 'mañana' ? 'mañana' : r.turno === 'tarde' ? 'tarde' : 'noche';
+  return '📏 Ref.: medición ' + f + ' (cierre ' + t + ')';
+}
+
+function renderTanques(nivelG, nivelS, entradasG, entradasS, refG, refS) {
   const pctG = Math.min(100, (nivelG / CAP_GASOIL) * 100);
   const pctS = Math.min(100, (nivelS / CAP_SP95) * 100);
 
@@ -3312,8 +3460,11 @@ function renderTanques(nivelG, nivelS, entradasG, entradasS) {
   document.getElementById('tq-gasoil-alerta').style.display = pctG < ALERTA_PCT ? 'block' : 'none';
   document.getElementById('tq-sp95-alerta').style.display = pctS < ALERTA_PCT ? 'block' : 'none';
 
-  document.getElementById('tq-gasoil-cisterna').textContent = entradasG > 0 ? `🚛 +${entradasG.toFixed(0)}L recibidos` : '';
-  document.getElementById('tq-sp95-cisterna').textContent = entradasS > 0 ? `🚛 +${entradasS.toFixed(0)}L recibidos` : '';
+  document.getElementById('tq-gasoil-cisterna').textContent = entradasG > 0 ? `🚛 +${entradasG.toFixed(0)}L recibidos desde la ref.` : '';
+  document.getElementById('tq-sp95-cisterna').textContent = entradasS > 0 ? `🚛 +${entradasS.toFixed(0)}L recibidos desde la ref.` : '';
+  const rG = document.getElementById('tq-gasoil-ref'), rS = document.getElementById('tq-sp95-ref');
+  if (rG) rG.textContent = _txtRefTanque(refG);
+  if (rS) rS.textContent = _txtRefTanque(refS);
 
   // Litros útiles (descontando fondo de reserva)
   const utilesG = Math.max(0, nivelG - RESERVA_GASOIL);
@@ -3327,6 +3478,82 @@ function renderTanques(nivelG, nivelS, entradasG, entradasS) {
   if (elUGS) elUGS.textContent = utilesG <= 0 ? '⚠️ Sin litros útiles' : `${((utilesG/CAP_GASOIL)*100).toFixed(1)}% utilizable`;
   if (elUSS) elUSS.textContent = utilesS <= 0 ? '⚠️ Sin litros útiles' : `${((utilesS/CAP_SP95)*100).toFixed(1)}% utilizable`;
 }
+
+// ── VENTANA DE MEDICIÓN REAL ──
+const _TURNO_TXT = { mañana: 'Mañana', tarde: 'Tarde', noche: 'Noche', fuera: 'Fuera de turno' };
+window.openMedicion = function() {
+  const h = new Date().getHours();
+  const f = h < 6 ? sumaDias(hoyStr(), -1) : hoyStr();
+  const t = h >= 6 && h < 14 ? 'mañana' : h >= 14 && h < 22 ? 'tarde' : 'noche';
+  const elF = document.getElementById('med-fecha');
+  elF.value = f; elF.max = hoyStr();
+  document.getElementById('med-turno').value = t;
+  ['med-gasoil', 'med-sp95', 'med-nota'].forEach(id => document.getElementById(id).value = '');
+  medPreview();
+  renderMediciones();
+  openOv('ov-medicion');
+};
+
+window.medPreview = function() {
+  const el = document.getElementById('med-preview'); if (!el) return;
+  const f = document.getElementById('med-fecha').value, t = document.getElementById('med-turno').value;
+  if (!f) { el.innerHTML = ''; return; }
+  const e = estadoTanques(posParte(f, t));
+  const g = parseFloat(document.getElementById('med-gasoil').value);
+  const s = parseFloat(document.getElementById('med-sp95').value);
+  const dif = (m, c) => isNaN(m) ? '' : ` → diferencia <b style="color:${m - c < 0 ? '#cc0018' : '#1e9e5a'}">${m - c >= 0 ? '+' : ''}${(m - c).toFixed(0)} L</b>`;
+  const hayParte = Object.values(partes).some(p => p.fecha === f && p.turno === t);
+  el.innerHTML = 'Nivel que calcula la app al cierre de ese turno:<br>'
+    + `⛽ Gasóil <b>${e.nivelG.toFixed(0)} L</b>${dif(g, e.nivelG)}<br>`
+    + `🟢 S.P.95 <b>${e.nivelS.toFixed(0)} L</b>${dif(s, e.nivelS)}`
+    + (hayParte ? '' : '<div style="color:#9a5300;margin-top:4px;">⚠️ Aún no hay parte de ese turno: recuerda guardarlo.</div>');
+};
+
+window.guardarMedicion = async function() {
+  const f = document.getElementById('med-fecha').value, t = document.getElementById('med-turno').value;
+  const g = parseFloat(document.getElementById('med-gasoil').value);
+  const s = parseFloat(document.getElementById('med-sp95').value);
+  if (!f) { showToast('Indica la fecha'); return; }
+  if (isNaN(g) && isNaN(s)) { showToast('Introduce los litros de al menos un tanque'); return; }
+  if ((!isNaN(g) && (g < 0 || g > CAP_GASOIL * 1.1)) || (!isNaN(s) && (s < 0 || s > CAP_SP95 * 1.1))) { showToast('Litros fuera de rango'); return; }
+  const e = estadoTanques(posParte(f, t));
+  await push(ref(db, 'config/medicionesTanques'), {
+    fecha: f, turno: t,
+    gasoil: isNaN(g) ? null : g, sp95: isNaN(s) ? null : s,
+    gasoilCalculado: parseFloat(e.nivelG.toFixed(2)), sp95Calculado: parseFloat(e.nivelS.toFixed(2)),
+    nota: document.getElementById('med-nota').value.trim(),
+    por: currentUser, ts: Date.now()
+  });
+  closeOv('ov-medicion');
+  showToast('Medición guardada ✓ — nuevo punto de partida de los tanques');
+};
+
+function renderMediciones() {
+  const el = document.getElementById('med-historial'); if (!el) return;
+  const arr = Object.entries(medicionesTanques).sort((a, b) =>
+    posParte(b[1].fecha, b[1].turno).localeCompare(posParte(a[1].fecha, a[1].turno)) || (b[1].ts || 0) - (a[1].ts || 0));
+  if (!arr.length) { el.innerHTML = '<div style="font-size:0.85rem;color:#aaa;">Todavía no hay mediciones</div>'; return; }
+  const puedeBorrar = PUEDE_ASIGNAR.includes(currentUser);
+  const linea = (lbl, real, calc) => {
+    if (real == null) return '';
+    const d = calc != null ? real - calc : null;
+    return `<div>${lbl} <b>${parseFloat(real).toFixed(0)} L</b>`
+      + (d != null ? ` <span style="color:#888;">(app: ${parseFloat(calc).toFixed(0)} L · <span style="color:${d < 0 ? '#cc0018' : '#1e9e5a'};">${d >= 0 ? '+' : ''}${d.toFixed(0)} L</span>)</span>` : '')
+      + '</div>';
+  };
+  el.innerHTML = arr.slice(0, 15).map(([k, m]) => '<div class="est-hist-item"><div class="grow" style="font-size:0.84rem;">'
+    + '<b>' + new Date(m.fecha + 'T12:00:00').toLocaleDateString('es-ES') + '</b> · cierre ' + (_TURNO_TXT[m.turno] || m.turno).toLowerCase()
+    + (m.por ? ' · ' + (NOMBRES[m.por] || m.por) : '')
+    + linea('⛽', m.gasoil, m.gasoilCalculado) + linea('🟢', m.sp95, m.sp95Calculado)
+    + (m.nota ? '<div style="color:#888;font-size:0.8rem;">' + m.nota + '</div>' : '')
+    + '</div>' + (puedeBorrar ? `<button class="est-mini-btn" onclick="borrarMedicion('${k}')">🗑</button>` : '') + '</div>').join('');
+}
+
+window.borrarMedicion = async function(k) {
+  if (!confirm('¿Eliminar esta medición? El nivel de los tanques se volverá a calcular desde la referencia anterior.')) return;
+  await remove(ref(db, 'config/medicionesTanques/' + k));
+  showToast('Medición eliminada');
+};
 
 // ── CONSUMOS INTERNOS ──
 let consumosCount = 0;
@@ -3434,24 +3661,42 @@ window.toggleCisterna = function() {
     document.getElementById('np-cisterna-sp95').value = '';
   }
 };
-// Encuentra el parte anterior en la secuencia de turnos
+// ── ORDEN DE LOS PARTES ──
+// Posición comparable de un parte: 'AAAA-MM-DD|n' (mañana 0, tarde 1, noche 2, fuera 3)
+const TURNO_IDX = { mañana: 0, tarde: 1, noche: 2, fuera: 3 };
+function posParte(fecha, turno) { return fecha + '|' + (TURNO_IDX[turno] ?? 3); }
+// Un parte sirve de referencia si tiene los dos contadores de combustible
+function tieneContadores(p) { return !!p && p.turno !== 'fuera' && (parseFloat(p.gasoil) || 0) > 0 && (parseFloat(p.sp95) || 0) > 0; }
+
+function _turnoPrevio(fechaStr, turno) {
+  if (turno === 'mañana') return { fecha: sumaDias(fechaStr, -1), turno: 'noche' };
+  if (turno === 'tarde') return { fecha: fechaStr, turno: 'mañana' };
+  if (turno === 'noche') return { fecha: fechaStr, turno: 'tarde' };
+  return null;
+}
+
+// Parte de referencia para calcular lo vendido en (fecha, turno).
+// 1º el del turno inmediatamente anterior; si falta, el último parte anterior con contadores.
+// Devuelve {id, parte, exacto} o null. excluirId: el parte que se está editando.
+function getParteAnteriorInfo(fechaStr, turno, excluirId) {
+  if (!fechaStr || turno === 'fuera') return null;
+  const prev = _turnoPrevio(fechaStr, turno);
+  if (!prev) return null;
+  const exacto = Object.entries(partes).find(([id, p]) => id !== excluirId && p.fecha === prev.fecha && p.turno === prev.turno && tieneContadores(p));
+  if (exacto) return { id: exacto[0], parte: exacto[1], exacto: true };
+  const pos = posParte(fechaStr, turno);
+  let mejor = null;
+  Object.entries(partes).forEach(([id, p]) => {
+    if (id === excluirId || !p.fecha || !tieneContadores(p)) return;
+    const pp = posParte(p.fecha, p.turno);
+    if (pp >= pos) return;
+    if (!mejor || pp > mejor.pos) mejor = { id, parte: p, pos: pp };
+  });
+  return mejor ? { id: mejor.id, parte: mejor.parte, exacto: false } : null;
+}
 function getParteAnterior(fechaStr, turno) {
-  // Orden de turnos: mañana → tarde → noche → mañana(día sig)
-  // El anterior de mañana es noche del día anterior
-  let fechaAnterior = fechaStr;
-  let turnoAnterior;
-  if (turno === 'mañana') {
-    turnoAnterior = 'noche';
-    const d = new Date(fechaStr + 'T12:00:00');
-    d.setDate(d.getDate() - 1);
-    fechaAnterior = d.toISOString().split('T')[0];
-  } else if (turno === 'tarde') {
-    turnoAnterior = 'mañana';
-  } else { // noche
-    turnoAnterior = 'tarde';
-  }
-  // Buscar en partes
-  return Object.values(partes).find(p => p.fecha === fechaAnterior && p.turno === turnoAnterior) || null;
+  const i = getParteAnteriorInfo(fechaStr, turno);
+  return i ? i.parte : null;
 }
 
 function litrosVendidos(fin, inicio) {
@@ -3461,91 +3706,144 @@ function litrosVendidos(fin, inicio) {
   return fin - inicio;
 }
 
+// Cálculo ÚNICO de la recaudación de un parte (se usa al guardar, al ver, en los informes y en los tanques).
+// p: parte (o datos del formulario); antInfo: resultado de getParteAnteriorInfo; P: precios a aplicar.
+// totalEuros = combustible + aceite + tránsitos + rampas (sin consumos internos ni cobros extra, como hasta ahora).
+function calcularRecaudacionParte(p, antInfo, P) {
+  if (!p || p.turno === 'fuera' || !antInfo || !P) return null;
+  const finG = parseFloat(p.gasoil), finS = parseFloat(p.sp95), finA = parseFloat(p.aceite);
+  if (!(finG > 0) || !(finS > 0)) return null;
+  const ant = antInfo.parte;
+  const iniG = parseFloat(ant.gasoil) || 0, iniS = parseFloat(ant.sp95) || 0, iniA = parseFloat(ant.aceite) || 0;
+  const r2 = x => parseFloat(x.toFixed(2));
+  const lG = r2(litrosVendidos(finG, iniG));
+  const lS = r2(litrosVendidos(finS, iniS));
+  const lA = r2(finA > 0 && iniA > finA ? iniA - finA : 0); // el contador de aceite baja
+  const nT10 = parseInt(p.transito10) || 0, nT12 = parseInt(p.transito12) || 0;
+  const nRS = parseInt(p.rampaSimple) || 0, nRD = parseInt(p.rampaDoble) || 0;
+  const extrasTotal = nT10 * P.t10 + nT12 * P.t12 + nRS * P.rs + nRD * P.rd;
+  return {
+    inicioGasoil: iniG, inicioSp95: iniS, inicioAceite: iniA,
+    litrosGasoil: lG, litrosSp95: lS, litrosAceite: lA,
+    precioGasoil: P.gasoil, precioSp95: P.sp95, precioAceite: P.aceite,
+    transitosT10: nT10, transitosT12: nT12, rampasSimple: nRS, rampasDoble: nRD,
+    precioT10: P.t10, precioT12: P.t12, precioRS: P.rs, precioRD: P.rd,
+    extrasTotal: r2(extrasTotal),
+    totalEuros: r2(lG * P.gasoil + lS * P.sp95 + lA * P.aceite + extrasTotal),
+    refFecha: ant.fecha, refTurno: ant.turno, refExacto: !!antInfo.exacto
+  };
+}
+
+// Tras guardar/editar/borrar un parte, el primer parte posterior con contadores usaba éste como referencia:
+// se recalcula su recaudación (con SUS precios) para que litros y euros cuadren. Devuelve los partes corregidos.
+async function recalcularSiguientes(posiciones) {
+  const hechos = [], vistos = new Set();
+  const casi = (a, b) => Math.abs((parseFloat(a) || 0) - (parseFloat(b) || 0)) < 0.005;
+  for (const pos of posiciones) {
+    if (!pos) continue;
+    let sig = null;
+    Object.entries(partes).forEach(([id, p]) => {
+      if (!p.fecha || !tieneContadores(p)) return;
+      const pp = posParte(p.fecha, p.turno);
+      if (pp <= pos) return;
+      if (!sig || pp < sig.pos) sig = { id, p, pos: pp };
+    });
+    if (!sig || vistos.has(sig.id)) continue;
+    vistos.add(sig.id);
+    const info = getParteAnteriorInfo(sig.p.fecha, sig.p.turno, sig.id);
+    const nueva = calcularRecaudacionParte(sig.p, info, preciosDeRecaudacion(sig.p.recaudacion, sig.p.fecha));
+    if (!nueva) continue;
+    const v = sig.p.recaudacion || {};
+    if (sig.p.recaudacion && casi(v.litrosGasoil, nueva.litrosGasoil) && casi(v.litrosSp95, nueva.litrosSp95)
+        && casi(v.litrosAceite, nueva.litrosAceite) && casi(v.totalEuros, nueva.totalEuros)) continue;
+    nueva.recalculadoEn = Date.now();
+    nueva.recalculadoPor = currentUser || '';
+    await set(ref(db, 'partes/' + sig.id + '/recaudacion'), nueva);
+    hechos.push(sig.p);
+  }
+  return hechos;
+}
+function _txtPartesRecalculados(lista) {
+  return lista.map(p => (_TURNO_TXT[p.turno] || p.turno) + ' ' + new Date(p.fecha + 'T12:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })).join(', ');
+}
+
+// Datos del formulario de parte en forma de parte
+function _parteDelFormulario() {
+  const v = id => document.getElementById(id)?.value;
+  return {
+    fecha: v('np-fecha'), turno: v('np-turno'),
+    gasoil: v('np-gasoil'), sp95: v('np-sp95'), aceite: v('np-aceite'),
+    transito10: v('np-transito-10'), transito12: v('np-transito-12'),
+    rampaSimple: v('np-rampa-simple'), rampaDoble: v('np-rampa-doble')
+  };
+}
+// Precios para el formulario: al editar, los que se usaron al guardar; si no, los vigentes en la fecha del parte
+function _preciosFormulario(fechaStr) {
+  const id = document.getElementById('np-editing-id')?.value;
+  const orig = id && partes[id];
+  if (orig && orig.recaudacion) return preciosDeRecaudacion(orig.recaudacion, fechaStr);
+  return preciosParaFecha(fechaStr);
+}
+
 window.calcularRecaudacion = function() {
   const fechaStr = document.getElementById('np-fecha')?.value;
   const turno = document.getElementById('np-turno')?.value;
-  const finGasoil = parseFloat(document.getElementById('np-gasoil')?.value);
-  const finSp95 = parseFloat(document.getElementById('np-sp95')?.value);
-  const finAceite = parseFloat(document.getElementById('np-aceite')?.value);
+  const editId = document.getElementById('np-editing-id')?.value || null;
 
   const refBox = document.getElementById('np-comb-ref');
   const recBox = document.getElementById('np-recaudacion-box');
   const recValor = document.getElementById('np-recaudacion-valor');
   const recDetalle = document.getElementById('np-recaudacion-detalle');
-  const lblG = document.getElementById('np-precio-gasoil-lbl');
-  const lblS = document.getElementById('np-precio-sp95-lbl');
-  const lblA = document.getElementById('np-precio-aceite-lbl');
-  if (lblG) lblG.textContent = precioGasoil.toFixed(3);
-  if (lblS) lblS.textContent = precioSp95.toFixed(3);
-  if (lblA) lblA.textContent = precioAceite.toFixed(2);
+  const P = fechaStr ? _preciosFormulario(fechaStr) : preciosActuales();
+  const setTxt = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  setTxt('np-precio-gasoil-lbl', P.gasoil.toFixed(3));
+  setTxt('np-precio-sp95-lbl', P.sp95.toFixed(3));
+  setTxt('np-precio-aceite-lbl', P.aceite.toFixed(2));
+  setTxt('np-lbl-t10', P.t10.toFixed(2) + '€/barco');
+  setTxt('np-lbl-t12', P.t12.toFixed(2) + '€/barco');
+  setTxt('np-lbl-rs', P.rs.toFixed(2) + '€');
+  setTxt('np-lbl-rd', P.rd.toFixed(2) + '€');
 
-  if (!fechaStr || !turno || !refBox) { if(recBox) recBox.style.display='none'; return; }
+  if (!fechaStr || !turno || !refBox) { if (recBox) recBox.style.display = 'none'; return; }
+  if (turno === 'fuera') { refBox.style.display = 'none'; recBox.style.display = 'none'; return; }
 
-  const anterior = getParteAnterior(fechaStr, turno);
-  if (anterior) {
-    const iniG = parseFloat(anterior.gasoil) || 0;
-    const iniS = parseFloat(anterior.sp95) || 0;
-    const iniA = parseFloat(anterior.aceite) || 0;
-    const tLabel = anterior.turno === 'mañana' ? 'Mañana' : anterior.turno === 'tarde' ? 'Tarde' : 'Noche';
+  const info = getParteAnteriorInfo(fechaStr, turno, editId);
+  refBox.className = 'comb-ref-box';
+  if (!info) {
+    refBox.style.cssText = 'display:block;background:#fff8e1;border-color:#f0c030;color:#8a6d00;';
+    refBox.textContent = `⚠️ No hay ningún parte anterior con contadores. Sin referencia para calcular recaudación.`;
+    recBox.style.display = 'none';
+    return;
+  }
+  const ant = info.parte;
+  const tLabel = _TURNO_TXT[ant.turno] || ant.turno;
+  const iniG = parseFloat(ant.gasoil) || 0, iniS = parseFloat(ant.sp95) || 0, iniA = parseFloat(ant.aceite) || 0;
+  const cont = `Gasóil ${iniG.toFixed(2)} · S.P.95 ${iniS.toFixed(2)} · Aceite ${iniA.toFixed(2)} L`;
+  if (info.exacto) {
     refBox.style.cssText = 'display:block;';
-    refBox.className = 'comb-ref-box';
-    refBox.textContent = `📋 Ref. (${tLabel} ${anterior.fecha}): Gasóil ${iniG.toFixed(2)} · S.P.95 ${iniS.toFixed(2)} · Aceite ${iniA.toFixed(2)} L`;
-
-    const hasFin = !isNaN(finGasoil) && !isNaN(finSp95);
-    if (hasFin) {
-      // Combustibles: contador sube → fin - inicio
-      const lG = iniG > finGasoil ? finGasoil + 10000 - iniG : finGasoil - iniG;
-      const lS = iniS > finSp95 ? finSp95 + 10000 - iniS : finSp95 - iniS;
-      const recG = lG * precioGasoil;
-      const recS = lS * precioSp95;
-
-      // Aceite: contador baja → inicio - fin (si se introdujo)
-      let recA = 0, lA = 0;
-      if (!isNaN(finAceite)) {
-        lA = iniA - finAceite; // vendido = lo que bajó
-        if (lA < 0) lA = 0;   // sin datos negativos
-        recA = lA * precioAceite;
-      }
-
-      const total = recG + recS + recA;
-      recBox.style.display = 'flex';
-
-      // Tránsitos y rampas
-      const nT10 = parseInt(document.getElementById('np-transito-10')?.value) || 0;
-      const nT12 = parseInt(document.getElementById('np-transito-12')?.value) || 0;
-      const nRS  = parseInt(document.getElementById('np-rampa-simple')?.value) || 0;
-      const nRD  = parseInt(document.getElementById('np-rampa-doble')?.value)  || 0;
-      const recT10 = nT10 * precioT10;
-      const recT12 = nT12 * precioT12;
-      const recRS  = nRS  * precioRS;
-      const recRD  = nRD  * precioRD;
-      const totalExtras = recT10 + recT12 + recRS + recRD;
-      // Consumos internos (se restan)
-      const consumos = getConsumosInternos();
-      const totalConsumos = consumos.reduce((a,c) => a + (c.importe||0), 0);
-      const cobros = getCobrosExtra();
-      const totalCobros = cobros.reduce((a,c) => a + (c.importe||0), 0);
-      const totalFinal = total + totalExtras - totalConsumos + totalCobros;
-
-      recValor.textContent = totalFinal.toFixed(2) + ' €';
-      let detalle = `Gasóil ${lG.toFixed(2)}L×${precioGasoil.toFixed(3)}=${recG.toFixed(2)}€ · S.P.95 ${lS.toFixed(2)}L×${precioSp95.toFixed(3)}=${recS.toFixed(2)}€`;
-      if (!isNaN(finAceite)) detalle += ` · Aceite ${lA.toFixed(2)}L×${precioAceite.toFixed(2)}=${recA.toFixed(2)}€`;
-      if (nT10 > 0) detalle += ` · Tráns.10m ${nT10}×${precioT10.toFixed(2)}=${recT10.toFixed(2)}€`;
-      if (nT12 > 0) detalle += ` · Tráns.12m ${nT12}×${precioT12.toFixed(2)}=${recT12.toFixed(2)}€`;
-      if (nRS  > 0) detalle += ` · R.Simple ${nRS}×${precioRS.toFixed(2)}=${recRS.toFixed(2)}€`;
-      if (nRD  > 0) detalle += ` · R.Doble ${nRD}×${precioRD.toFixed(2)}=${recRD.toFixed(2)}€`;
-      if (totalConsumos > 0) detalle += ` · Consumos internos -${totalConsumos.toFixed(2)}€`;
-      if (totalCobros   > 0) detalle += ` · Cobros extra +${totalCobros.toFixed(2)}€`;
-      recDetalle.textContent = detalle;
-    } else {
-      recBox.style.display = 'none';
-    }
+    refBox.textContent = `📋 Ref. (${tLabel} ${ant.fecha}): ${cont}`;
   } else {
     refBox.style.cssText = 'display:block;background:#fff8e1;border-color:#f0c030;color:#8a6d00;';
-    refBox.className = 'comb-ref-box';
-    refBox.textContent = `⚠️ No se encontró el parte anterior. Sin referencia para calcular recaudación.`;
-    recBox.style.display = 'none';
+    refBox.textContent = `⚠️ Falta el parte del turno anterior. Se toma como referencia el último parte con contadores (${tLabel} ${ant.fecha}): ${cont}. Lo vendido desde entonces se suma a este turno.`;
   }
+
+  const rec = calcularRecaudacionParte(_parteDelFormulario(), info, P);
+  if (!rec) { recBox.style.display = 'none'; return; }
+  const totalConsumos = getConsumosInternos().reduce((a, c) => a + (c.importe || 0), 0);
+  const totalCobros = getCobrosExtra().reduce((a, c) => a + (c.importe || 0), 0);
+  const totalFinal = rec.totalEuros - totalConsumos + totalCobros;
+  recBox.style.display = 'flex';
+  recValor.textContent = totalFinal.toFixed(2) + ' €';
+  const e2 = x => x.toFixed(2);
+  let detalle = `Gasóil ${e2(rec.litrosGasoil)}L×${P.gasoil.toFixed(3)}=${e2(rec.litrosGasoil * P.gasoil)}€ · S.P.95 ${e2(rec.litrosSp95)}L×${P.sp95.toFixed(3)}=${e2(rec.litrosSp95 * P.sp95)}€`;
+  if (rec.litrosAceite > 0) detalle += ` · Aceite ${e2(rec.litrosAceite)}L×${P.aceite.toFixed(2)}=${e2(rec.litrosAceite * P.aceite)}€`;
+  if (rec.transitosT10 > 0) detalle += ` · Tráns.10m ${rec.transitosT10}×${P.t10.toFixed(2)}=${e2(rec.transitosT10 * P.t10)}€`;
+  if (rec.transitosT12 > 0) detalle += ` · Tráns.12m ${rec.transitosT12}×${P.t12.toFixed(2)}=${e2(rec.transitosT12 * P.t12)}€`;
+  if (rec.rampasSimple > 0) detalle += ` · R.Simple ${rec.rampasSimple}×${P.rs.toFixed(2)}=${e2(rec.rampasSimple * P.rs)}€`;
+  if (rec.rampasDoble > 0) detalle += ` · R.Doble ${rec.rampasDoble}×${P.rd.toFixed(2)}=${e2(rec.rampasDoble * P.rd)}€`;
+  if (totalConsumos > 0) detalle += ` · Consumos internos -${totalConsumos.toFixed(2)}€`;
+  if (totalCobros > 0) detalle += ` · Cobros extra +${totalCobros.toFixed(2)}€`;
+  recDetalle.textContent = detalle;
 }; // fin calcularRecaudacion
 
 // Cargar partes desde Firebase
@@ -3749,31 +4047,29 @@ function verParteConcreto(p, id) {
   if (p.turno !== 'fuera') {
   if (p.recaudacion) {
     const r = p.recaudacion;
+    const P = preciosDeRecaudacion(r, p.fecha);
     const extras = {
       t10: r.transitosT10||0, t12: r.transitosT12||0,
       rs: r.rampasSimple||0, rd: r.rampasDoble||0,
-      pt10: r.precioT10||precioT10, pt12: r.precioT12||precioT12,
-      prs: r.precioRS||precioRS, prd: r.precioRD||precioRD,
+      pt10: P.t10, pt12: P.t12, prs: P.rs, prd: P.rd,
       total: r.extrasTotal||0
     };
     const consumosTotal = (p.consumosInternos||[]).reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
     const cobrosTotal   = (p.cobrosExtra||[]).reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
-    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, r.precioGasoil||precioGasoil, r.precioSp95||precioSp95, r.precioAceite||precioAceite, true, extras, consumosTotal, cobrosTotal);
+    recHtml = buildRecHtml(r.litrosGasoil||0, r.litrosSp95||0, r.litrosAceite||0, P.gasoil, P.sp95, P.aceite, true, extras, consumosTotal, cobrosTotal);
+    if (r.refExacto === false) recHtml += `<div style="font-size:0.75rem;color:#8a6d00;margin-top:4px;">⚠️ Calculada con el parte de ${_TURNO_TXT[r.refTurno]||r.refTurno} ${r.refFecha} como referencia (faltaba el del turno anterior).</div>`;
   } else {
-    const ant = getParteAnterior(p.fecha, p.turno);
-    if (ant) {
-      const iniG = parseFloat(ant.gasoil)||0, iniS = parseFloat(ant.sp95)||0, iniA = parseFloat(ant.aceite)||0;
-      const finG = parseFloat(p.gasoil)||0, finS = parseFloat(p.sp95)||0, finA = parseFloat(p.aceite)||0;
-      const lG = iniG > finG ? finG+10000-iniG : finG-iniG;
-      const lS = iniS > finS ? finS+10000-iniS : finS-iniS;
-      const lA = iniA > finA ? iniA-finA : 0;
+    // Sin recaudación guardada: se calcula ahora con el parte de referencia y los precios de su fecha
+    const rec = calcularRecaudacionParte(p, getParteAnteriorInfo(p.fecha, p.turno, id), preciosParaFecha(p.fecha));
+    if (rec) {
       const extras = {
-        t10: p.transito10||0, t12: p.transito12||0,
-        rs: p.rampaSimple||0, rd: p.rampaDoble||0,
-        pt10: precioT10, pt12: precioT12, prs: precioRS, prd: precioRD,
-        total: (p.transito10||0)*precioT10 + (p.transito12||0)*precioT12 + (p.rampaSimple||0)*precioRS + (p.rampaDoble||0)*precioRD
+        t10: rec.transitosT10, t12: rec.transitosT12, rs: rec.rampasSimple, rd: rec.rampasDoble,
+        pt10: rec.precioT10, pt12: rec.precioT12, prs: rec.precioRS, prd: rec.precioRD,
+        total: rec.extrasTotal
       };
-      recHtml = buildRecHtml(lG, lS, lA, precioGasoil, precioSp95, precioAceite, false, extras);
+      const consumosTotal = (p.consumosInternos||[]).reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
+      const cobrosTotal   = (p.cobrosExtra||[]).reduce((a,c)=>a+(parseFloat(c.importe)||0),0);
+      recHtml = buildRecHtml(rec.litrosGasoil, rec.litrosSp95, rec.litrosAceite, rec.precioGasoil, rec.precioSp95, rec.precioAceite, false, extras, consumosTotal, cobrosTotal);
     }
   }
   } // fin if turno !== fuera
@@ -3874,9 +4170,13 @@ window.eliminarParte = async function() {
   const id = btn._parteId;
   if (!id) return;
   if (!confirm('¿Eliminar este parte?')) return;
+  const pBorrado = partes[id];
+  const posBorrado = pBorrado ? posParte(pBorrado.fecha, pBorrado.turno) : null;
   await remove(ref(db, 'partes/' + id));
   closeOv('ov-ver-parte');
-  showToast('Parte eliminado');
+  // El parte siguiente usaba éste como referencia: se recalcula con el anterior que quede
+  const recalc = await recalcularSiguientes([posBorrado]);
+  showToast('Parte eliminado' + (recalc.length ? ' · recalculado: ' + _txtPartesRecalculados(recalc) : ''));
   renderPartesCalendario();
 };
 
@@ -3990,16 +4290,8 @@ window.descargarPartesDia = function() {
 
   function calcRec(p) {
     if (p.turno === 'fuera') return null;
-    const ant = getParteAnterior(p.fecha, p.turno);
     if (p.recaudacion) return p.recaudacion;
-    if (!ant) return null;
-    const iniG = parseFloat(ant.gasoil)||0, iniS = parseFloat(ant.sp95)||0, iniA = parseFloat(ant.aceite)||0;
-    const finG = parseFloat(p.gasoil)||0, finS = parseFloat(p.sp95)||0, finA = parseFloat(p.aceite)||0;
-    const lG = iniG > finG ? finG+10000-iniG : finG-iniG;
-    const lS = iniS > finS ? finS+10000-iniS : finS-iniS;
-    const lA = iniA > finA ? iniA-finA : 0;
-    return { litrosGasoil:lG, litrosSp95:lS, litrosAceite:lA, precioGasoil, precioSp95, precioAceite,
-      totalEuros: parseFloat((lG*precioGasoil + lS*precioSp95 + lA*precioAceite).toFixed(2)) };
+    return calcularRecaudacionParte(p, getParteAnteriorInfo(p.fecha, p.turno), preciosParaFecha(p.fecha));
   }
 
   function renderParteHtml(p) {
@@ -4124,40 +4416,17 @@ window.descargarPartesDia = function() {
     return `<div class="resumen-fila"><span>${tLabel} — ${(NOMBRES[p.marinero]||p.marinero||'').toUpperCase()}</span><strong>${r ? r.totalEuros.toFixed(2)+' €' : '—'}</strong></div>`;
   }).join('');
 
-  // Nivel de tanques al cierre de este día
-  // Acumulamos entradas y salidas hasta e incluyendo este día
-  const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
-  const diaDate = new Date(fechaStr + 'T23:59:59');
-  let acumEnG = 0, acumEnS = 0, acumSalG = 0, acumSalS = 0;
-  Object.values(partes).forEach(p => {
-    const fp = new Date(p.fecha + 'T12:00:00');
-    if (fp <= refDate || fp > diaDate) return;
-    if (p.cisterna) {
-      acumEnG += parseFloat(p.cisterna.gasoil)||0;
-      acumEnS += parseFloat(p.cisterna.sp95)||0;
-    }
-    const r = p.recaudacion;
-    if (r) {
-      acumSalG += parseFloat(r.litrosGasoil)||0;
-      acumSalS += parseFloat(r.litrosSp95)||0;
-    } else {
-      const ant = getParteAnterior(p.fecha, p.turno);
-      if (ant) {
-        const iniG=parseFloat(ant.gasoil)||0, finG=parseFloat(p.gasoil)||0;
-        const iniS=parseFloat(ant.sp95)||0,  finS=parseFloat(p.sp95)||0;
-        if (finG>0) acumSalG += iniG>finG ? finG+10000-iniG : finG-iniG;
-        if (finS>0) acumSalS += iniS>finS ? finS+10000-iniS : finS-iniS;
-      }
-    }
-  });
-  const nivelGDia = Math.max(0, STOCK_REF_GASOIL + acumEnG - acumSalG);
-  const nivelSDia = Math.max(0, STOCK_REF_SP95  + acumEnS - acumSalS);
+  // Nivel de tanques al cierre de este día (desde el stock inicial o la última medición real)
+  const _et = estadoTanques(fechaStr + '|9', fechaStr);
+  const nivelGDia = _et.nivelG, nivelSDia = _et.nivelS;
+  const acumSalG = _et.vendDiaG, acumSalS = _et.vendDiaS;   // vendido ESE día
+  const acumEnG = _et.cisDiaG, acumEnS = _et.cisDiaS;       // cisterna recibida ESE día
   const pctGDia = Math.min(100, (nivelGDia/CAP_GASOIL)*100);
   const pctSDia = Math.min(100, (nivelSDia/CAP_SP95)*100);
   const alertaG = pctGDia < ALERTA_PCT ? '<span style="color:#cc0018;font-weight:700;"> ⚠️ NIVEL BAJO</span>' : '';
   const alertaS = pctSDia < ALERTA_PCT ? '<span style="color:#cc0018;font-weight:700;"> ⚠️ NIVEL BAJO</span>' : '';
-  const entradaGHtml = acumEnG > 0 ? `<div style="font-size:9px;color:#1b7a4a;margin-top:3px;">🚛 Cisterna acumulada hoy: +${acumEnG.toFixed(0)} L</div>` : '';
-  const entradaSHtml = acumEnS > 0 ? `<div style="font-size:9px;color:#1b7a4a;margin-top:3px;">🚛 Cisterna acumulada hoy: +${acumEnS.toFixed(0)} L</div>` : '';
+  const entradaGHtml = acumEnG > 0 ? `<div style="font-size:9px;color:#1b7a4a;margin-top:3px;">🚛 Cisterna recibida hoy: +${acumEnG.toFixed(0)} L</div>` : '';
+  const entradaSHtml = acumEnS > 0 ? `<div style="font-size:9px;color:#1b7a4a;margin-top:3px;">🚛 Cisterna recibida hoy: +${acumEnS.toFixed(0)} L</div>` : '';
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <title>Partes ${fechaStr} — Club Náutico Águilas</title>
@@ -4276,39 +4545,14 @@ window.descargarResumenAdm = function() {
   function calcRec(p) {
     if (p.turno === 'fuera') return null;
     if (p.recaudacion) return p.recaudacion;
-    const ant = getParteAnterior(p.fecha, p.turno);
-    if (!ant) return null;
-    const iniG=parseFloat(ant.gasoil)||0, iniS=parseFloat(ant.sp95)||0, iniA=parseFloat(ant.aceite)||0;
-    const finG=parseFloat(p.gasoil)||0, finS=parseFloat(p.sp95)||0, finA=parseFloat(p.aceite)||0;
-    const lG=iniG>finG?finG+10000-iniG:finG-iniG;
-    const lS=iniS>finS?finS+10000-iniS:finS-iniS;
-    const lA=iniA>finA?iniA-finA:0;
-    return {litrosGasoil:lG,litrosSp95:lS,litrosAceite:lA,precioGasoil,precioSp95,precioAceite,
-      totalEuros:parseFloat((lG*precioGasoil+lS*precioSp95+lA*precioAceite).toFixed(2))};
+    return calcularRecaudacionParte(p, getParteAnteriorInfo(p.fecha, p.turno), preciosParaFecha(p.fecha));
   }
 
-  // Calcular nivel de tanques al cierre del día
-  const refDate = new Date(STOCK_REF_FECHA + 'T23:59:59');
-  const diaDate = new Date(fechaStr + 'T23:59:59');
-  let acumEnG=0,acumEnS=0,acumSalG=0,acumSalS=0;
-  Object.values(partes).forEach(p => {
-    const fp = new Date(p.fecha + 'T12:00:00');
-    if (fp <= refDate || fp > diaDate) return;
-    if (p.cisterna) { acumEnG+=parseFloat(p.cisterna.gasoil)||0; acumEnS+=parseFloat(p.cisterna.sp95)||0; }
-    const r = p.recaudacion;
-    if (r) { acumSalG+=parseFloat(r.litrosGasoil)||0; acumSalS+=parseFloat(r.litrosSp95)||0; }
-    else {
-      const ant=getParteAnterior(p.fecha,p.turno);
-      if (ant) {
-        const iniG=parseFloat(ant.gasoil)||0,finG=parseFloat(p.gasoil)||0;
-        const iniS=parseFloat(ant.sp95)||0,finS=parseFloat(p.sp95)||0;
-        if(finG>0) acumSalG+=iniG>finG?finG+10000-iniG:finG-iniG;
-        if(finS>0) acumSalS+=iniS>finS?finS+10000-iniS:finS-iniS;
-      }
-    }
-  });
-  const nivelGDia = Math.max(0, STOCK_REF_GASOIL + acumEnG - acumSalG);
-  const nivelSDia = Math.max(0, STOCK_REF_SP95  + acumEnS - acumSalS);
+  // Nivel de tanques al cierre del día (desde el stock inicial o la última medición real)
+  const _et = estadoTanques(fechaStr + '|9', fechaStr);
+  const nivelGDia = _et.nivelG, nivelSDia = _et.nivelS;
+  const acumSalG = _et.vendDiaG, acumSalS = _et.vendDiaS;   // vendido ESE día
+  const acumEnG = _et.cisDiaG, acumEnS = _et.cisDiaS;       // cisterna recibida ESE día
   const pctGDia = Math.min(100,(nivelGDia/CAP_GASOIL)*100);
   const pctSDia = Math.min(100,(nivelSDia/CAP_SP95)*100);
   const alertaG = pctGDia < ALERTA_PCT ? ' ⚠️ NIVEL BAJO' : '';
@@ -4702,39 +4946,20 @@ window.guardarParte = async function() {
   progress.classList.add('visible');
   msgEl.textContent = editingId ? 'Actualizando parte...' : 'Guardando parte...';
 
-  // Calcular recaudación para guardar
-  const anteriorParte = getParteAnterior(fechaStr, turno);
-  let recaudacionData = null;
   const esFuera = turno === 'fuera';
+  // Posición que tenía el parte antes de editarlo (por si se cambia el turno)
+  const posAntigua = editingId && partes[editingId] ? posParte(partes[editingId].fecha, partes[editingId].turno) : null;
   // Tránsitos y rampas (solo si no es fuera de turno)
   const nT10 = esFuera ? 0 : (parseInt(document.getElementById('np-transito-10').value) || 0);
   const nT12 = esFuera ? 0 : (parseInt(document.getElementById('np-transito-12').value) || 0);
   const nRS  = esFuera ? 0 : (parseInt(document.getElementById('np-rampa-simple').value)  || 0);
   const nRD  = esFuera ? 0 : (parseInt(document.getElementById('np-rampa-doble').value)   || 0);
-  const extrasTotal = nT10*precioT10 + nT12*precioT12 + nRS*precioRS + nRD*precioRD;
-
-  if (!esFuera && anteriorParte) {
-    const iniG = parseFloat(anteriorParte.gasoil) || 0;
-    const iniS = parseFloat(anteriorParte.sp95) || 0;
-    const iniA = parseFloat(anteriorParte.aceite) || 0;
-    const finG = parseFloat(document.getElementById('np-gasoil').value);
-    const finS = parseFloat(document.getElementById('np-sp95').value);
-    const finA = parseFloat(document.getElementById('np-aceite').value);
-    if (!isNaN(finG) && !isNaN(finS)) {
-      const lG = iniG > finG ? finG + 10000 - iniG : finG - iniG;
-      const lS = iniS > finS ? finS + 10000 - iniS : finS - iniS;
-      const lA = (!isNaN(finA) && iniA > finA) ? iniA - finA : 0;
-      recaudacionData = {
-        inicioGasoil: iniG, inicioSp95: iniS, inicioAceite: iniA,
-        litrosGasoil: lG, litrosSp95: lS, litrosAceite: lA,
-        precioGasoil, precioSp95, precioAceite,
-        transitosT10: nT10, transitosT12: nT12, rampasSimple: nRS, rampasDoble: nRD,
-        precioT10, precioT12, precioRS, precioRD,
-        extrasTotal: parseFloat(extrasTotal.toFixed(2)),
-        totalEuros: parseFloat((lG*precioGasoil + lS*precioSp95 + lA*precioAceite + extrasTotal).toFixed(2))
-      };
-    }
-  }
+  // Recaudación: parte de referencia (anterior o, si falta, el último con contadores)
+  // y precios del parte original al editar, o los vigentes en la fecha del parte si es nuevo.
+  const parteForm = { ..._parteDelFormulario(), fecha: fechaStr, turno,
+    transito10: nT10, transito12: nT12, rampaSimple: nRS, rampaDoble: nRD };
+  const recaudacionData = esFuera ? null
+    : calcularRecaudacionParte(parteForm, getParteAnteriorInfo(fechaStr, turno, editingId || null), _preciosFormulario(fechaStr));
 
   const parteData = {
     fecha: fechaStr,
@@ -4777,6 +5002,10 @@ window.guardarParte = async function() {
   } else {
     await push(partesRef, parteData);
   }
+  // El parte siguiente usa éste como referencia: si sus litros cambian, se recalcula (con sus precios)
+  let recalc = [];
+  try { recalc = await recalcularSiguientes([posParte(fechaStr, turno), posAntigua]); }
+  catch (e) { console.error('Recalcular siguiente:', e); }
 
   // Resetear modo edición
   document.getElementById('np-editing-id').value = '';
@@ -4786,7 +5015,7 @@ window.guardarParte = async function() {
 
   progress.classList.remove('visible');
   closeOv('ov-nuevo-parte');
-  showToast(editingId ? 'Parte actualizado ✓' : 'Parte guardado ✓');
+  showToast((editingId ? 'Parte actualizado ✓' : 'Parte guardado ✓') + (recalc.length ? ' · recalculado también: ' + _txtPartesRecalculados(recalc) : ''));
 
   const [y, m] = fechaStr.split('-').map(Number);
   partesMesActual = new Date(y, m - 1, 1);
